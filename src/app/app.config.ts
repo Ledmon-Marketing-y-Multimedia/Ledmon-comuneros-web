@@ -27,7 +27,7 @@ export const appConfig: ApplicationConfig = {
             withPreloading(PreloadAllModules),
             withInMemoryScrolling({scrollPositionRestoration: 'enabled'}),
         ),
-
+            
         { provide: APP_INITIALIZER, useFactory: authAppInitializerFactory, deps: [AuthService], multi: true },
 
 

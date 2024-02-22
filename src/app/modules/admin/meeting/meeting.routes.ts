@@ -1,25 +1,25 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, Routes } from '@angular/router';
-import { ComunerosComponent } from 'app/modules/admin/comuneros/comuneros.component';
-import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
-import { ComunerosDetailsComponent } from 'app/modules/admin/comuneros/details/details.component';
-import { ComunerosListComponent } from 'app/modules/admin/comuneros/list/list.component';
+import { MeetingDetailsComponent } from 'app/modules/admin/meeting/details/details.component';
+import { MeetingListComponent } from 'app/modules/admin/meeting/list/list.component';
+import { MeetingComponent } from 'app/modules/admin/meeting/meeting.component';
+import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { catchError, throwError } from 'rxjs';
 
 /**
- * Comunero resolver
+ * Meeting resolver
  *
  * @param route
  * @param state
  */
-const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+const meetingResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
-    const comunerosService = inject(ComunerosService);
+    const meetingService = inject(MeetingService);
     const router = inject(Router);
 
-    return comunerosService.getContactById(route.paramMap.get('id'))
+    return meetingService.getMeetingById(route.paramMap.get('id'))
         .pipe(
-            // Error here means the requested comunero is not available
+            // Error here means the requested meeting is not available
             catchError((error) =>
             {
                 // Log the error
@@ -38,15 +38,15 @@ const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
 };
 
 /**
- * Can deactivate comuneros details
+ * Can deactivate meeting details
  *
  * @param component
  * @param currentRoute
  * @param currentState
  * @param nextState
  */
-const canDeactivateComunerosDetails = (
-    component: ComunerosDetailsComponent,
+const canDeactivateMeetingDetails = (
+    component: MeetingDetailsComponent,
     currentRoute: ActivatedRouteSnapshot,
     currentState: RouterStateSnapshot,
     nextState: RouterStateSnapshot) =>
@@ -58,16 +58,16 @@ const canDeactivateComunerosDetails = (
         nextRoute = nextRoute.firstChild;
     }
 
-    // If the next state doesn't contain '/comuneros'
+    // If the next state doesn't contain '/meeting'
     // it means we are navigating away from the
-    // comuneros app
-    if ( !nextState.url.includes('/comuneros') )
+    // meeting app
+    if ( !nextState.url.includes('/reuniones') )
     {
         // Let it navigate
         return true;
     }
 
-    // If we are navigating to another comunero...
+    // If we are navigating to another meeting...
     if ( nextRoute.paramMap.get('id') )
     {
         // Just navigate
@@ -81,27 +81,22 @@ const canDeactivateComunerosDetails = (
 export default [
     {
         path     : '',
-        component: ComunerosComponent,
-        resolve  : {
-            tags: () => inject(ComunerosService).getTags(),
-        },
+        component: MeetingComponent,
         children : [
             {
                 path     : '',
-                component: ComunerosListComponent,
+                component: MeetingListComponent,
                 resolve  : {
-                    comuneros : () => inject(ComunerosService).getComuneros(),
-                    countries: () => inject(ComunerosService).getCountries(),
+                    meetings: () => inject(MeetingService).getMeetings(),
                 },
                 children : [
                     {
                         path         : ':id',
-                        component    : ComunerosDetailsComponent,
+                        component    : MeetingDetailsComponent,
                         resolve      : {
-                            comunero  : contactResolver,
-                            countries: () => inject(ComunerosService).getCountries(),
+                            meeting: meetingResolver,
                         },
-                        canDeactivate: [canDeactivateComunerosDetails],
+                        canDeactivate: [canDeactivateMeetingDetails],
                     },
                 ],
             },

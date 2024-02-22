@@ -17,33 +17,29 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseFindByKeyPipe } from '@fuse/pipes/find-by-key/find-by-key.pipe';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
-import { Comunero, Country, Tag } from 'app/modules/admin/comuneros/comuneros.types';
-import { ComunerosListComponent } from 'app/modules/admin/comuneros/list/list.component';
+import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
+import { Lugar } from 'app/modules/admin/lugares/lugares.types';
+import { LugaresListComponent } from 'app/modules/admin/lugares/list/list.component';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 
 @Component({
-    selector       : 'comuneros-details',
+    selector       : 'lugares-details',
     templateUrl    : './details.component.html',
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
     imports        : [NgIf, MatButtonModule, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
 })
-export class ComunerosDetailsComponent implements OnInit, OnDestroy
+export class LugaresDetailsComponent implements OnInit, OnDestroy
 {
     @ViewChild('avatarFileInput') private _avatarFileInput: ElementRef;
     @ViewChild('tagsPanel') private _tagsPanel: TemplateRef<any>;
     @ViewChild('tagsPanelOrigin') private _tagsPanelOrigin: ElementRef;
 
     editMode: boolean = false;
-    tags: Tag[];
-    tagsEditMode: boolean = false;
-    filteredTags: Tag[];
-    comunero: Comunero;
+    lugar: Lugar;
     contactForm: UntypedFormGroup;
-    comuneros: Comunero[];
-    countries: Country[];
+    lugares: Lugar[];
     private _tagsPanelOverlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -53,8 +49,8 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     constructor(
         private _activatedRoute: ActivatedRoute,
         private _changeDetectorRef: ChangeDetectorRef,
-        private _comunerosListComponent: ComunerosListComponent,
-        private _comunerosService: ComunerosService,
+        private _lugaresListComponent: LugaresListComponent,
+        private _lugaresService: LugaresService,
         private _formBuilder: UntypedFormBuilder,
         private _fuseConfirmationService: FuseConfirmationService,
         private _renderer2: Renderer2,
@@ -75,7 +71,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     ngOnInit(): void
     {
         // Open the drawer
-        this._comunerosListComponent.matDrawer.open();
+        this._lugaresListComponent.matDrawer.open();
 
         // Create the comunero form
         this.contactForm = this._formBuilder.group({
@@ -92,27 +88,27 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
             tags        : [[]],
         });
 
-        // Get the comuneros
-        this._comunerosService.comuneros$
+        // Get the lugares
+        this._lugaresService.lugares$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comuneros: Comunero[]) =>
+            .subscribe((lugares: Lugar[]) =>
             {
-                this.comuneros = comuneros;
+                this.lugares = lugares;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
             });
 
         // Get the comunero
-        this._comunerosService.comunero$
+        this._lugaresService.comunero$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comunero: Comunero) =>
+            .subscribe((comunero: Lugar) =>
             {
                 // Open the drawer in case it is closed
-                this._comunerosListComponent.matDrawer.open();
+                this._lugaresListComponent.matDrawer.open();
 
                 // Get the comunero
-                this.comunero = comunero;
+                this.lugar = comunero;
 
                 // Clear the emails and phoneNumbers form arrays
                 (this.contactForm.get('emails') as UntypedFormArray).clear();
@@ -121,76 +117,6 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 // Patch values to the form
                 this.contactForm.patchValue(comunero);
 
-                // Setup the emails form array
-                const emailFormGroups = [];
-
-                if ( comunero.emails.length > 0 )
-                {
-                    // Iterate through them
-                    comunero.emails.forEach((email) =>
-                    {
-                        // Create an email form group
-                        emailFormGroups.push(
-                            this._formBuilder.group({
-                                email: [email.email],
-                                label: [email.label],
-                            }),
-                        );
-                    });
-                }
-                else
-                {
-                    // Create an email form group
-                    emailFormGroups.push(
-                        this._formBuilder.group({
-                            email: [''],
-                            label: [''],
-                        }),
-                    );
-                }
-
-                // Add the email form groups to the emails form array
-                emailFormGroups.forEach((emailFormGroup) =>
-                {
-                    (this.contactForm.get('emails') as UntypedFormArray).push(emailFormGroup);
-                });
-
-                // Setup the phone numbers form array
-                const phoneNumbersFormGroups = [];
-
-                if ( comunero.phoneNumbers.length > 0 )
-                {
-                    // Iterate through them
-                    comunero.phoneNumbers.forEach((phoneNumber) =>
-                    {
-                        // Create an email form group
-                        phoneNumbersFormGroups.push(
-                            this._formBuilder.group({
-                                country    : [phoneNumber.country],
-                                phoneNumber: [phoneNumber.phoneNumber],
-                                label      : [phoneNumber.label],
-                            }),
-                        );
-                    });
-                }
-                else
-                {
-                    // Create a phone number form group
-                    phoneNumbersFormGroups.push(
-                        this._formBuilder.group({
-                            country    : ['us'],
-                            phoneNumber: [''],
-                            label      : [''],
-                        }),
-                    );
-                }
-
-                // Add the phone numbers form groups to the phone numbers form array
-                phoneNumbersFormGroups.forEach((phoneNumbersFormGroup) =>
-                {
-                    (this.contactForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumbersFormGroup);
-                });
-
                 // Toggle the edit mode off
                 this.toggleEditMode(false);
 
@@ -198,28 +124,6 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 this._changeDetectorRef.markForCheck();
             });
 
-        // Get the country telephone codes
-        this._comunerosService.countries$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((codes: Country[]) =>
-            {
-                this.countries = codes;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Get the tags
-        this._comunerosService.tags$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tags: Tag[]) =>
-            {
-                this.tags = tags;
-                this.filteredTags = tags;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
     }
 
     /**
@@ -247,7 +151,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
      */
     closeDrawer(): Promise<MatDrawerToggleResult>
     {
-        return this._comunerosListComponent.matDrawer.close();
+        return this._lugaresListComponent.matDrawer.close();
     }
 
     /**
@@ -284,7 +188,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         comunero.phoneNumbers = comunero.phoneNumbers.filter(phoneNumber => phoneNumber.phoneNumber);
 
         // Update the comunero on the server
-        this._comunerosService.updateContact(comunero.id, comunero).subscribe(() =>
+        this._lugaresService.updateContact(comunero.id, comunero).subscribe(() =>
         {
             // Toggle the edit mode off
             this.toggleEditMode(false);
@@ -314,15 +218,15 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
             if ( result === 'confirmed' )
             {
                 // Get the current comunero's id
-                const id = this.comunero.id;
+                const id = this.lugar.id;
 
                 // Get the next/previous comunero's id
-                const currentContactIndex = this.comuneros.findIndex(item => item.id === id);
-                const nextContactIndex = currentContactIndex + ((currentContactIndex === (this.comuneros.length - 1)) ? -1 : 1);
-                const nextContactId = (this.comuneros.length === 1 && this.comuneros[0].id === id) ? null : this.comuneros[nextContactIndex].id;
+                const currentContactIndex = this.lugares.findIndex(item => item.id === id);
+                const nextContactIndex = currentContactIndex + ((currentContactIndex === (this.lugares.length - 1)) ? -1 : 1);
+                const nextContactId = (this.lugares.length === 1 && this.lugares[0].id === id) ? null : this.lugares[nextContactIndex].id;
 
                 // Delete the comunero
-                this._comunerosService.deleteContact(id)
+                this._lugaresService.deleteContact(id)
                     .subscribe((isDeleted) =>
                     {
                         // Return if the comunero wasn't deleted...
@@ -376,7 +280,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         }
 
         // Upload the avatar
-        this._comunerosService.uploadAvatar(this.comunero.id, file).subscribe();
+        this._lugaresService.uploadAvatar(this.lugar.id, file).subscribe();
     }
 
     /**
@@ -397,74 +301,6 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         // this.comunero.avatar = null;
     }
 
-    /**
-     * Open tags panel
-     */
-    openTagsPanel(): void
-    {
-        // Create the overlay
-        this._tagsPanelOverlayRef = this._overlay.create({
-            backdropClass   : '',
-            hasBackdrop     : true,
-            scrollStrategy  : this._overlay.scrollStrategies.block(),
-            positionStrategy: this._overlay.position()
-                .flexibleConnectedTo(this._tagsPanelOrigin.nativeElement)
-                .withFlexibleDimensions(true)
-                .withViewportMargin(64)
-                .withLockedPosition(true)
-                .withPositions([
-                    {
-                        originX : 'start',
-                        originY : 'bottom',
-                        overlayX: 'start',
-                        overlayY: 'top',
-                    },
-                ]),
-        });
-
-        // Subscribe to the attachments observable
-        this._tagsPanelOverlayRef.attachments().subscribe(() =>
-        {
-            // Add a class to the origin
-            this._renderer2.addClass(this._tagsPanelOrigin.nativeElement, 'panel-opened');
-
-            // Focus to the search input once the overlay has been attached
-            this._tagsPanelOverlayRef.overlayElement.querySelector('input').focus();
-        });
-
-        // Create a portal from the template
-        const templatePortal = new TemplatePortal(this._tagsPanel, this._viewContainerRef);
-
-        // Attach the portal to the overlay
-        this._tagsPanelOverlayRef.attach(templatePortal);
-
-        // Subscribe to the backdrop click
-        this._tagsPanelOverlayRef.backdropClick().subscribe(() =>
-        {
-            // Remove the class from the origin
-            this._renderer2.removeClass(this._tagsPanelOrigin.nativeElement, 'panel-opened');
-
-            // If overlay exists and attached...
-            if ( this._tagsPanelOverlayRef && this._tagsPanelOverlayRef.hasAttached() )
-            {
-                // Detach it
-                this._tagsPanelOverlayRef.detach();
-
-                // Reset the tag filter
-                this.filteredTags = this.tags;
-
-                // Toggle the edit mode off
-                this.tagsEditMode = false;
-            }
-
-            // If template portal exists and attached...
-            if ( templatePortal && templatePortal.isAttached )
-            {
-                // Detach it
-                templatePortal.detach();
-            }
-        });
-    }
 
     // /**
     //  * Toggle the tags edit mode
@@ -543,7 +379,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     //     };
 
     //     // Create tag on the server
-    //     this._comunerosService.createTag(tag)
+    //     this._lugaresService.createTag(tag)
     //         .subscribe((response) =>
     //         {
     //             // Add the tag to the comunero
@@ -563,7 +399,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     //     tag.title = event.target.value;
 
     //     // Update the tag on the server
-    //     this._comunerosService.updateTag(tag.id, tag)
+    //     this._lugaresService.updateTag(tag.id, tag)
     //         .pipe(debounceTime(300))
     //         .subscribe();
 
@@ -579,7 +415,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     // deleteTag(tag: Tag): void
     // {
     //     // Delete the tag from the server
-    //     this._comunerosService.deleteTag(tag.id).subscribe();
+    //     this._lugaresService.deleteTag(tag.id).subscribe();
 
     //     // Mark for check
     //     this._changeDetectorRef.markForCheck();
@@ -635,16 +471,6 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     //         this.addTagToContact(tag);
     //     }
     // }
-
-    /**
-     * Should the create tag button be visible
-     *
-     * @param inputValue
-     */
-    shouldShowCreateTagButton(inputValue: string): boolean
-    {
-        return !!!(inputValue === '' || this.tags.findIndex(tag => tag.title.toLowerCase() === inputValue.toLowerCase()) > -1);
-    }
 
     /**
      * Add the email field
@@ -715,16 +541,6 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Get country info by iso code
-     *
-     * @param iso
-     */
-    getCountryByIso(iso: string): Country
-    {
-        return this.countries.find(country => country.iso === iso);
     }
 
     /**

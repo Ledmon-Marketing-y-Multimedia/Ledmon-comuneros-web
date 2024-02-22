@@ -6,10 +6,10 @@
         <!-- Header -->
         <div class="relative w-full h-40 sm:h-48 px-8 sm:px-12 bg-accent-100 dark:bg-accent-700">
             <!-- Background -->
-            <ng-container *ngIf="comunero.background">
+            <ng-container *ngIf="lugar.background">
                 <img
                     class="absolute inset-0 object-cover w-full h-full"
-                    [src]="comunero.background">
+                    [src]="lugar.background">
             </ng-container>
             <!-- Close button -->
             <div class="flex items-center justify-end w-full max-w-3xl mx-auto pt-6">
@@ -24,7 +24,7 @@
             </div>
         </div>
 
-        <!-- Comunero -->
+        <!-- lugar -->
         <div class="relative flex flex-col flex-auto items-center p-6 pt-0 sm:p-12 sm:pt-0">
             <div class="w-full max-w-3xl">
 
@@ -34,12 +34,12 @@
                     <div class="flex items-center justify-center w-32 h-32 rounded-full overflow-hidden ring-4 ring-bg-card">
                         <img
                             class="object-cover w-full h-full"
-                            *ngIf="comunero.avatar"
-                            [src]="comunero.avatar">
+                            *ngIf="lugar.avatar"
+                            [src]="lugar.avatar">
                         <div
                             class="flex items-center justify-center w-full h-full rounded overflow-hidden uppercase text-8xl font-bold leading-none bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                            *ngIf="!comunero.avatar">
-                            {{comunero.user.name.charAt(0)}}
+                            *ngIf="!lugar.avatar">
+                            {{lugar.address.charAt(0)}}
                         </div>
                     </div>
                     <!-- Actions -->
@@ -56,31 +56,31 @@
                 </div>
 
                 <!-- Name -->
-                <div class="mt-3 text-4xl font-bold truncate">{{comunero.user.name}}</div>
+                <div class="mt-3 text-4xl font-bold truncate">{{lugar.address}}</div>
 
                 <div class="flex flex-col mt-4 pt-6 border-t space-y-8">
                     <!-- Title -->
-                    <ng-container *ngIf="comunero.title">
+                    <ng-container *ngIf="lugar.title">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:briefcase'"></mat-icon>
-                            <div class="ml-6 leading-6">{{comunero.title}}</div>
+                            <div class="ml-6 leading-6">{{lugar.title}}</div>
                         </div>
                     </ng-container>
 
                     <!-- Company -->
-                    <ng-container *ngIf="comunero.company">
+                    <ng-container *ngIf="lugar.company">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:building-office-2'"></mat-icon>
-                            <div class="ml-6 leading-6">{{comunero.company}}</div>
+                            <div class="ml-6 leading-6">{{lugar.company}}</div>
                         </div>
                     </ng-container>
 
                     <!-- Emails -->
-                    <!-- <ng-container *ngIf="comunero.emails.length">
+                    <!-- <ng-container *ngIf="lugar.emails.length">
                         <div class="flex">
                             <mat-icon [svgIcon]="'heroicons_outline:envelope'"></mat-icon>
                             <div class="min-w-0 ml-6 space-y-1">
-                                <ng-container *ngFor="let email of comunero.emails; trackBy: trackByFn">
+                                <ng-container *ngFor="let email of lugar.emails; trackBy: trackByFn">
                                     <div class="flex items-center leading-6">
                                         <a
                                             class="hover:underline text-primary-500"
@@ -101,16 +101,16 @@
                     </ng-container> -->
 
                     <!-- Phone -->
-                    <!-- <ng-container *ngIf="comunero.phoneNumbers.length">
+                    <!-- <ng-container *ngIf="lugar.phoneNumbers.length">
                         <div class="flex">
                             <mat-icon [svgIcon]="'heroicons_outline:phone'"></mat-icon>
                             <div class="min-w-0 ml-6 space-y-1">
-                                <ng-container *ngFor="let phoneNumber of comunero.phoneNumbers; trackBy: trackByFn">
+                                <ng-container *ngFor="let phoneNumber of lugar.phoneNumbers; trackBy: trackByFn">
                                     <div class="flex items-center leading-6">
                                         <div
                                             class="hidden sm:flex w-6 h-4 overflow-hidden"
                                             [matTooltip]="getCountryByIso(phoneNumber.country).name"
-                                            [style.background]="'url(\'/assets/images/apps/comuneros/flags.png\') no-repeat 0 0'"
+                                            [style.background]="'url(\'/assets/images/apps/lugares/flags.png\') no-repeat 0 0'"
                                             [style.backgroundSize]="'24px 3876px'"
                                             [style.backgroundPosition]="getCountryByIso(phoneNumber.country).flagImagePos"></div>
                                         <div class="sm:ml-3 font-mono">{{getCountryByIso(phoneNumber.country).code}}</div>
@@ -128,28 +128,28 @@
                     </ng-container> -->
 
                     <!-- Address -->
-                    <ng-container *ngIf="comunero.address">
+                    <ng-container *ngIf="lugar.address">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
-                            <div class="ml-6 leading-6">{{comunero.address}}</div>
+                            <div class="ml-6 leading-6">{{lugar.address}}</div>
                         </div>
                     </ng-container>
 
                     <!-- Birthday -->
-                    <ng-container *ngIf="comunero.birthday">
+                    <ng-container *ngIf="lugar.birthday">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:cake'"></mat-icon>
-                            <div class="ml-6 leading-6">{{comunero.birthday | date:'longDate'}}</div>
+                            <div class="ml-6 leading-6">{{lugar.birthday | date:'longDate'}}</div>
                         </div>
                     </ng-container>
 
                     <!-- Notes -->
-                    <ng-container *ngIf="comunero.notes">
+                    <ng-container *ngIf="lugar.notes">
                         <div class="flex">
                             <mat-icon [svgIcon]="'heroicons_outline:bars-3-bottom-left'"></mat-icon>
                             <div
                                 class="max-w-none ml-6 prose prose-sm"
-                                [innerHTML]="comunero.notes"></div>
+                                [innerHTML]="lugar.notes"></div>
                         </div>
                     </ng-container>
                 </div>
@@ -164,10 +164,10 @@
         <!-- Header -->
         <div class="relative w-full h-40 sm:h-48 px-8 sm:px-12 bg-accent-100 dark:bg-accent-700">
             <!-- Background -->
-            <ng-container *ngIf="comunero.background">
+            <ng-container *ngIf="lugar.background">
                 <img
                     class="absolute inset-0 object-cover w-full h-full"
-                    [src]="comunero.background">
+                    [src]="lugar.background">
             </ng-container>
             <!-- Close button -->
             <div class="flex items-center justify-end w-full max-w-3xl mx-auto pt-6">
@@ -182,7 +182,7 @@
             </div>
         </div>
 
-        <!-- Comunero form -->
+        <!-- lugar form -->
         <div class="relative flex flex-col flex-auto items-center px-6 sm:px-12">
             <div class="w-full max-w-3xl">
                 <form [formGroup]="contactForm">
@@ -224,12 +224,12 @@
                             <!-- Image/Letter -->
                             <img
                                 class="object-cover w-full h-full"
-                                *ngIf="comunero.avatar"
-                                [src]="comunero.avatar">
+                                *ngIf="lugar.avatar"
+                                [src]="lugar.avatar">
                             <div
                                 class="flex items-center justify-center w-full h-full rounded overflow-hidden uppercase text-8xl font-bold leading-none bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                                *ngIf="!comunero.avatar">
-                                {{comunero.name.charAt(0)}}
+                                *ngIf="!lugar.avatar">
+                                {{lugar.address.charAt(0)}}
                             </div>
                         </div>
                     </div>
@@ -255,8 +255,8 @@
                     <!-- Tags -->
                     <div class="flex flex-wrap items-center -m-1.5 mt-6">
                         <!-- Tags -->
-                        <ng-container *ngIf="comunero.tags.length">
-                            <ng-container *ngFor="let tag of (comunero.tags | fuseFindByKey:'id':tags); trackBy: trackByFn">
+                        <ng-container *ngIf="lugar.tags.length">
+                            <ng-container *ngFor="let tag of (lugar.tags | fuseFindByKey:'id':tags); trackBy: trackByFn">
                                 <div class="flex items-center justify-center px-4 m-1.5 rounded-full leading-9 text-gray-500 bg-gray-100 dark:text-gray-300 dark:bg-gray-700">
                                     <span class="text-md font-medium whitespace-nowrap">{{tag.title}}</span>
                                 </div>
@@ -268,14 +268,14 @@
                             (click)="openTagsPanel()"
                             #tagsPanelOrigin>
 
-                            <ng-container *ngIf="comunero.tags.length">
+                            <ng-container *ngIf="lugar.tags.length">
                                 <mat-icon
                                     class="icon-size-5"
                                     [svgIcon]="'heroicons_solid:pencil-square'"></mat-icon>
                                 <span class="ml-1.5 text-md font-medium whitespace-nowrap">Edit</span>
                             </ng-container>
 
-                            <ng-container *ngIf="!comunero.tags.length">
+                            <ng-container *ngIf="!lugar.tags.length">
                                 <mat-icon
                                     class="icon-size-5"
                                     [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
@@ -327,7 +327,7 @@
                                                     matRipple>
                                                     <mat-checkbox
                                                         class="flex items-center h-10 min-h-10 pointer-events-none"
-                                                        [checked]="comunero.tags.includes(tag.id)"
+                                                        [checked]="lugar.tags.includes(tag.id)"
                                                         [color]="'primary'"
                                                         [disableRipple]="true">
                                                     </mat-checkbox>
@@ -493,7 +493,7 @@
                                                 <span class="flex items-center">
                                                     <span
                                                         class="hidden sm:flex w-6 h-4 mr-1 overflow-hidden"
-                                                        [style.background]="'url(\'/assets/images/apps/comuneros/flags.png\') no-repeat 0 0'"
+                                                        [style.background]="'url(\'/assets/images/apps/lugares/flags.png\') no-repeat 0 0'"
                                                         [style.backgroundSize]="'24px 3876px'"
                                                         [style.backgroundPosition]="getCountryByIso(phoneNumber.get('country').value).flagImagePos"></span>
                                                     <span class="sm:mx-0.5 font-medium text-default">{{getCountryByIso(phoneNumber.get('country').value).code}}</span>
@@ -504,7 +504,7 @@
                                                     <span class="flex items-center">
                                                         <span
                                                             class="w-6 h-4 overflow-hidden"
-                                                            [style.background]="'url(\'/assets/images/apps/comuneros/flags.png\') no-repeat 0 0'"
+                                                            [style.background]="'url(\'/assets/images/apps/lugares/flags.png\') no-repeat 0 0'"
                                                             [style.backgroundSize]="'24px 3876px'"
                                                             [style.backgroundPosition]="country.flagImagePos"></span>
                                                         <span class="ml-2">{{country.name}}</span>

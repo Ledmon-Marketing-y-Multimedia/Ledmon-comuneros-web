@@ -71,7 +71,7 @@ export const appRoutes: Route[] = [
         canActivateChild: [AuthGuard],
         component: LayoutComponent,
         data: {
-            layout: 'classic'
+            layout: 'modern'
         },
         resolve: {
             initialData: initialDataResolver
@@ -79,6 +79,8 @@ export const appRoutes: Route[] = [
         children: [
             {path: 'example', loadChildren: () => import('app/modules/admin/example/example.routes')},
             {path: 'comuneros', loadChildren: () => import('app/modules/admin/comuneros/comuneros.routes')},
+            {path: 'lugares', loadChildren: () => import('app/modules/admin/lugares/lugares.routes')},
+            {path: 'reuniones', loadChildren: () => import('app/modules/admin/meeting/meeting.routes')},
         ]
     }
 ];

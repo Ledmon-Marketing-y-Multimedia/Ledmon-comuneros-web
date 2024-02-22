@@ -1,9 +1,10 @@
-export interface Contact
+export interface Comunero
 {
     id: string;
-    avatar?: string | null;
+    user?: User;
     background?: string | null;
-    name: string;
+    name?: string;
+    lugar?: Lugar;
     emails?: {
         email: string;
         label: string;
@@ -13,12 +14,29 @@ export interface Contact
         phoneNumber: string;
         label: string;
     }[];
-    title?: string;
-    company?: string;
-    birthday?: string | null;
-    address?: string | null;
-    notes?: string | null;
-    tags: string[];
+    code?: string;
+    role?: string;
+}
+
+export interface Lugar
+{
+    id: string;
+    address: string;
+    zona: string;
+    poblacion: string;
+    provincia: string;
+    cp: string;
+}
+
+
+export interface User
+{
+    id: string;
+    name: string;
+    email: string;
+    username: string;
+    phones: string;
+    createdAt: string;
 }
 
 export interface Country

@@ -72,7 +72,7 @@ export const adminNavigation: FuseNavigationItem[] = [
         title: 'Reuniones',
         type : 'basic',
         icon : 'heroicons_outline:home',
-        link : 'dashboard',
+        link : 'reuniones',
         exactMatch: true,
     },
     {

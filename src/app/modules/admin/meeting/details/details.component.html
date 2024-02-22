@@ -1,0 +1,134 @@
+<div class="flex flex-auto">
+
+    <form
+        class="flex flex-col flex-auto p-6 pt-10 sm:p-8 sm:pt-10 overflow-y-auto"
+        [formGroup]="meetingForm">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between -mt-3 -ml-4">
+
+            <div class="flex items-center">
+                <!-- More menu -->
+                <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="moreMenu">
+                    <mat-icon [svgIcon]="'heroicons_outline:ellipsis-vertical'"></mat-icon>
+                </button>
+                <mat-menu #moreMenu="matMenu">
+                    <button
+                        mat-menu-item
+                        (click)="deleteMeeting()">
+                        <mat-icon [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                        <span>Delete</span>
+                    </button>
+                </mat-menu>
+
+                <!-- Close button -->
+                <a
+                    mat-icon-button
+                    [routerLink]="['../']">
+                    <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                </a>
+            </div>
+
+        </div>
+
+        <mat-divider class="mt-6 mb-8"></mat-divider>
+
+        <!-- Title -->
+        <div>
+            <mat-form-field
+                class="w-full"
+                [subscriptSizing]="'dynamic'">
+                <mat-label>Título de la reunion</mat-label>
+                <textarea
+                    matInput
+                    [formControlName]="'name'"
+                    [spellcheck]="false"
+                    cdkTextareaAutosize
+                    #nameField></textarea>
+            </mat-form-field>
+        </div>
+
+        <!-- Priority and Due date -->
+        <div class="flex flex-wrap items-center mt-8">
+
+            <!-- Date -->
+            <div class="ml-6">
+                <div class="font-medium">Fecha</div>
+                <div
+                    class="relative flex items-center mt-1.5 px-4 leading-9 rounded-full cursor-pointer"
+                    [ngClass]="{'text-gray-500 bg-gray-100 dark:text-gray-300 dark:bg-gray-700': !meeting.date,
+                                'text-green-800 bg-green-200 dark:text-green-100 dark:bg-green-500': meeting.date}"
+                    (click)="datePicker.open()">
+                    <mat-icon
+                        class="icon-size-5 text-current"
+                        [svgIcon]="'heroicons_solid:calendar'"></mat-icon>
+                    <span class="ml-2 text-md font-medium">
+                        <ng-container *ngIf="meeting.date">{{meeting.date | date:'longDate'}}</ng-container>
+                        <ng-container *ngIf="!meeting.date">Not set</ng-container>
+                    </span>
+                    <mat-form-field
+                        class="fuse-mat-dense invisible absolute inset-0 -mt-2.5 opacity-0 pointer-events-none"
+                        [subscriptSizing]="'dynamic'">
+                        <input
+                            matInput
+                            [formControlName]="'date'"
+                            [matDatepicker]="datePicker">
+                        <mat-datepicker #datePicker>
+                            <mat-datepicker-actions>
+                                <button
+                                    mat-button
+                                    (click)="meetingForm.get('date').setValue(null)"
+                                    matDatepickerCancel>Clear
+                                </button>
+                                <button
+                                    class=""
+                                    mat-flat-button
+                                    [color]="'primary'"
+                                    matDatepickerApply>Select
+                                </button>
+                            </mat-datepicker-actions>
+                        </mat-datepicker>
+                    </mat-form-field>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Notes -->
+        <div class="mt-8">
+            <mat-form-field
+                class="w-full"
+                [subscriptSizing]="'dynamic'">
+                <mat-label>Descripción</mat-label>
+                <textarea
+                    matInput
+                    [formControlName]="'description'"
+                    [spellcheck]="false"
+                    cdkTextareaAutosize></textarea>
+            </mat-form-field>
+        </div>
+
+    </form>
+
+</div>
+
+
+<div class="fixed inset-0 z-50 overflow-y-auto h-screen overflow-hidden">
+    <div class="flex items-start justify-center  mb-12 ">
+        <div class="relative z-30 p-5 text-sm text-white">
+            Escaneo QR
+        </div>
+
+        @if(meetingAttendance$ | async; as meetingAttendance) {
+            <div class="absolute flex items-center gap-x-2 w-auto z-50 text-white text-2xl top-40">
+                <mat-icon class="text-green-500" svgIcon="heroicons_outline:check-circle"></mat-icon>
+                <div @fadeIn >{{meetingAttendance.comunero.user.name}}</div>
+            </div>
+        }
+
+        <zxing-scanner (permissionResponse)="onHasPermission($event)" [autofocusEnabled]="false" [tryHarder]="false" (scanError)="scanErrorHandler($event)" [formats]="allowedFormats" [enable]="true" (scanSuccess)="scanSuccessHandler($event)" class="absolute w-auto min-w-full min-h-full max-w-none"></zxing-scanner>
+    </div>
+    <div style="box-shadow: 0 0 0 99999px rgba(0, 0, 0, .8);" class="absolute z-10 bottom-12 top-12 inset-x-0 m-auto w-72 h-72 rounded-xl border-2 border-sky-500"></div>
+</div>

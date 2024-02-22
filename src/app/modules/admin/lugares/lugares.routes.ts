@@ -1,23 +1,23 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, Routes } from '@angular/router';
-import { ComunerosComponent } from 'app/modules/admin/comuneros/comuneros.component';
-import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
-import { ComunerosDetailsComponent } from 'app/modules/admin/comuneros/details/details.component';
-import { ComunerosListComponent } from 'app/modules/admin/comuneros/list/list.component';
+import { LugaresComponent } from 'app/modules/admin/lugares/lugares.component';
+import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
+import { LugaresDetailsComponent } from 'app/modules/admin/lugares/details/details.component';
+import { LugaresListComponent } from 'app/modules/admin/lugares/list/list.component';
 import { catchError, throwError } from 'rxjs';
 
 /**
- * Comunero resolver
+ * Lugar resolver
  *
  * @param route
  * @param state
  */
 const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
-    const comunerosService = inject(ComunerosService);
+    const lugaresService = inject(LugaresService);
     const router = inject(Router);
 
-    return comunerosService.getContactById(route.paramMap.get('id'))
+    return lugaresService.getContactById(route.paramMap.get('id'))
         .pipe(
             // Error here means the requested comunero is not available
             catchError((error) =>
@@ -38,15 +38,15 @@ const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
 };
 
 /**
- * Can deactivate comuneros details
+ * Can deactivate lugares details
  *
  * @param component
  * @param currentRoute
  * @param currentState
  * @param nextState
  */
-const canDeactivateComunerosDetails = (
-    component: ComunerosDetailsComponent,
+const canDeactivateLugaresDetails = (
+    component: LugaresDetailsComponent,
     currentRoute: ActivatedRouteSnapshot,
     currentState: RouterStateSnapshot,
     nextState: RouterStateSnapshot) =>
@@ -58,10 +58,10 @@ const canDeactivateComunerosDetails = (
         nextRoute = nextRoute.firstChild;
     }
 
-    // If the next state doesn't contain '/comuneros'
+    // If the next state doesn't contain '/lugares'
     // it means we are navigating away from the
-    // comuneros app
-    if ( !nextState.url.includes('/comuneros') )
+    // lugares app
+    if ( !nextState.url.includes('/lugares') )
     {
         // Let it navigate
         return true;
@@ -81,27 +81,22 @@ const canDeactivateComunerosDetails = (
 export default [
     {
         path     : '',
-        component: ComunerosComponent,
-        resolve  : {
-            tags: () => inject(ComunerosService).getTags(),
-        },
+        component: LugaresComponent,
         children : [
             {
                 path     : '',
-                component: ComunerosListComponent,
+                component: LugaresListComponent,
                 resolve  : {
-                    comuneros : () => inject(ComunerosService).getComuneros(),
-                    countries: () => inject(ComunerosService).getCountries(),
+                    lugares : () => inject(LugaresService).getLugares(),
                 },
                 children : [
                     {
                         path         : ':id',
-                        component    : ComunerosDetailsComponent,
+                        component    : LugaresDetailsComponent,
                         resolve      : {
-                            comunero  : contactResolver,
-                            countries: () => inject(ComunerosService).getCountries(),
+                            lugar  : contactResolver,
                         },
-                        canDeactivate: [canDeactivateComunerosDetails],
+                        canDeactivate: [canDeactivateLugaresDetails],
                     },
                 ],
             },
