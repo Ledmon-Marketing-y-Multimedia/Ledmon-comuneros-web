@@ -99,11 +99,6 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((meeting: Meeting) =>
             {
-
-                let scanner = new ZXingScannerComponent();
-                scanner.askForPermission().then((result) => {
-                    alert(result);
-                });
                 // Open the drawer in case it is closed
                 this._meetingListComponent.matDrawer.open();
 

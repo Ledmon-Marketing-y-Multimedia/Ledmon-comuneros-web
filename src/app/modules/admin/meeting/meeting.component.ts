@@ -71,11 +71,9 @@ export class MeetingComponent
     }
 
     scanErrorHandler(event: any) {
-        alert('Error' + event);
     }
 
     scanFailureHandler(event: any) {
-        alert('Failure' + event);
     }
 
     closeScanningOverlay(){
