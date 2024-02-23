@@ -17,7 +17,7 @@ const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
     const lugaresService = inject(LugaresService);
     const router = inject(Router);
 
-    return lugaresService.getContactById(route.paramMap.get('id'))
+    return lugaresService.getLugarById(route.paramMap.get('id'))
         .pipe(
             // Error here means the requested comunero is not available
             catchError((error) =>

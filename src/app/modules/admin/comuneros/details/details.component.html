@@ -185,43 +185,12 @@
         <!-- Comunero form -->
         <div class="relative flex flex-col flex-auto items-center px-6 sm:px-12">
             <div class="w-full max-w-3xl">
-                <form [formGroup]="contactForm">
+                <form [formGroup]="comuneroForm">
 
-                    <!-- Avatar -->
+                    <!-- Avatar and actions -->
                     <div class="flex flex-auto items-end -mt-16">
-                        <div class="relative flex items-center justify-center w-32 h-32 rounded-full overflow-hidden ring-4 ring-bg-card">
-                            <!-- Upload / Remove avatar -->
-                            <div class="absolute inset-0 bg-black bg-opacity-50 z-10"></div>
-                            <div class="absolute inset-0 flex items-center justify-center z-20">
-                                <div>
-                                    <input
-                                        id="avatar-file-input"
-                                        class="absolute h-0 w-0 opacity-0 invisible pointer-events-none"
-                                        type="file"
-                                        [multiple]="false"
-                                        [accept]="'image/jpeg, image/png'"
-                                        (change)="uploadAvatar(avatarFileInput.files)"
-                                        #avatarFileInput>
-                                    <label
-                                        class="flex items-center justify-center w-10 h-10 rounded-full cursor-pointer hover:bg-hover"
-                                        for="avatar-file-input"
-                                        matRipple>
-                                        <mat-icon
-                                            class="text-white"
-                                            [svgIcon]="'heroicons_outline:camera'"></mat-icon>
-                                    </label>
-                                </div>
-                                <div>
-                                    <button
-                                        mat-icon-button
-                                        (click)="removeAvatar()">
-                                        <mat-icon
-                                            class="text-white"
-                                            [svgIcon]="'heroicons_outline:trash'"></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <!-- Image/Letter -->
+                        <!-- Avatar -->
+                        <div class="flex items-center justify-center w-32 h-32 rounded-full overflow-hidden ring-4 ring-bg-card">
                             <img
                                 class="object-cover w-full h-full"
                                 *ngIf="comunero.avatar"
@@ -229,17 +198,27 @@
                             <div
                                 class="flex items-center justify-center w-full h-full rounded overflow-hidden uppercase text-8xl font-bold leading-none bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                                 *ngIf="!comunero.avatar">
-                                {{comunero.name.charAt(0)}}
+                                {{comunero.user?.name.charAt(0)}}
                             </div>
                         </div>
+                        <!-- Actions -->
+                        <div class="flex items-center ml-auto mb-1">
+                            <button
+                                mat-stroked-button
+                                (click)="toggleEditMode(true)">
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="'heroicons_solid:pencil-square'"></mat-icon>
+                                <span class="ml-2">Edit</span>
+                            </button>
+                        </div>
                     </div>
-
                     <!-- Name -->
                     <div class="mt-8">
                         <mat-form-field
                             class="w-full"
                             [subscriptSizing]="'dynamic'">
-                            <mat-label>Name</mat-label>
+                            <mat-label>Nombre y apellidos</mat-label>
                             <mat-icon
                                 matPrefix
                                 class="hidden sm:flex icon-size-5"
@@ -247,235 +226,50 @@
                             <input
                                 matInput
                                 [formControlName]="'name'"
-                                [placeholder]="'Name'"
+                                [placeholder]="'Nombre y apellidos'"
                                 [spellcheck]="false">
                         </mat-form-field>
                     </div>
 
-                    <!-- Tags -->
-                    <div class="flex flex-wrap items-center -m-1.5 mt-6">
-                        <!-- Tags -->
-                        <ng-container *ngIf="comunero.tags.length">
-                            <ng-container *ngFor="let tag of (comunero.tags | fuseFindByKey:'id':tags); trackBy: trackByFn">
-                                <div class="flex items-center justify-center px-4 m-1.5 rounded-full leading-9 text-gray-500 bg-gray-100 dark:text-gray-300 dark:bg-gray-700">
-                                    <span class="text-md font-medium whitespace-nowrap">{{tag.title}}</span>
-                                </div>
-                            </ng-container>
-                        </ng-container>
-                        <!-- Tags panel and its button -->
-                        <div
-                            class="flex items-center justify-center px-4 m-1.5 rounded-full leading-9 cursor-pointer text-gray-500 bg-gray-100 dark:text-gray-300 dark:bg-gray-700"
-                            (click)="openTagsPanel()"
-                            #tagsPanelOrigin>
 
-                            <ng-container *ngIf="comunero.tags.length">
-                                <mat-icon
-                                    class="icon-size-5"
-                                    [svgIcon]="'heroicons_solid:pencil-square'"></mat-icon>
-                                <span class="ml-1.5 text-md font-medium whitespace-nowrap">Edit</span>
-                            </ng-container>
-
-                            <ng-container *ngIf="!comunero.tags.length">
-                                <mat-icon
-                                    class="icon-size-5"
-                                    [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
-                                <span class="ml-1.5 text-md font-medium whitespace-nowrap">Add</span>
-                            </ng-container>
-
-                            <!-- Tags panel -->
-                            <ng-template #tagsPanel>
-                                <div class="w-60 rounded border shadow-md bg-card">
-                                    <!-- Tags panel header -->
-                                    <div class="flex items-center m-3 mr-2">
-                                        <div class="flex items-center">
-                                            <mat-icon
-                                                class="icon-size-5"
-                                                [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-                                            <div class="ml-2">
-                                                <input
-                                                    class="w-full min-w-0 py-1 border-0"
-                                                    type="text"
-                                                    placeholder="Enter tag name"
-                                                    (input)="filterTags($event)"
-                                                    (keydown)="filterTagsInputKeyDown($event)"
-                                                    [maxLength]="30"
-                                                    #newTagInput>
-                                            </div>
-                                        </div>
-                                        <button
-                                            class="ml-1"
-                                            mat-icon-button
-                                            (click)="toggleTagsEditMode()">
-                                            <mat-icon
-                                                *ngIf="!tagsEditMode"
-                                                class="icon-size-5"
-                                                [svgIcon]="'heroicons_solid:pencil-square'"></mat-icon>
-                                            <mat-icon
-                                                *ngIf="tagsEditMode"
-                                                class="icon-size-5"
-                                                [svgIcon]="'heroicons_solid:check'"></mat-icon>
-                                        </button>
-                                    </div>
-                                    <div
-                                        class="flex flex-col max-h-64 py-2 border-t overflow-y-auto">
-                                        <!-- Tags -->
-                                        <ng-container *ngIf="!tagsEditMode">
-                                            <ng-container *ngFor="let tag of filteredTags; trackBy: trackByFn">
-                                                <div
-                                                    class="flex items-center h-10 min-h-10 pl-1 pr-4 cursor-pointer hover:bg-hover"
-                                                    (click)="toggleContactTag(tag)"
-                                                    matRipple>
-                                                    <mat-checkbox
-                                                        class="flex items-center h-10 min-h-10 pointer-events-none"
-                                                        [checked]="comunero.tags.includes(tag.id)"
-                                                        [color]="'primary'"
-                                                        [disableRipple]="true">
-                                                    </mat-checkbox>
-                                                    <div>{{tag.title}}</div>
-                                                </div>
-                                            </ng-container>
-                                        </ng-container>
-                                        <!-- Tags editing -->
-                                        <ng-container *ngIf="tagsEditMode">
-                                            <div class="py-2 space-y-2">
-                                                <ng-container *ngFor="let tag of filteredTags; trackBy: trackByFn">
-                                                    <div class="flex items-center">
-                                                        <mat-form-field
-                                                            class="fuse-mat-dense w-full mx-4"
-                                                            [subscriptSizing]="'dynamic'">
-                                                            <input
-                                                                matInput
-                                                                [value]="tag.title"
-                                                                (input)="updateTagTitle(tag, $event)">
-                                                            <button
-                                                                mat-icon-button
-                                                                (click)="deleteTag(tag)"
-                                                                matSuffix>
-                                                                <mat-icon
-                                                                    class="icon-size-5 ml-2"
-                                                                    [svgIcon]="'heroicons_solid:trash'"></mat-icon>
-                                                            </button>
-                                                        </mat-form-field>
-                                                    </div>
-                                                </ng-container>
-                                            </div>
-                                        </ng-container>
-                                        <!-- Create tag -->
-                                        <div
-                                            class="flex items-center h-10 min-h-10 -ml-0.5 pl-4 pr-3 leading-none cursor-pointer hover:bg-hover"
-                                            *ngIf="shouldShowCreateTagButton(newTagInput.value)"
-                                            (click)="createTag(newTagInput.value); newTagInput.value = ''"
-                                            matRipple>
-                                            <mat-icon
-                                                class="mr-2 icon-size-5"
-                                                [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
-                                            <div class="break-all">Create "<b>{{newTagInput.value}}</b>"</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </ng-template>
-                        </div>
-                    </div>
-
-                    <!-- Title -->
+                    <!-- DNI -->
                     <div class="mt-8">
                         <mat-form-field
                             class="w-full"
                             [subscriptSizing]="'dynamic'">
-                            <mat-label>Title</mat-label>
+                            <mat-label>DNI</mat-label>
                             <mat-icon
                                 matPrefix
                                 class="hidden sm:flex icon-size-5"
                                 [svgIcon]="'heroicons_solid:briefcase'"></mat-icon>
                             <input
                                 matInput
-                                [formControlName]="'title'"
-                                [placeholder]="'Job title'">
+                                [formControlName]="'dni'"
+                                [placeholder]="'DNI'">
                         </mat-form-field>
                     </div>
 
-                    <!-- Company -->
+                    <!-- Email -->
                     <div class="mt-8">
                         <mat-form-field
                             class="w-full"
                             [subscriptSizing]="'dynamic'">
-                            <mat-label>Company</mat-label>
+                            <mat-label>Email</mat-label>
                             <mat-icon
                                 matPrefix
                                 class="hidden sm:flex icon-size-5"
                                 [svgIcon]="'heroicons_solid:building-office-2'"></mat-icon>
                             <input
                                 matInput
-                                [formControlName]="'company'"
-                                [placeholder]="'Company'">
+                                [formControlName]="'email'"
+                                [placeholder]="'Email'">
                         </mat-form-field>
-                    </div>
-
-                    <!-- Emails -->
-                    <div class="mt-8">
-                        <div class="space-y-4">
-                            <ng-container *ngFor="let email of contactForm.get('emails')['controls']; let i = index; let first = first; let last = last; trackBy: trackByFn">
-                                <div class="flex">
-                                    <mat-form-field
-                                        class="flex-auto"
-                                        [subscriptSizing]="'dynamic'">
-                                        <mat-label *ngIf="first">Email</mat-label>
-                                        <mat-icon
-                                            matPrefix
-                                            class="hidden sm:flex icon-size-5"
-                                            [svgIcon]="'heroicons_solid:envelope'"></mat-icon>
-                                        <input
-                                            matInput
-                                            [formControl]="email.get('email')"
-                                            [placeholder]="'Email address'"
-                                            [spellcheck]="false">
-                                    </mat-form-field>
-                                    <mat-form-field
-                                        class="flex-auto w-full max-w-24 sm:max-w-40 ml-2 sm:ml-4"
-                                        [subscriptSizing]="'dynamic'">
-                                        <mat-label *ngIf="first">Label</mat-label>
-                                        <mat-icon
-                                            matPrefix
-                                            class="hidden sm:flex icon-size-5"
-                                            [svgIcon]="'heroicons_solid:tag'"></mat-icon>
-                                        <input
-                                            matInput
-                                            [formControl]="email.get('label')"
-                                            [placeholder]="'Label'">
-                                    </mat-form-field>
-                                    <!-- Remove email -->
-                                    <ng-container *ngIf="!(first && last)">
-                                        <div
-                                            class="flex items-center w-10 pl-2"
-                                            [ngClass]="{'mt-6': first}">
-                                            <button
-                                                class="w-8 h-8 min-h-8"
-                                                mat-icon-button
-                                                (click)="removeEmailField(i)"
-                                                matTooltip="Remove">
-                                                <mat-icon
-                                                    class="icon-size-5"
-                                                    [svgIcon]="'heroicons_solid:trash'"></mat-icon>
-                                            </button>
-                                        </div>
-                                    </ng-container>
-                                </div>
-                            </ng-container>
-                        </div>
-                        <div
-                            class="group inline-flex items-center mt-2 -ml-4 py-2 px-4 rounded cursor-pointer"
-                            (click)="addEmailField()">
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
-                            <span class="ml-2 font-medium text-secondary group-hover:underline">Add an email address</span>
-                        </div>
                     </div>
 
                     <!-- Phone numbers -->
                     <div class="mt-8">
                         <div class="space-y-4">
-                            <ng-container *ngFor="let phoneNumber of contactForm.get('phoneNumbers')['controls']; let i = index; let first = first; let last = last; trackBy: trackByFn">
+                            <ng-container *ngFor="let phoneNumber of comuneroForm.get('phoneNumbers')['controls']; let i = index; let first = first; let last = last; trackBy: trackByFn">
                                 <div class="relative flex">
                                     <mat-form-field
                                         class="flex-auto"
@@ -556,65 +350,23 @@
                         </div>
                     </div>
 
-                    <!-- Address -->
+                    <!-- Código -->
                     <div class="mt-8">
                         <mat-form-field
                             class="w-full"
                             [subscriptSizing]="'dynamic'">
-                            <mat-label>Address</mat-label>
+                            <mat-label>Código de comunero</mat-label>
                             <mat-icon
                                 matPrefix
                                 class="hidden sm:flex icon-size-5"
                                 [svgIcon]="'heroicons_solid:map-pin'"></mat-icon>
                             <input
                                 matInput
-                                [formControlName]="'address'"
-                                [placeholder]="'Address'">
+                                [formControlName]="'code'"
+                                [placeholder]="'Código'">
                         </mat-form-field>
                     </div>
 
-                    <!-- Birthday -->
-                    <div class="mt-8">
-                        <mat-form-field
-                            class="w-full"
-                            [subscriptSizing]="'dynamic'">
-                            <mat-label>Birthday</mat-label>
-                            <mat-icon
-                                matPrefix
-                                class="hidden sm:flex icon-size-5"
-                                [svgIcon]="'heroicons_solid:cake'"></mat-icon>
-                            <input
-                                matInput
-                                [matDatepicker]="birthdayDatepicker"
-                                [formControlName]="'birthday'"
-                                [placeholder]="'Birthday'">
-                            <mat-datepicker-toggle
-                                matSuffix
-                                [for]="birthdayDatepicker">
-                            </mat-datepicker-toggle>
-                            <mat-datepicker #birthdayDatepicker></mat-datepicker>
-                        </mat-form-field>
-                    </div>
-
-                    <!-- Notes -->
-                    <div class="mt-8">
-                        <mat-form-field
-                            class="w-full"
-                            [subscriptSizing]="'dynamic'">
-                            <mat-label>Notes</mat-label>
-                            <mat-icon
-                                matPrefix
-                                class="hidden sm:flex icon-size-5"
-                                [svgIcon]="'heroicons_solid:bars-3-bottom-left'"></mat-icon>
-                            <textarea
-                                matInput
-                                [formControlName]="'notes'"
-                                [placeholder]="'Notes'"
-                                [rows]="5"
-                                [spellcheck]="false"
-                                cdkTextareaAutosize></textarea>
-                        </mat-form-field>
-                    </div>
 
                     <!-- Actions -->
                     <div class="flex items-center mt-10 -mx-6 sm:-mx-12 py-4 pr-4 pl-1 sm:pr-12 sm:pl-7 border-t bg-gray-50 dark:bg-transparent">
@@ -639,7 +391,7 @@
                             class="ml-2"
                             mat-flat-button
                             [color]="'primary'"
-                            [disabled]="contactForm.invalid"
+                            [disabled]="comuneroForm.invalid"
                             [matTooltip]="'Save'"
                             (click)="updateContact()">
                             Save

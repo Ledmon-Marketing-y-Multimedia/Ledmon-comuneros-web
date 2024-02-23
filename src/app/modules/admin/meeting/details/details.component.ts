@@ -32,8 +32,7 @@ import { BehaviorSubject, debounceTime, filter, Observable, Subject, take, takeU
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    animations     : fuseAnimations,
-    imports        : [CommonModule, FormsModule, ZXingScannerModule, ReactiveFormsModule, MatButtonModule, NgIf, MatIconModule, MatMenuModule, RouterLink, MatDividerModule, MatFormFieldModule, MatInputModule, TextFieldModule, NgFor, MatRippleModule, MatCheckboxModule, NgClass, MatDatepickerModule, FuseFindByKeyPipe, DatePipe],
+    imports        : [FormsModule, ZXingScannerModule, ReactiveFormsModule, MatButtonModule, NgIf, MatIconModule, MatMenuModule, RouterLink, MatDividerModule, MatFormFieldModule, MatInputModule, TextFieldModule, NgFor, MatRippleModule, MatCheckboxModule, NgClass, MatDatepickerModule, FuseFindByKeyPipe, DatePipe],
 })
 export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
 {
@@ -42,12 +41,6 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     meeting: Meeting;
     meetingForm: UntypedFormGroup;
     meetings: Meeting[];
-    allowedFormats = [ BarcodeFormat.QR_CODE, BarcodeFormat.EAN_13, BarcodeFormat.CODE_128, BarcodeFormat.DATA_MATRIX, BarcodeFormat.AZTEC, BarcodeFormat.CODE_39,  BarcodeFormat.CODE_93,  BarcodeFormat.CODABAR,
-        BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.UPC_EAN_EXTENSION, BarcodeFormat.EAN_8, BarcodeFormat.MAXICODE, BarcodeFormat.PDF_417, BarcodeFormat.ITF, BarcodeFormat.RSS_14,
-        BarcodeFormat.RSS_EXPANDED, BarcodeFormat.EAN_8];
-
-    private _meetingAttendance: BehaviorSubject<MeetingAttendance | null> = new BehaviorSubject(null);
-    meetingAttendance$ : Observable<MeetingAttendance> = this._meetingAttendance.asObservable();
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     hasPermission: boolean;
 
@@ -99,7 +92,7 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-            });
+        });
 
         // Get the meeting
         this._meetingService.meeting$
@@ -278,6 +271,15 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         });
     }
 
+
+    /**
+     * Open the scanning overlay
+     */
+    openScanningOverlay(): void
+    {
+        this._meetingService.scanning = this.meeting;
+    }
+
     /**
      * Track by function for ngFor loops
      *
@@ -287,42 +289,5 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     trackByFn(index: number, item: any): any
     {
         return item.id || index;
-    }
-
-    scanSuccessHandler(event: any) {
-        console.log('Success' + event);
-        const attendance : MeetingAttendance = {
-            comunero: {id: event},
-            meeting: {id: this.meeting.id},
-            status: 'ASISTE',
-            entryDate: new Date()
-        }
-        this._meetingAttendance.value ? null :
-        this._meetingService.registerAttendance(attendance).pipe(take(1)).subscribe(
-            (result) => {
-                this._meetingAttendance.next(result);
-                let snd = new Audio("assets/sounds/ping.mp3");
-                snd.play();
-                console.log('Attendance registered');
-                setTimeout(() => {
-                    this._meetingAttendance.next(null);
-                }, 3000);
-            },
-            (error) => {
-                console.error('Error registering attendance', error);
-            }
-        );
-    }
-
-    scanErrorHandler(event: any) {
-    alert('Error' + event);
-    }
-
-    scanFailureHandler(event: any) {
-    alert('Failure' + event);
-    }
-
-    onHasPermission(has: boolean) {
-        this.hasPermission = has;
     }
 }

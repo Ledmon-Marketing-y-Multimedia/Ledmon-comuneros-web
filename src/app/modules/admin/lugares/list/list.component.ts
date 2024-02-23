@@ -30,7 +30,7 @@ export class LugaresListComponent implements OnInit, OnDestroy
     lugaresTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedContact: Lugar;
+    selectedLugar: Lugar;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -69,13 +69,13 @@ export class LugaresListComponent implements OnInit, OnDestroy
                 this._changeDetectorRef.markForCheck();
             });
 
-        // Get the comunero
-        this._lugaresService.comunero$
+        // Get the lugar
+        this._lugaresService.lugar$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comunero: Lugar) =>
+            .subscribe((lugar: Lugar) =>
             {
-                // Update the selected comunero
-                this.selectedContact = comunero;
+                // Update the selected lugar
+                this.selectedLugar = lugar;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -98,8 +98,8 @@ export class LugaresListComponent implements OnInit, OnDestroy
         {
             if ( !opened )
             {
-                // Remove the selected comunero when drawer closed
-                this.selectedContact = null;
+                // Remove the selected lugar when drawer closed
+                this.selectedLugar = null;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -136,7 +136,7 @@ export class LugaresListComponent implements OnInit, OnDestroy
             )
             .subscribe(() =>
             {
-                this.createContact();
+                this.createLugar();
             });
     }
 
@@ -167,15 +167,15 @@ export class LugaresListComponent implements OnInit, OnDestroy
     }
 
     /**
-     * Create comunero
+     * Create lugar
      */
-    createContact(): void
+    createLugar(): void
     {
-        // Create the comunero
-        this._lugaresService.createContact().subscribe((newContact) =>
+        // Create the lugar
+        this._lugaresService.createLugar().subscribe((newLugar) =>
         {
-            // Go to the new comunero
-            this._router.navigate(['./', newContact.id], {relativeTo: this._activatedRoute});
+            // Go to the new lugar
+            this._router.navigate(['./', newLugar.id], {relativeTo: this._activatedRoute});
 
             // Mark for check
             this._changeDetectorRef.markForCheck();

@@ -38,7 +38,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
 
     editMode: boolean = false;
     lugar: Lugar;
-    contactForm: UntypedFormGroup;
+    lugarForm: UntypedFormGroup;
     lugares: Lugar[];
     private _tagsPanelOverlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
@@ -73,19 +73,13 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
         // Open the drawer
         this._lugaresListComponent.matDrawer.open();
 
-        // Create the comunero form
-        this.contactForm = this._formBuilder.group({
+        // Create the lugar form
+        this.lugarForm = this._formBuilder.group({
             id          : [''],
-            avatar      : [null],
-            name        : ['', [Validators.required]],
-            emails      : this._formBuilder.array([]),
-            phoneNumbers: this._formBuilder.array([]),
-            title       : [''],
-            company     : [''],
-            birthday    : [null],
-            address     : [null],
-            notes       : [null],
-            tags        : [[]],
+            address        : ['', [Validators.required]],
+            poblacion       : [''],
+            zona     : [''],
+            cp     : [''],
         });
 
         // Get the lugares
@@ -99,23 +93,19 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
                 this._changeDetectorRef.markForCheck();
             });
 
-        // Get the comunero
-        this._lugaresService.comunero$
+        // Get the lugar
+        this._lugaresService.lugar$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comunero: Lugar) =>
+            .subscribe((lugar: Lugar) =>
             {
                 // Open the drawer in case it is closed
                 this._lugaresListComponent.matDrawer.open();
 
-                // Get the comunero
-                this.lugar = comunero;
-
-                // Clear the emails and phoneNumbers form arrays
-                (this.contactForm.get('emails') as UntypedFormArray).clear();
-                (this.contactForm.get('phoneNumbers') as UntypedFormArray).clear();
+                // Get the lugar
+                this.lugar = lugar;
 
                 // Patch values to the form
-                this.contactForm.patchValue(comunero);
+                this.lugarForm.patchValue(lugar);
 
                 // Toggle the edit mode off
                 this.toggleEditMode(false);
@@ -175,20 +165,16 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
     }
 
     /**
-     * Update the comunero
+     * Update the lugar
      */
-    updateContact(): void
+    updateLugar(): void
     {
-        // Get the comunero object
-        const comunero = this.contactForm.getRawValue();
+        // Get the lugar object
+        const lugar = this.lugarForm.getRawValue();
 
-        // Go through the comunero object and clear empty values
-        comunero.emails = comunero.emails.filter(email => email.email);
 
-        comunero.phoneNumbers = comunero.phoneNumbers.filter(phoneNumber => phoneNumber.phoneNumber);
-
-        // Update the comunero on the server
-        this._lugaresService.updateContact(comunero.id, comunero).subscribe(() =>
+        // Update the lugar on the server
+        this._lugaresService.updateLugar(lugar.id, lugar).subscribe(() =>
         {
             // Toggle the edit mode off
             this.toggleEditMode(false);
@@ -196,14 +182,14 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
     }
 
     /**
-     * Delete the comunero
+     * Delete the lugar
      */
-    deleteContact(): void
+    deleteLugar(): void
     {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title  : 'Delete comunero',
-            message: 'Are you sure you want to delete this comunero? This action cannot be undone!',
+            title  : 'Delete lugar',
+            message: 'Are you sure you want to delete this lugar? This action cannot be undone!',
             actions: {
                 confirm: {
                     label: 'Delete',
@@ -217,28 +203,23 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
             // If the confirm button pressed...
             if ( result === 'confirmed' )
             {
-                // Get the current comunero's id
+                // Get the current lugar's id
                 const id = this.lugar.id;
 
-                // Get the next/previous comunero's id
-                const currentContactIndex = this.lugares.findIndex(item => item.id === id);
-                const nextContactIndex = currentContactIndex + ((currentContactIndex === (this.lugares.length - 1)) ? -1 : 1);
-                const nextContactId = (this.lugares.length === 1 && this.lugares[0].id === id) ? null : this.lugares[nextContactIndex].id;
+                // Get the next/previous lugar's id
+                const currentLugarIndex = this.lugares.findIndex(item => item.id === id);
+                const nextLugarIndex = currentLugarIndex + ((currentLugarIndex === (this.lugares.length - 1)) ? -1 : 1);
+                const nextLugarId = (this.lugares.length === 1 && this.lugares[0].id === id) ? null : this.lugares[nextLugarIndex].id;
 
-                // Delete the comunero
-                this._lugaresService.deleteContact(id)
-                    .subscribe((isDeleted) =>
+                // Delete the lugar
+                this._lugaresService.deleteLugar(id)
+                    .subscribe(() =>
                     {
-                        // Return if the comunero wasn't deleted...
-                        if ( !isDeleted )
-                        {
-                            return;
-                        }
 
-                        // Navigate to the next comunero if available
-                        if ( nextContactId )
+                        // Navigate to the next lugar if available
+                        if ( nextLugarId )
                         {
-                            this._router.navigate(['../', nextContactId], {relativeTo: this._activatedRoute});
+                            this._router.navigate(['../', nextLugarId], {relativeTo: this._activatedRoute});
                         }
                         // Otherwise, navigate to the parent
                         else
@@ -255,292 +236,6 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
             }
         });
 
-    }
-
-    /**
-     * Upload avatar
-     *
-     * @param fileList
-     */
-    uploadAvatar(fileList: FileList): void
-    {
-        // Return if canceled
-        if ( !fileList.length )
-        {
-            return;
-        }
-
-        const allowedTypes = ['image/jpeg', 'image/png'];
-        const file = fileList[0];
-
-        // Return if the file is not allowed
-        if ( !allowedTypes.includes(file.type) )
-        {
-            return;
-        }
-
-        // Upload the avatar
-        this._lugaresService.uploadAvatar(this.lugar.id, file).subscribe();
-    }
-
-    /**
-     * Remove the avatar
-     */
-    removeAvatar(): void
-    {
-        // Get the form control for 'avatar'
-        const avatarFormControl = this.contactForm.get('avatar');
-
-        // Set the avatar as null
-        avatarFormControl.setValue(null);
-
-        // Set the file input value as null
-        this._avatarFileInput.nativeElement.value = null;
-
-        // Update the comunero
-        // this.comunero.avatar = null;
-    }
-
-
-    // /**
-    //  * Toggle the tags edit mode
-    //  */
-    // toggleTagsEditMode(): void
-    // {
-    //     this.tagsEditMode = !this.tagsEditMode;
-    // }
-
-    // /**
-    //  * Filter tags
-    //  *
-    //  * @param event
-    //  */
-    // filterTags(event): void
-    // {
-    //     // Get the value
-    //     const value = event.target.value.toLowerCase();
-
-    //     // Filter the tags
-    //     this.filteredTags = this.tags.filter(tag => tag.title.toLowerCase().includes(value));
-    // }
-
-    // /**
-    //  * Filter tags input key down event
-    //  *
-    //  * @param event
-    //  */
-    // filterTagsInputKeyDown(event): void
-    // {
-    //     // Return if the pressed key is not 'Enter'
-    //     if ( event.key !== 'Enter' )
-    //     {
-    //         return;
-    //     }
-
-    //     // If there is no tag available...
-    //     if ( this.filteredTags.length === 0 )
-    //     {
-    //         // Create the tag
-    //         this.createTag(event.target.value);
-
-    //         // Clear the input
-    //         event.target.value = '';
-
-    //         // Return
-    //         return;
-    //     }
-
-    //     // If there is a tag...
-    //     const tag = this.filteredTags[0];
-    //     const isTagApplied = this.comunero.tags.find(id => id === tag.id);
-
-    //     // If the found tag is already applied to the comunero...
-    //     if ( isTagApplied )
-    //     {
-    //         // Remove the tag from the comunero
-    //         this.removeTagFromContact(tag);
-    //     }
-    //     else
-    //     {
-    //         // Otherwise add the tag to the comunero
-    //         this.addTagToContact(tag);
-    //     }
-    // }
-
-    // /**
-    //  * Create a new tag
-    //  *
-    //  * @param title
-    //  */
-    // createTag(title: string): void
-    // {
-    //     const tag = {
-    //         title,
-    //     };
-
-    //     // Create tag on the server
-    //     this._lugaresService.createTag(tag)
-    //         .subscribe((response) =>
-    //         {
-    //             // Add the tag to the comunero
-    //             this.addTagToContact(response);
-    //         });
-    // }
-
-    // /**
-    //  * Update the tag title
-    //  *
-    //  * @param tag
-    //  * @param event
-    //  */
-    // updateTagTitle(tag: Tag, event): void
-    // {
-    //     // Update the title on the tag
-    //     tag.title = event.target.value;
-
-    //     // Update the tag on the server
-    //     this._lugaresService.updateTag(tag.id, tag)
-    //         .pipe(debounceTime(300))
-    //         .subscribe();
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Delete the tag
-    //  *
-    //  * @param tag
-    //  */
-    // deleteTag(tag: Tag): void
-    // {
-    //     // Delete the tag from the server
-    //     this._lugaresService.deleteTag(tag.id).subscribe();
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Add tag to the comunero
-    //  *
-    //  * @param tag
-    //  */
-    // addTagToContact(tag: Tag): void
-    // {
-    //     // Add the tag
-    //     this.comunero.tags.unshift(tag.id);
-
-    //     // Update the comunero form
-    //     this.contactForm.get('tags').patchValue(this.comunero.tags);
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Remove tag from the comunero
-    //  *
-    //  * @param tag
-    //  */
-    // removeTagFromContact(tag: Tag): void
-    // {
-    //     // Remove the tag
-    //     this.comunero.tags.splice(this.comunero.tags.findIndex(item => item === tag.id), 1);
-
-    //     // Update the comunero form
-    //     this.contactForm.get('tags').patchValue(this.comunero.tags);
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Toggle comunero tag
-    //  *
-    //  * @param tag
-    //  */
-    // toggleContactTag(tag: Tag): void
-    // {
-    //     if ( this.comunero.tags.includes(tag.id) )
-    //     {
-    //         this.removeTagFromContact(tag);
-    //     }
-    //     else
-    //     {
-    //         this.addTagToContact(tag);
-    //     }
-    // }
-
-    /**
-     * Add the email field
-     */
-    addEmailField(): void
-    {
-        // Create an empty email form group
-        const emailFormGroup = this._formBuilder.group({
-            email: [''],
-            label: [''],
-        });
-
-        // Add the email form group to the emails form array
-        (this.contactForm.get('emails') as UntypedFormArray).push(emailFormGroup);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Remove the email field
-     *
-     * @param index
-     */
-    removeEmailField(index: number): void
-    {
-        // Get form array for emails
-        const emailsFormArray = this.contactForm.get('emails') as UntypedFormArray;
-
-        // Remove the email field
-        emailsFormArray.removeAt(index);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Add an empty phone number field
-     */
-    addPhoneNumberField(): void
-    {
-        // Create an empty phone number form group
-        const phoneNumberFormGroup = this._formBuilder.group({
-            country    : ['us'],
-            phoneNumber: [''],
-            label      : [''],
-        });
-
-        // Add the phone number form group to the phoneNumbers form array
-        (this.contactForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumberFormGroup);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Remove the phone number field
-     *
-     * @param index
-     */
-    removePhoneNumberField(index: number): void
-    {
-        // Get form array for phone numbers
-        const phoneNumbersFormArray = this.contactForm.get('phoneNumbers') as UntypedFormArray;
-
-        // Remove the phone number field
-        phoneNumbersFormArray.removeAt(index);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
     }
 
     /**

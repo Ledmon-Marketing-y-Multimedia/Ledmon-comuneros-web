@@ -29,6 +29,13 @@
                     [routerLink]="['../']">
                     <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
                 </a>
+
+                <button
+                    mat-flat-button
+                    class="ml-4"
+                    (click)="openScanningOverlay()">
+                    Scan
+                </button>
             </div>
 
         </div>
@@ -114,21 +121,3 @@
 
 </div>
 
-
-<div class="fixed inset-0 z-50 overflow-y-auto h-screen overflow-hidden">
-    <div class="flex items-start justify-center  mb-12 ">
-        <div class="relative z-30 p-5 text-sm text-white">
-            Escaneo QR
-        </div>
-
-        @if(meetingAttendance$ | async; as meetingAttendance) {
-            <div class="absolute flex items-center gap-x-2 w-auto z-50 text-white text-2xl top-40">
-                <mat-icon class="text-green-500" svgIcon="heroicons_outline:check-circle"></mat-icon>
-                <div @fadeIn >{{meetingAttendance.comunero.user.name}}</div>
-            </div>
-        }
-
-        <zxing-scanner (permissionResponse)="onHasPermission($event)" [autofocusEnabled]="false" [tryHarder]="false" (scanError)="scanErrorHandler($event)" [formats]="allowedFormats" [enable]="true" (scanSuccess)="scanSuccessHandler($event)" class="absolute w-auto min-w-full min-h-full max-w-none"></zxing-scanner>
-    </div>
-    <div style="box-shadow: 0 0 0 99999px rgba(0, 0, 0, .8);" class="absolute z-10 bottom-12 top-12 inset-x-0 m-auto w-72 h-72 rounded-xl border-2 border-sky-500"></div>
-</div>

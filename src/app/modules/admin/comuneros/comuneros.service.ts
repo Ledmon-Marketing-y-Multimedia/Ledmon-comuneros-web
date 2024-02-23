@@ -10,10 +10,8 @@ const COMUNEROS_URL = environment.apiUrl + '/comunero';
 export class ComunerosService
 {
     // Private
-    private _contact: BehaviorSubject<Comunero | null> = new BehaviorSubject(null);
+    private _comunero: BehaviorSubject<Comunero | null> = new BehaviorSubject(null);
     private _comuneros: BehaviorSubject<Comunero[] | null> = new BehaviorSubject(null);
-    private _countries: BehaviorSubject<Country[] | null> = new BehaviorSubject(null);
-    private _tags: BehaviorSubject<Tag[] | null> = new BehaviorSubject(null);
 
     /**
      * Constructor
@@ -31,7 +29,7 @@ export class ComunerosService
      */
     get comunero$(): Observable<Comunero>
     {
-        return this._contact.asObservable();
+        return this._comunero.asObservable();
     }
 
     /**
@@ -42,21 +40,6 @@ export class ComunerosService
         return this._comuneros.asObservable();
     }
 
-    /**
-     * Getter for countries
-     */
-    get countries$(): Observable<Country[]>
-    {
-        return this._countries.asObservable();
-    }
-
-    /**
-     * Getter for tags
-     */
-    get tags$(): Observable<Tag[]>
-    {
-        return this._tags.asObservable();
-    }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Public methods
@@ -82,7 +65,7 @@ export class ComunerosService
      */
     searchComuneros(query: string): Observable<Comunero[]>
     {
-        return this._httpClient.get<Comunero[]>('api/apps/contacts/search', {
+        return this._httpClient.get<Comunero[]>('api/apps/comuneros/search', {
             params: {query},
         }).pipe(
             tap((comuneros) =>
@@ -95,7 +78,7 @@ export class ComunerosService
     /**
      * Get comunero by id
      */
-    getContactById(id: string): Observable<Comunero>
+    getComuneroById(id: string): Observable<Comunero>
     {
         return this._comuneros.pipe(
             take(1),
@@ -105,7 +88,7 @@ export class ComunerosService
                 const comunero = comuneros.find(item => item.id === id) || null;
 
                 // Update the comunero
-                this._contact.next(comunero);
+                this._comunero.next(comunero);
 
                 // Return the comunero
                 return comunero;
@@ -125,18 +108,18 @@ export class ComunerosService
     /**
      * Create comunero
      */
-    createContact(): Observable<Comunero>
+    createComunero(): Observable<Comunero>
     {
         return this.comuneros$.pipe(
             take(1),
-            switchMap(comuneros => this._httpClient.post<Comunero>('api/apps/contacts/contact', {}).pipe(
-                map((newContact) =>
+            switchMap(comuneros => this._httpClient.post<Comunero>('api/apps/comuneros/comunero', {}).pipe(
+                map((newComunero) =>
                 {
                     // Update the comuneros with the new comunero
-                    this._comuneros.next([newContact, ...comuneros]);
+                    this._comuneros.next([newComunero, ...comuneros]);
 
                     // Return the new comunero
-                    return newContact;
+                    return newComunero;
                 }),
             )),
         );
@@ -148,38 +131,38 @@ export class ComunerosService
      * @param id
      * @param comunero
      */
-    updateContact(id: string, comunero: Comunero): Observable<Comunero>
+    updateComunero(id: string, comunero: Comunero): Observable<Comunero>
     {
         return this.comuneros$.pipe(
             take(1),
-            switchMap(comuneros => this._httpClient.patch<Comunero>('api/apps/contacts/contact', {
+            switchMap(comuneros => this._httpClient.patch<Comunero>('api/apps/comuneros/comunero', {
                 id,
                 comunero,
             }).pipe(
-                map((updatedContact) =>
+                map((updatedComunero) =>
                 {
                     // Find the index of the updated comunero
                     const index = comuneros.findIndex(item => item.id === id);
 
                     // Update the comunero
-                    comuneros[index] = updatedContact;
+                    comuneros[index] = updatedComunero;
 
                     // Update the comuneros
                     this._comuneros.next(comuneros);
 
                     // Return the updated comunero
-                    return updatedContact;
+                    return updatedComunero;
                 }),
-                switchMap(updatedContact => this.comunero$.pipe(
+                switchMap(updatedComunero => this.comunero$.pipe(
                     take(1),
                     filter(item => item && item.id === id),
                     tap(() =>
                     {
                         // Update the comunero if it's selected
-                        this._contact.next(updatedContact);
+                        this._comunero.next(updatedComunero);
 
                         // Return the updated comunero
-                        return updatedContact;
+                        return updatedComunero;
                     }),
                 )),
             )),
@@ -191,11 +174,11 @@ export class ComunerosService
      *
      * @param id
      */
-    deleteContact(id: string): Observable<boolean>
+    deleteComunero(id: string): Observable<boolean>
     {
         return this.comuneros$.pipe(
             take(1),
-            switchMap(comuneros => this._httpClient.delete('api/apps/contacts/contact', {params: {id}}).pipe(
+            switchMap(comuneros => this._httpClient.delete('api/apps/comuneros/comunero', {params: {id}}).pipe(
                 map((isDeleted: boolean) =>
                 {
                     // Find the index of the deleted comunero
@@ -210,184 +193,6 @@ export class ComunerosService
                     // Return the deleted status
                     return isDeleted;
                 }),
-            )),
-        );
-    }
-
-    /**
-     * Get countries
-     */
-    getCountries(): Observable<Country[]>
-    {
-        return this._httpClient.get<Country[]>('api/apps/contacts/countries').pipe(
-            tap((countries) =>
-            {
-                this._countries.next(countries);
-            }),
-        );
-    }
-
-    /**
-     * Get tags
-     */
-    getTags(): Observable<Tag[]>
-    {
-        return this._httpClient.get<Tag[]>('api/apps/contacts/tags').pipe(
-            tap((tags) =>
-            {
-                this._tags.next(tags);
-            }),
-        );
-    }
-
-    /**
-     * Create tag
-     *
-     * @param tag
-     */
-    createTag(tag: Tag): Observable<Tag>
-    {
-        return this.tags$.pipe(
-            take(1),
-            switchMap(tags => this._httpClient.post<Tag>('api/apps/contacts/tag', {tag}).pipe(
-                map((newTag) =>
-                {
-                    // Update the tags with the new tag
-                    this._tags.next([...tags, newTag]);
-
-                    // Return new tag from observable
-                    return newTag;
-                }),
-            )),
-        );
-    }
-
-    /**
-     * Update the tag
-     *
-     * @param id
-     * @param tag
-     */
-    updateTag(id: string, tag: Tag): Observable<Tag>
-    {
-        return this.tags$.pipe(
-            take(1),
-            switchMap(tags => this._httpClient.patch<Tag>('api/apps/contacts/tag', {
-                id,
-                tag,
-            }).pipe(
-                map((updatedTag) =>
-                {
-                    // Find the index of the updated tag
-                    const index = tags.findIndex(item => item.id === id);
-
-                    // Update the tag
-                    tags[index] = updatedTag;
-
-                    // Update the tags
-                    this._tags.next(tags);
-
-                    // Return the updated tag
-                    return updatedTag;
-                }),
-            )),
-        );
-    }
-
-    /**
-     * Delete the tag
-     *
-     * @param id
-     */
-    deleteTag(id: string): Observable<boolean>
-    {
-        return this.tags$.pipe(
-            take(1),
-            switchMap(tags => this._httpClient.delete('api/apps/contacts/tag', {params: {id}}).pipe(
-                map((isDeleted: boolean) =>
-                {
-                    // Find the index of the deleted tag
-                    const index = tags.findIndex(item => item.id === id);
-
-                    // Delete the tag
-                    tags.splice(index, 1);
-
-                    // Update the tags
-                    this._tags.next(tags);
-
-                    // Return the deleted status
-                    return isDeleted;
-                }),
-                filter(isDeleted => isDeleted),
-                switchMap(isDeleted => this.comuneros$.pipe(
-                    take(1),
-                    map((comuneros) =>
-                    {
-                        // Iterate through the comuneros
-                        // comuneros.forEach((comunero) =>
-                        // {
-                        //     const tagIndex = comunero.tags.findIndex(tag => tag === id);
-
-                        //     // If the comunero has the tag, remove it
-                        //     if ( tagIndex > -1 )
-                        //     {
-                        //         comunero.tags.splice(tagIndex, 1);
-                        //     }
-                        // });
-
-                        // Return the deleted status
-                        return isDeleted;
-                    }),
-                )),
-            )),
-        );
-    }
-
-    /**
-     * Update the avatar of the given comunero
-     *
-     * @param id
-     * @param avatar
-     */
-    uploadAvatar(id: string, avatar: File): Observable<Comunero>
-    {
-        return this.comuneros$.pipe(
-            take(1),
-            switchMap(comuneros => this._httpClient.post<Comunero>('api/apps/comuneros/avatar', {
-                id,
-                avatar,
-            }, {
-                headers: {
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
-                    'Content-Type': avatar.type,
-                },
-            }).pipe(
-                map((updatedContact) =>
-                {
-                    // Find the index of the updated comunero
-                    const index = comuneros.findIndex(item => item.id === id);
-
-                    // Update the comunero
-                    comuneros[index] = updatedContact;
-
-                    // Update the comuneros
-                    this._comuneros.next(comuneros);
-
-                    // Return the updated comunero
-                    return updatedContact;
-                }),
-                switchMap(updatedContact => this.comunero$.pipe(
-                    take(1),
-                    filter(item => item && item.id === id),
-                    tap(() =>
-                    {
-                        // Update the comunero if it's selected
-                        this._contact.next(updatedContact);
-
-                        // Return the updated comunero
-                        return updatedContact;
-                    }),
-                )),
             )),
         );
     }

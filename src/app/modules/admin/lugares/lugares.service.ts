@@ -10,7 +10,7 @@ const LUGAR_URL = environment.apiUrl + '/lugar';
 export class LugaresService
 {
     // Private
-    private _contact: BehaviorSubject<Lugar | null> = new BehaviorSubject(null);
+    private _lugar: BehaviorSubject<Lugar | null> = new BehaviorSubject(null);
     private _lugares: BehaviorSubject<Lugar[] | null> = new BehaviorSubject(null);
 
     /**
@@ -25,11 +25,11 @@ export class LugaresService
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Getter for comunero
+     * Getter for lugar
      */
-    get comunero$(): Observable<Lugar>
+    get lugar$(): Observable<Lugar>
     {
-        return this._contact.asObservable();
+        return this._lugar.asObservable();
     }
 
     /**
@@ -52,7 +52,7 @@ export class LugaresService
         return this._httpClient.get<Lugar[]>(LUGAR_URL + "/search/" + "marcon").pipe(
             tap((lugares) =>
             {
-                this._lugares.next(lugares.sort((a, b) => a.address.localeCompare(b.address)));
+                this._lugares.next(lugares.sort((a, b) => (a.address || "").localeCompare(b.address || "")));
             }),
         );
     }
@@ -75,93 +75,92 @@ export class LugaresService
     }
 
     /**
-     * Get comunero by id
+     * Get lugar by id
      */
-    getContactById(id: string): Observable<Lugar>
+    getLugarById(id: string): Observable<Lugar>
     {
         return this._lugares.pipe(
             take(1),
             map((lugares) =>
             {
-                // Find the comunero
-                const comunero = lugares.find(item => item.id === id) || null;
+                // Find the lugar
+                const lugar = lugares.find(item => item.id === id) || null;
 
-                // Update the comunero
-                this._contact.next(comunero);
+                // Update the lugar
+                this._lugar.next(lugar);
 
-                // Return the comunero
-                return comunero;
+                // Return the lugar
+                return lugar;
             }),
-            switchMap((comunero) =>
+            switchMap((lugar) =>
             {
-                if ( !comunero )
+                if ( !lugar )
                 {
-                    return throwError('Could not found comunero with id of ' + id + '!');
+                    return throwError('Could not found lugar with id of ' + id + '!');
                 }
 
-                return of(comunero);
+                return of(lugar);
             }),
         );
     }
 
     /**
-     * Create comunero
+     * Create lugar
      */
-    createContact(): Observable<Lugar>
+    createLugar(): Observable<Lugar>
     {
         return this.lugares$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.post<Lugar>('api/apps/contacts/contact', {}).pipe(
-                map((newContact) =>
+            switchMap(lugares => this._httpClient.post<Lugar>(LUGAR_URL, {comunidadId: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}).pipe(
+                map((newLugar) =>
                 {
-                    // Update the lugares with the new comunero
-                    this._lugares.next([newContact, ...lugares]);
+                    // Update the lugares with the new lugar
+                    this._lugares.next([newLugar, ...lugares]);
 
-                    // Return the new comunero
-                    return newContact;
+                    // Return the new lugar
+                    return newLugar;
                 }),
             )),
         );
     }
 
     /**
-     * Update comunero
+     * Update lugar
      *
      * @param id
-     * @param comunero
+     * @param lugar
      */
-    updateContact(id: string, comunero: Lugar): Observable<Lugar>
+    updateLugar(id: string, lugar: Lugar): Observable<Lugar>
     {
         return this.lugares$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.patch<Lugar>('api/apps/contacts/contact', {
-                id,
-                comunero,
-            }).pipe(
-                map((updatedContact) =>
+            switchMap(lugares => this._httpClient.patch<Lugar>(LUGAR_URL + "/" + id,
+                lugar,
+            ).pipe(
+                map((updatedLugar) =>
                 {
-                    // Find the index of the updated comunero
+                    // Find the index of the updated lugar
                     const index = lugares.findIndex(item => item.id === id);
 
-                    // Update the comunero
-                    lugares[index] = updatedContact;
+                    // Update the lugar
+                    lugares[index] = updatedLugar;
 
                     // Update the lugares
                     this._lugares.next(lugares);
 
-                    // Return the updated comunero
-                    return updatedContact;
+                    // Return the updated lugar
+                    return updatedLugar;
                 }),
-                switchMap(updatedContact => this.comunero$.pipe(
+                switchMap(updatedLugar => this.lugar$.pipe(
                     take(1),
                     filter(item => item && item.id === id),
                     tap(() =>
                     {
-                        // Update the comunero if it's selected
-                        this._contact.next(updatedContact);
+                        // Update the lugar if it's selected
+                        this._lugar.next(updatedLugar);
 
-                        // Return the updated comunero
-                        return updatedContact;
+                        // Return the updated lugar
+                        return updatedLugar;
                     }),
                 )),
             )),
@@ -169,21 +168,21 @@ export class LugaresService
     }
 
     /**
-     * Delete the comunero
+     * Delete the lugar
      *
      * @param id
      */
-    deleteContact(id: string): Observable<boolean>
+    deleteLugar(id: string): Observable<boolean>
     {
         return this.lugares$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.delete('api/apps/contacts/contact', {params: {id}}).pipe(
+            switchMap(lugares => this._httpClient.delete(LUGAR_URL + "/" + id).pipe(
                 map((isDeleted: boolean) =>
                 {
-                    // Find the index of the deleted comunero
+                    // Find the index of the deleted lugar
                     const index = lugares.findIndex(item => item.id === id);
 
-                    // Delete the comunero
+                    // Delete the lugar
                     lugares.splice(index, 1);
 
                     // Update the lugares
@@ -198,7 +197,7 @@ export class LugaresService
 
 
     /**
-     * Update the avatar of the given comunero
+     * Update the avatar of the given lugar
      *
      * @param id
      * @param avatar
@@ -216,30 +215,30 @@ export class LugaresService
                     'Content-Type': avatar.type,
                 },
             }).pipe(
-                map((updatedContact) =>
+                map((updatedLugar) =>
                 {
-                    // Find the index of the updated comunero
+                    // Find the index of the updated lugar
                     const index = lugares.findIndex(item => item.id === id);
 
-                    // Update the comunero
-                    lugares[index] = updatedContact;
+                    // Update the lugar
+                    lugares[index] = updatedLugar;
 
                     // Update the lugares
                     this._lugares.next(lugares);
 
-                    // Return the updated comunero
-                    return updatedContact;
+                    // Return the updated lugar
+                    return updatedLugar;
                 }),
-                switchMap(updatedContact => this.comunero$.pipe(
+                switchMap(updatedLugar => this.lugar$.pipe(
                     take(1),
                     filter(item => item && item.id === id),
                     tap(() =>
                     {
-                        // Update the comunero if it's selected
-                        this._contact.next(updatedContact);
+                        // Update the lugar if it's selected
+                        this._lugar.next(updatedLugar);
 
-                        // Return the updated comunero
-                        return updatedContact;
+                        // Return the updated lugar
+                        return updatedLugar;
                     }),
                 )),
             )),

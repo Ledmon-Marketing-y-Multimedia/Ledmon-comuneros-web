@@ -1,1 +1,33 @@
 <router-outlet></router-outlet>
+
+@if(scanning$ | async; as meeting) {
+    <div class="fixed inset-0 z-50 overflow-y-auto h-screen overflow-hidden">
+        <div class="flex items-start justify-center  mb-12 ">
+            <div class="relative z-50 p-5 text-xl text-white">
+                Escaneo QR de la reunión {{meeting.name}}
+            </div>
+
+            <div class="absolute top-0 right-0 p-5 z-50">
+                <button
+                    mat-icon-button
+                    (click)="closeScanningOverlay()">
+                    <mat-icon class="text-white" [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                </button>
+            </div>
+
+            @if(meetingAttendance$ | async; as meetingAttendance) {
+                <div class="absolute flex flex-col items-center justify-center gap-y-2 w-auto z-50 text-white text-2xl top-40">
+                    <div @slideInTop class="flex flex-col gap-y-2 z-50 flex-auto items-center justify-center w-full h-full p-4">
+                        <div class="mt-4 text-xl text-center font-medium text-white tracking-tight">{{meetingAttendance.comunero.user.name}}</div>
+                        <mat-icon
+                            class="icon-size-20 text-green-500"
+                            [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+                    </div>
+                </div>
+            }
+
+            <zxing-scanner [previewFitMode]="'cover'" [autofocusEnabled]="false" [tryHarder]="false" (scanError)="scanErrorHandler($event)" [formats]="allowedFormats" [enable]="true" (scanSuccess)="scanSuccessHandler($event, meeting)" class="absolute w-auto min-w-full min-h-full max-w-none"></zxing-scanner>
+        </div>
+        <div style="box-shadow: 0 0 0 99999px rgba(0, 0, 0, .8);" class="absolute bottom-12 top-12 scanning inset-x-0 m-auto w-72 h-72 rounded-xl border-2 border-sky-500"></div>
+    </div>
+}

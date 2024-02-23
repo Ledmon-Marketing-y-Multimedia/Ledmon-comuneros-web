@@ -14,7 +14,7 @@ export class MeetingService
     // Private
     private _meeting: BehaviorSubject<Meeting | null> = new BehaviorSubject(null);
     private _meetings: BehaviorSubject<Meeting[] | null> = new BehaviorSubject(null);
-
+    private _scanning: BehaviorSubject<Meeting | null> = new BehaviorSubject(null);
     /**
      * Constructor
      */
@@ -40,6 +40,22 @@ export class MeetingService
     get meetings$(): Observable<Meeting[]>
     {
         return this._meetings.asObservable();
+    }
+
+    /**
+     * Getter for scanning
+     */
+    get scanning$(): Observable<Meeting>
+    {
+        return this._scanning.asObservable();
+    }
+
+    /**
+     * Setter for scanning
+     */
+    set scanning(value: Meeting)
+    {
+        this._scanning.next(value);
     }
 
     // -----------------------------------------------------------------------------------------------------

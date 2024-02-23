@@ -245,7 +245,6 @@ export class AuthService
     }
 
     public runInitialLoginSequence(): Promise<void> {
-        debugger
         if (location.hash) {
           console.log('Encountered hash fragment, plotting as table...');
           console.table(location.hash.substr(1).split('&').map(kvp => kvp.split('=')));
@@ -319,7 +318,7 @@ export class AuthService
               this._router.navigateByUrl(stateUrl);
             }
           })
-          .catch((result) => {debugger ;this.isDoneLoadingSubject$.next(true); return Promise.reject(result)});
+          .catch((result) => {this.isDoneLoadingSubject$.next(true); return Promise.reject(result)});
     }
 
     userCheck() : Observable<boolean>{

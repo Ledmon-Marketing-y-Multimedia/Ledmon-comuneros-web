@@ -17,7 +17,7 @@ const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
     const comunerosService = inject(ComunerosService);
     const router = inject(Router);
 
-    return comunerosService.getContactById(route.paramMap.get('id'))
+    return comunerosService.getComuneroById(route.paramMap.get('id'))
         .pipe(
             // Error here means the requested comunero is not available
             catchError((error) =>
@@ -82,16 +82,12 @@ export default [
     {
         path     : '',
         component: ComunerosComponent,
-        resolve  : {
-            tags: () => inject(ComunerosService).getTags(),
-        },
         children : [
             {
                 path     : '',
                 component: ComunerosListComponent,
                 resolve  : {
                     comuneros : () => inject(ComunerosService).getComuneros(),
-                    countries: () => inject(ComunerosService).getCountries(),
                 },
                 children : [
                     {
@@ -99,7 +95,6 @@ export default [
                         component    : ComunerosDetailsComponent,
                         resolve      : {
                             comunero  : contactResolver,
-                            countries: () => inject(ComunerosService).getCountries(),
                         },
                         canDeactivate: [canDeactivateComunerosDetails],
                     },

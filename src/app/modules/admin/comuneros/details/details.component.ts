@@ -37,13 +37,9 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     @ViewChild('tagsPanelOrigin') private _tagsPanelOrigin: ElementRef;
 
     editMode: boolean = false;
-    tags: Tag[];
-    tagsEditMode: boolean = false;
-    filteredTags: Tag[];
     comunero: Comunero;
-    contactForm: UntypedFormGroup;
+    comuneroForm: UntypedFormGroup;
     comuneros: Comunero[];
-    countries: Country[];
     private _tagsPanelOverlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
@@ -57,10 +53,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         private _comunerosService: ComunerosService,
         private _formBuilder: UntypedFormBuilder,
         private _fuseConfirmationService: FuseConfirmationService,
-        private _renderer2: Renderer2,
         private _router: Router,
-        private _overlay: Overlay,
-        private _viewContainerRef: ViewContainerRef,
     )
     {
     }
@@ -78,18 +71,14 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         this._comunerosListComponent.matDrawer.open();
 
         // Create the comunero form
-        this.contactForm = this._formBuilder.group({
+        this.comuneroForm = this._formBuilder.group({
             id          : [''],
             avatar      : [null],
             name        : ['', [Validators.required]],
-            emails      : this._formBuilder.array([]),
             phoneNumbers: this._formBuilder.array([]),
-            title       : [''],
-            company     : [''],
-            birthday    : [null],
-            address     : [null],
-            notes       : [null],
-            tags        : [[]],
+            email       : [''],
+            code       : [''],
+            dni     : [''],
         });
 
         // Get the comuneros
@@ -115,11 +104,11 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 this.comunero = comunero;
 
                 // Clear the emails and phoneNumbers form arrays
-                (this.contactForm.get('emails') as UntypedFormArray).clear();
-                (this.contactForm.get('phoneNumbers') as UntypedFormArray).clear();
+                (this.comuneroForm.get('emails') as UntypedFormArray).clear();
+                (this.comuneroForm.get('phoneNumbers') as UntypedFormArray).clear();
 
                 // Patch values to the form
-                this.contactForm.patchValue(comunero);
+                this.comuneroForm.patchValue(comunero);
 
                 // Setup the emails form array
                 const emailFormGroups = [];
@@ -152,7 +141,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 // Add the email form groups to the emails form array
                 emailFormGroups.forEach((emailFormGroup) =>
                 {
-                    (this.contactForm.get('emails') as UntypedFormArray).push(emailFormGroup);
+                    (this.comuneroForm.get('emails') as UntypedFormArray).push(emailFormGroup);
                 });
 
                 // Setup the phone numbers form array
@@ -188,34 +177,11 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 // Add the phone numbers form groups to the phone numbers form array
                 phoneNumbersFormGroups.forEach((phoneNumbersFormGroup) =>
                 {
-                    (this.contactForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumbersFormGroup);
+                    (this.comuneroForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumbersFormGroup);
                 });
 
                 // Toggle the edit mode off
                 this.toggleEditMode(false);
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Get the country telephone codes
-        this._comunerosService.countries$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((codes: Country[]) =>
-            {
-                this.countries = codes;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Get the tags
-        this._comunerosService.tags$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((tags: Tag[]) =>
-            {
-                this.tags = tags;
-                this.filteredTags = tags;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -273,18 +239,15 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     /**
      * Update the comunero
      */
-    updateContact(): void
+    updateComunero(): void
     {
         // Get the comunero object
-        const comunero = this.contactForm.getRawValue();
-
-        // Go through the comunero object and clear empty values
-        comunero.emails = comunero.emails.filter(email => email.email);
+        const comunero = this.comuneroForm.getRawValue();
 
         comunero.phoneNumbers = comunero.phoneNumbers.filter(phoneNumber => phoneNumber.phoneNumber);
 
         // Update the comunero on the server
-        this._comunerosService.updateContact(comunero.id, comunero).subscribe(() =>
+        this._comunerosService.updateComunero(comunero.id, comunero).subscribe(() =>
         {
             // Toggle the edit mode off
             this.toggleEditMode(false);
@@ -294,7 +257,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     /**
      * Delete the comunero
      */
-    deleteContact(): void
+    deleteComunero(): void
     {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
@@ -317,12 +280,12 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 const id = this.comunero.id;
 
                 // Get the next/previous comunero's id
-                const currentContactIndex = this.comuneros.findIndex(item => item.id === id);
-                const nextContactIndex = currentContactIndex + ((currentContactIndex === (this.comuneros.length - 1)) ? -1 : 1);
-                const nextContactId = (this.comuneros.length === 1 && this.comuneros[0].id === id) ? null : this.comuneros[nextContactIndex].id;
+                const currentComuneroIndex = this.comuneros.findIndex(item => item.id === id);
+                const nextComuneroIndex = currentComuneroIndex + ((currentComuneroIndex === (this.comuneros.length - 1)) ? -1 : 1);
+                const nextComuneroId = (this.comuneros.length === 1 && this.comuneros[0].id === id) ? null : this.comuneros[nextComuneroIndex].id;
 
                 // Delete the comunero
-                this._comunerosService.deleteContact(id)
+                this._comunerosService.deleteComunero(id)
                     .subscribe((isDeleted) =>
                     {
                         // Return if the comunero wasn't deleted...
@@ -332,9 +295,9 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                         }
 
                         // Navigate to the next comunero if available
-                        if ( nextContactId )
+                        if ( nextComuneroId )
                         {
-                            this._router.navigate(['../', nextContactId], {relativeTo: this._activatedRoute});
+                            this._router.navigate(['../', nextComuneroId], {relativeTo: this._activatedRoute});
                         }
                         // Otherwise, navigate to the parent
                         else
@@ -351,380 +314,6 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
             }
         });
 
-    }
-
-    /**
-     * Upload avatar
-     *
-     * @param fileList
-     */
-    uploadAvatar(fileList: FileList): void
-    {
-        // Return if canceled
-        if ( !fileList.length )
-        {
-            return;
-        }
-
-        const allowedTypes = ['image/jpeg', 'image/png'];
-        const file = fileList[0];
-
-        // Return if the file is not allowed
-        if ( !allowedTypes.includes(file.type) )
-        {
-            return;
-        }
-
-        // Upload the avatar
-        this._comunerosService.uploadAvatar(this.comunero.id, file).subscribe();
-    }
-
-    /**
-     * Remove the avatar
-     */
-    removeAvatar(): void
-    {
-        // Get the form control for 'avatar'
-        const avatarFormControl = this.contactForm.get('avatar');
-
-        // Set the avatar as null
-        avatarFormControl.setValue(null);
-
-        // Set the file input value as null
-        this._avatarFileInput.nativeElement.value = null;
-
-        // Update the comunero
-        // this.comunero.avatar = null;
-    }
-
-    /**
-     * Open tags panel
-     */
-    openTagsPanel(): void
-    {
-        // Create the overlay
-        this._tagsPanelOverlayRef = this._overlay.create({
-            backdropClass   : '',
-            hasBackdrop     : true,
-            scrollStrategy  : this._overlay.scrollStrategies.block(),
-            positionStrategy: this._overlay.position()
-                .flexibleConnectedTo(this._tagsPanelOrigin.nativeElement)
-                .withFlexibleDimensions(true)
-                .withViewportMargin(64)
-                .withLockedPosition(true)
-                .withPositions([
-                    {
-                        originX : 'start',
-                        originY : 'bottom',
-                        overlayX: 'start',
-                        overlayY: 'top',
-                    },
-                ]),
-        });
-
-        // Subscribe to the attachments observable
-        this._tagsPanelOverlayRef.attachments().subscribe(() =>
-        {
-            // Add a class to the origin
-            this._renderer2.addClass(this._tagsPanelOrigin.nativeElement, 'panel-opened');
-
-            // Focus to the search input once the overlay has been attached
-            this._tagsPanelOverlayRef.overlayElement.querySelector('input').focus();
-        });
-
-        // Create a portal from the template
-        const templatePortal = new TemplatePortal(this._tagsPanel, this._viewContainerRef);
-
-        // Attach the portal to the overlay
-        this._tagsPanelOverlayRef.attach(templatePortal);
-
-        // Subscribe to the backdrop click
-        this._tagsPanelOverlayRef.backdropClick().subscribe(() =>
-        {
-            // Remove the class from the origin
-            this._renderer2.removeClass(this._tagsPanelOrigin.nativeElement, 'panel-opened');
-
-            // If overlay exists and attached...
-            if ( this._tagsPanelOverlayRef && this._tagsPanelOverlayRef.hasAttached() )
-            {
-                // Detach it
-                this._tagsPanelOverlayRef.detach();
-
-                // Reset the tag filter
-                this.filteredTags = this.tags;
-
-                // Toggle the edit mode off
-                this.tagsEditMode = false;
-            }
-
-            // If template portal exists and attached...
-            if ( templatePortal && templatePortal.isAttached )
-            {
-                // Detach it
-                templatePortal.detach();
-            }
-        });
-    }
-
-    // /**
-    //  * Toggle the tags edit mode
-    //  */
-    // toggleTagsEditMode(): void
-    // {
-    //     this.tagsEditMode = !this.tagsEditMode;
-    // }
-
-    // /**
-    //  * Filter tags
-    //  *
-    //  * @param event
-    //  */
-    // filterTags(event): void
-    // {
-    //     // Get the value
-    //     const value = event.target.value.toLowerCase();
-
-    //     // Filter the tags
-    //     this.filteredTags = this.tags.filter(tag => tag.title.toLowerCase().includes(value));
-    // }
-
-    // /**
-    //  * Filter tags input key down event
-    //  *
-    //  * @param event
-    //  */
-    // filterTagsInputKeyDown(event): void
-    // {
-    //     // Return if the pressed key is not 'Enter'
-    //     if ( event.key !== 'Enter' )
-    //     {
-    //         return;
-    //     }
-
-    //     // If there is no tag available...
-    //     if ( this.filteredTags.length === 0 )
-    //     {
-    //         // Create the tag
-    //         this.createTag(event.target.value);
-
-    //         // Clear the input
-    //         event.target.value = '';
-
-    //         // Return
-    //         return;
-    //     }
-
-    //     // If there is a tag...
-    //     const tag = this.filteredTags[0];
-    //     const isTagApplied = this.comunero.tags.find(id => id === tag.id);
-
-    //     // If the found tag is already applied to the comunero...
-    //     if ( isTagApplied )
-    //     {
-    //         // Remove the tag from the comunero
-    //         this.removeTagFromContact(tag);
-    //     }
-    //     else
-    //     {
-    //         // Otherwise add the tag to the comunero
-    //         this.addTagToContact(tag);
-    //     }
-    // }
-
-    // /**
-    //  * Create a new tag
-    //  *
-    //  * @param title
-    //  */
-    // createTag(title: string): void
-    // {
-    //     const tag = {
-    //         title,
-    //     };
-
-    //     // Create tag on the server
-    //     this._comunerosService.createTag(tag)
-    //         .subscribe((response) =>
-    //         {
-    //             // Add the tag to the comunero
-    //             this.addTagToContact(response);
-    //         });
-    // }
-
-    // /**
-    //  * Update the tag title
-    //  *
-    //  * @param tag
-    //  * @param event
-    //  */
-    // updateTagTitle(tag: Tag, event): void
-    // {
-    //     // Update the title on the tag
-    //     tag.title = event.target.value;
-
-    //     // Update the tag on the server
-    //     this._comunerosService.updateTag(tag.id, tag)
-    //         .pipe(debounceTime(300))
-    //         .subscribe();
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Delete the tag
-    //  *
-    //  * @param tag
-    //  */
-    // deleteTag(tag: Tag): void
-    // {
-    //     // Delete the tag from the server
-    //     this._comunerosService.deleteTag(tag.id).subscribe();
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Add tag to the comunero
-    //  *
-    //  * @param tag
-    //  */
-    // addTagToContact(tag: Tag): void
-    // {
-    //     // Add the tag
-    //     this.comunero.tags.unshift(tag.id);
-
-    //     // Update the comunero form
-    //     this.contactForm.get('tags').patchValue(this.comunero.tags);
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Remove tag from the comunero
-    //  *
-    //  * @param tag
-    //  */
-    // removeTagFromContact(tag: Tag): void
-    // {
-    //     // Remove the tag
-    //     this.comunero.tags.splice(this.comunero.tags.findIndex(item => item === tag.id), 1);
-
-    //     // Update the comunero form
-    //     this.contactForm.get('tags').patchValue(this.comunero.tags);
-
-    //     // Mark for check
-    //     this._changeDetectorRef.markForCheck();
-    // }
-
-    // /**
-    //  * Toggle comunero tag
-    //  *
-    //  * @param tag
-    //  */
-    // toggleContactTag(tag: Tag): void
-    // {
-    //     if ( this.comunero.tags.includes(tag.id) )
-    //     {
-    //         this.removeTagFromContact(tag);
-    //     }
-    //     else
-    //     {
-    //         this.addTagToContact(tag);
-    //     }
-    // }
-
-    /**
-     * Should the create tag button be visible
-     *
-     * @param inputValue
-     */
-    shouldShowCreateTagButton(inputValue: string): boolean
-    {
-        return !!!(inputValue === '' || this.tags.findIndex(tag => tag.title.toLowerCase() === inputValue.toLowerCase()) > -1);
-    }
-
-    /**
-     * Add the email field
-     */
-    addEmailField(): void
-    {
-        // Create an empty email form group
-        const emailFormGroup = this._formBuilder.group({
-            email: [''],
-            label: [''],
-        });
-
-        // Add the email form group to the emails form array
-        (this.contactForm.get('emails') as UntypedFormArray).push(emailFormGroup);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Remove the email field
-     *
-     * @param index
-     */
-    removeEmailField(index: number): void
-    {
-        // Get form array for emails
-        const emailsFormArray = this.contactForm.get('emails') as UntypedFormArray;
-
-        // Remove the email field
-        emailsFormArray.removeAt(index);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Add an empty phone number field
-     */
-    addPhoneNumberField(): void
-    {
-        // Create an empty phone number form group
-        const phoneNumberFormGroup = this._formBuilder.group({
-            country    : ['us'],
-            phoneNumber: [''],
-            label      : [''],
-        });
-
-        // Add the phone number form group to the phoneNumbers form array
-        (this.contactForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumberFormGroup);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Remove the phone number field
-     *
-     * @param index
-     */
-    removePhoneNumberField(index: number): void
-    {
-        // Get form array for phone numbers
-        const phoneNumbersFormArray = this.contactForm.get('phoneNumbers') as UntypedFormArray;
-
-        // Remove the phone number field
-        phoneNumbersFormArray.removeAt(index);
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Get country info by iso code
-     *
-     * @param iso
-     */
-    getCountryByIso(iso: string): Country
-    {
-        return this.countries.find(country => country.iso === iso);
     }
 
     /**

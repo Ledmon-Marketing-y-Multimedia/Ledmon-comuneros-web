@@ -28,10 +28,9 @@ export class ComunerosListComponent implements OnInit, OnDestroy
 
     comunerosCount: number = 0;
     comunerosTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
-    countries: Country[];
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedContact: Comunero;
+    selectedComunero: Comunero;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -76,23 +75,12 @@ export class ComunerosListComponent implements OnInit, OnDestroy
             .subscribe((comunero: Comunero) =>
             {
                 // Update the selected comunero
-                this.selectedContact = comunero;
+                this.selectedComunero = comunero;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-            });
+        });
 
-        // Get the countries
-        this._comunerosService.countries$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((countries: Country[]) =>
-            {
-                // Update the countries
-                this.countries = countries;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
 
         // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
@@ -112,7 +100,7 @@ export class ComunerosListComponent implements OnInit, OnDestroy
             if ( !opened )
             {
                 // Remove the selected comunero when drawer closed
-                this.selectedContact = null;
+                this.selectedComunero = null;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -149,7 +137,7 @@ export class ComunerosListComponent implements OnInit, OnDestroy
             )
             .subscribe(() =>
             {
-                this.createContact();
+                this.createComunero();
             });
     }
 
@@ -182,13 +170,13 @@ export class ComunerosListComponent implements OnInit, OnDestroy
     /**
      * Create comunero
      */
-    createContact(): void
+    createComunero(): void
     {
         // Create the comunero
-        this._comunerosService.createContact().subscribe((newContact) =>
+        this._comunerosService.createComunero().subscribe((newComunero) =>
         {
             // Go to the new comunero
-            this._router.navigate(['./', newContact.id], {relativeTo: this._activatedRoute});
+            this._router.navigate(['./', newComunero.id], {relativeTo: this._activatedRoute});
 
             // Mark for check
             this._changeDetectorRef.markForCheck();
