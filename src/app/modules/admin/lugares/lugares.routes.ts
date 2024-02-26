@@ -12,7 +12,7 @@ import { catchError, throwError } from 'rxjs';
  * @param route
  * @param state
  */
-const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+export const lugarResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
     const lugaresService = inject(LugaresService);
     const router = inject(Router);
@@ -94,7 +94,7 @@ export default [
                         path         : ':id',
                         component    : LugaresDetailsComponent,
                         resolve      : {
-                            lugar  : contactResolver,
+                            lugar  : lugarResolver,
                         },
                         canDeactivate: [canDeactivateLugaresDetails],
                     },

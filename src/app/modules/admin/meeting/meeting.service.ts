@@ -202,7 +202,7 @@ export class MeetingService
     {
         return this.meetings$.pipe(
             take(1),
-            switchMap(meetings => this._httpClient.delete('api/apps/tasks/task', {params: {id}}).pipe(
+            switchMap(meetings => this._httpClient.delete(MEETING_URL + "/" + id).pipe(
                 map((isDeleted: boolean) =>
                 {
                     // Find the index of the deleted meeting

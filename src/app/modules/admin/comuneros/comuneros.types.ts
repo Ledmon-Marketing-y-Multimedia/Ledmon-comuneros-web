@@ -3,17 +3,7 @@ export interface Comunero
     id: string;
     user?: User;
     background?: string | null;
-    name?: string;
     lugar?: Lugar;
-    emails?: {
-        email: string;
-        label: string;
-    }[];
-    phoneNumbers?: {
-        country: string;
-        phoneNumber: string;
-        label: string;
-    }[];
     code?: string;
     role?: string;
 }
@@ -31,12 +21,34 @@ export interface Lugar
 
 export interface User
 {
-    id: string;
+    id?: string;
+    name?: string;
+    email?: string;
+    dni?: string;
+    username?: string;
+    phones?: string;
+    createdAt?: string;
+    phoneNumbers?: {
+        country: string;
+        phoneNumber: string;
+        label: string;
+    }[];
+}
+
+export interface NewComunero {
     name: string;
-    email: string;
+    email?: string;
     username: string;
-    phones: string;
-    createdAt: string;
+    dni?: string;
+    code: string;
+    fechaAlta?: string;
+    phoneNumbers?: {
+        country: string;
+        phoneNumber: string;
+        label: string;
+    }[];
+    lugarId?: string;
+    role: string;
 }
 
 export interface Country

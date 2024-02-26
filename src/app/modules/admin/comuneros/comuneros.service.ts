@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Comunero, Country, Tag } from 'app/modules/admin/comuneros/comuneros.types';
+import { Comunero, Country, NewComunero, Tag } from 'app/modules/admin/comuneros/comuneros.types';
 import { environment } from 'environments/environment';
 import { BehaviorSubject, filter, map, Observable, of, switchMap, take, tap, throwError } from 'rxjs';
 
@@ -108,11 +108,11 @@ export class ComunerosService
     /**
      * Create comunero
      */
-    createComunero(): Observable<Comunero>
+    createComunero(comunero: NewComunero): Observable<Comunero>
     {
         return this.comuneros$.pipe(
             take(1),
-            switchMap(comuneros => this._httpClient.post<Comunero>('api/apps/comuneros/comunero', {}).pipe(
+            switchMap(comuneros => this._httpClient.post<Comunero>(COMUNEROS_URL, comunero).pipe(
                 map((newComunero) =>
                 {
                     // Update the comuneros with the new comunero
@@ -135,10 +135,8 @@ export class ComunerosService
     {
         return this.comuneros$.pipe(
             take(1),
-            switchMap(comuneros => this._httpClient.patch<Comunero>('api/apps/comuneros/comunero', {
-                id,
-                comunero,
-            }).pipe(
+            switchMap(comuneros => this._httpClient.patch<Comunero>(COMUNEROS_URL + "/" + id,
+                comunero).pipe(
                 map((updatedComunero) =>
                 {
                     // Find the index of the updated comunero
@@ -195,5 +193,16 @@ export class ComunerosService
                 }),
             )),
         );
+    }
+
+    /**
+     * Mock the user
+     *
+     */
+    newComunero(): Observable<Comunero>
+    {
+        const newComunero : Comunero = {background: '', user : {name: '', id : '', username: '', phoneNumbers: [], email: ''}, id: ''}
+        this._comunero.next(newComunero);
+        return of(newComunero);
     }
 }

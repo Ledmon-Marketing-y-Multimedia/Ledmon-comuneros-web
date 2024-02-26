@@ -124,21 +124,7 @@ export class ComunerosListComponent implements OnInit, OnDestroy
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-            });
-
-        // Listen for shortcuts
-        fromEvent(this._document, 'keydown')
-            .pipe(
-                takeUntil(this._unsubscribeAll),
-                filter<KeyboardEvent>(event =>
-                    (event.ctrlKey === true || event.metaKey) // Ctrl or Cmd
-                    && (event.key === '/'), // '/'
-                ),
-            )
-            .subscribe(() =>
-            {
-                this.createComunero();
-            });
+        });
     }
 
     /**
@@ -165,22 +151,6 @@ export class ComunerosListComponent implements OnInit, OnDestroy
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Create comunero
-     */
-    createComunero(): void
-    {
-        // Create the comunero
-        this._comunerosService.createComunero().subscribe((newComunero) =>
-        {
-            // Go to the new comunero
-            this._router.navigate(['./', newComunero.id], {relativeTo: this._activatedRoute});
-
-            // Mark for check
-            this._changeDetectorRef.markForCheck();
-        });
     }
 
     /**

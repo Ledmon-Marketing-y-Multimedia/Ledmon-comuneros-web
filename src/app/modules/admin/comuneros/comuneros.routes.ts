@@ -5,6 +5,7 @@ import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service'
 import { ComunerosDetailsComponent } from 'app/modules/admin/comuneros/details/details.component';
 import { ComunerosListComponent } from 'app/modules/admin/comuneros/list/list.component';
 import { catchError, throwError } from 'rxjs';
+import { LugaresService } from '../lugares/lugares.service';
 
 /**
  * Comunero resolver
@@ -35,6 +36,19 @@ const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
                 return throwError(error);
             }),
         );
+};
+
+
+/**
+ * New Comunero resolver
+ *
+ * @param route
+ * @param state
+ */
+const newComuneroResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+{
+    const comunerosService = inject(ComunerosService);
+    return comunerosService.newComunero();
 };
 
 /**
@@ -91,10 +105,20 @@ export default [
                 },
                 children : [
                     {
+                        path         : 'new',
+                        component    : ComunerosDetailsComponent,
+                        resolve      : {
+                            comunero  : newComuneroResolver,
+                            lugares   : () => inject(LugaresService).getLugares()
+                        },
+                        canDeactivate: [canDeactivateComunerosDetails],
+                    },
+                    {
                         path         : ':id',
                         component    : ComunerosDetailsComponent,
                         resolve      : {
                             comunero  : contactResolver,
+                            lugares   : () => inject(LugaresService).getLugares()
                         },
                         canDeactivate: [canDeactivateComunerosDetails],
                     },

@@ -240,8 +240,8 @@ export class AuthService
         return this.userCheck();
     }
 
-    login() {
-        this._oauthService.initCodeFlow();
+    public login(targetUrl?: string) {
+        this._oauthService.initLoginFlow(targetUrl || this._router.url);
     }
 
     public runInitialLoginSequence(): Promise<void> {
