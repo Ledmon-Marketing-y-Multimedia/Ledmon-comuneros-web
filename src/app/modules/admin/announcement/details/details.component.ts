@@ -33,6 +33,9 @@ import { Comunero, ComuneroRole } from '../../comuneros/comuneros.types';
 })
 export class LugaresDetailsComponent implements OnInit, OnDestroy
 {
+    @ViewChild('avatarFileInput') private _avatarFileInput: ElementRef;
+    @ViewChild('tagsPanel') private _tagsPanel: TemplateRef<any>;
+    @ViewChild('tagsPanelOrigin') private _tagsPanelOrigin: ElementRef;
 
     editMode: boolean = false;
     lugar: Lugar;
@@ -53,7 +56,10 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
         private _lugaresService: LugaresService,
         private _formBuilder: UntypedFormBuilder,
         private _fuseConfirmationService: FuseConfirmationService,
+        private _renderer2: Renderer2,
         private _router: Router,
+        private _overlay: Overlay,
+        private _viewContainerRef: ViewContainerRef,
     )
     {
     }
@@ -204,7 +210,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
     /**
      * Update the lugar
      */
-    updateLugares(): void
+    updateLugar(): void
     {
         // Get the lugar object
         const lugar = this.lugarForm.getRawValue();
@@ -224,7 +230,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
         lugar.autorizados = null;
 
         // Update the lugar on the server
-        this._lugaresService.updateLugar(lugar.id, lugar).subscribe(() =>
+        this._lugaresService.updateLugares(lugar.id, lugar).subscribe(() =>
         {
             // Toggle the edit mode off
             this.toggleEditMode(false);
@@ -234,7 +240,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
     /**
      * Delete the lugar
      */
-    deleteLugares(): void
+    deleteLugar(): void
     {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
@@ -257,19 +263,19 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
                 const id = this.lugar.id;
 
                 // Get the next/previous lugar's id
-                const currentLugaresIndex = this.lugares.findIndex(item => item.id === id);
-                const nextLugaresIndex = currentLugaresIndex + ((currentLugaresIndex === (this.lugares.length - 1)) ? -1 : 1);
-                const nextLugaresId = (this.lugares.length === 1 && this.lugares[0].id === id) ? null : this.lugares[nextLugaresIndex].id;
+                const currentLugarIndex = this.lugares.findIndex(item => item.id === id);
+                const nextLugarIndex = currentLugarIndex + ((currentLugarIndex === (this.lugares.length - 1)) ? -1 : 1);
+                const nextLugarId = (this.lugares.length === 1 && this.lugares[0].id === id) ? null : this.lugares[nextLugarIndex].id;
 
                 // Delete the lugar
-                this._lugaresService.deleteLugar(id)
+                this._lugaresService.deleteLugares(id)
                     .subscribe(() =>
                     {
 
                         // Navigate to the next lugar if available
-                        if ( nextLugaresId )
+                        if ( nextLugarId )
                         {
-                            this._router.navigate(['../', nextLugaresId], {relativeTo: this._activatedRoute});
+                            this._router.navigate(['../', nextLugarId], {relativeTo: this._activatedRoute});
                         }
                         // Otherwise, navigate to the parent
                         else

@@ -5,6 +5,7 @@ export interface Meeting
     id?: string;
     name?: string;
     description?: string;
+    attendance?: MeetingAttendance[];
     status?: string;
     date?: Date;
 }
@@ -12,8 +13,8 @@ export interface Meeting
 export interface MeetingAttendance
 {
     id?: string;
-    meeting?: Meeting;
     status: string;
     entryDate: Date;
+    meeting?: Meeting;
     comunero?: Comunero;
 }

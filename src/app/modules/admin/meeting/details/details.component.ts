@@ -25,6 +25,8 @@ import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { Meeting, MeetingAttendance } from 'app/modules/admin/meeting/meeting.types';
 import { assign } from 'lodash-es';
 import { BehaviorSubject, debounceTime, filter, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { ComunerosService } from '../../comuneros/comuneros.service';
+import { Comunero } from '../../comuneros/comuneros.types';
 
 @Component({
     selector       : 'meeting-details',
@@ -41,8 +43,9 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     meeting: Meeting;
     meetingForm: UntypedFormGroup;
     meetings: Meeting[];
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
+    comuneros: Comunero[];
     hasPermission: boolean;
+    private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
      * Constructor
@@ -56,8 +59,7 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         private _router: Router,
         private _meetingListComponent: MeetingListComponent,
         private _meetingService: MeetingService,
-        private _overlay: Overlay,
-        private _viewContainerRef: ViewContainerRef,
+        private _comunerosService: ComunerosService,
     )
     {
     }
@@ -94,6 +96,16 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
                 this._changeDetectorRef.markForCheck();
         });
 
+        this._comunerosService.comuneros$
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((comuneros: Comunero[]) =>
+            {
+                this.comuneros = comuneros;
+
+                // Mark for check
+                this._changeDetectorRef.markForCheck();
+        });
+
         // Get the meeting
         this._meetingService.meeting$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -123,10 +135,23 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
                 debounceTime(300),
                 takeUntil(this._unsubscribeAll),
             )
-            .subscribe((value) =>
+            .subscribe((value: Meeting) =>
             {
+                const attendance : MeetingAttendance[] = [];
+                this.comuneros.forEach(comunero => {
+                    attendance.push({
+                        comunero: {id: comunero.id},
+                        meeting: {id: value.id},
+                        status: 'ASISTE',
+                        entryDate: new Date()
+                    });
+                });
+
+                value.attendance = attendance;
+                debugger
                 // Update the meeting on the server
                 this._meetingService.updateMeeting(value.id, value).subscribe();
+
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();

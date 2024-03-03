@@ -13,7 +13,7 @@ import { LugaresService } from '../lugares/lugares.service';
  * @param route
  * @param state
  */
-const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+export const comuneroResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
     const comunerosService = inject(ComunerosService);
     const router = inject(Router);
@@ -117,7 +117,7 @@ export default [
                         path         : ':id',
                         component    : ComunerosDetailsComponent,
                         resolve      : {
-                            comunero  : contactResolver,
+                            comunero  : comuneroResolver,
                             lugares   : () => inject(LugaresService).getLugares()
                         },
                         canDeactivate: [canDeactivateComunerosDetails],

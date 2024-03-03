@@ -2,16 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
 import { BehaviorSubject, filter, map, Observable, of, switchMap, take, tap, throwError } from 'rxjs';
-import { Lugar } from './lugares.types';
+import { Announcement } from './announcement.types';
 
 const LUGAR_URL = environment.apiUrl + '/lugar';
 
 @Injectable({providedIn: 'root'})
-export class LugaresService
+export class AnnouncementService
 {
     // Private
-    private _lugar: BehaviorSubject<Lugar | null> = new BehaviorSubject(null);
-    private _lugares: BehaviorSubject<Lugar[] | null> = new BehaviorSubject(null);
+    private _lugar: BehaviorSubject<Announcement | null> = new BehaviorSubject(null);
+    private _announcement: BehaviorSubject<Announcement[] | null> = new BehaviorSubject(null);
 
     /**
      * Constructor
@@ -27,17 +27,17 @@ export class LugaresService
     /**
      * Getter for lugar
      */
-    get lugar$(): Observable<Lugar>
+    get lugar$(): Observable<Announcement>
     {
         return this._lugar.asObservable();
     }
 
     /**
-     * Getter for lugares
+     * Getter for announcement
      */
-    get lugares$(): Observable<Lugar[]>
+    get announcement$(): Observable<Announcement[]>
     {
-        return this._lugares.asObservable();
+        return this._announcement.asObservable();
     }
 
     // -----------------------------------------------------------------------------------------------------
@@ -45,31 +45,31 @@ export class LugaresService
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Get lugares
+     * Get announcement
      */
-    getLugares(): Observable<Lugar[]>
+    getAnnouncement(): Observable<Announcement[]>
     {
-        return this._httpClient.get<Lugar[]>(LUGAR_URL + "/search/" + "marcon").pipe(
-            tap((lugares) =>
+        return this._httpClient.get<Announcement[]>(LUGAR_URL + "/search/" + "marcon").pipe(
+            tap((announcement) =>
             {
-                this._lugares.next(lugares.sort((a, b) => (a.address || "").localeCompare(b.address || "")));
+                this._announcement.next(announcement.sort((a, b) => (a.address || "").localeCompare(b.address || "")));
             }),
         );
     }
 
     /**
-     * Search lugares with given query
+     * Search announcement with given query
      *
      * @param query
      */
-    searchLugares(address: string): Observable<Lugar[]>
+    searchAnnouncement(address: string): Observable<Announcement[]>
     {
-        return this._httpClient.get<Lugar[]>(LUGAR_URL + "/search/" + "marcon", {
+        return this._httpClient.get<Announcement[]>(LUGAR_URL + "/search/" + "marcon", {
             params: {address},
         }).pipe(
-            tap((lugares) =>
+            tap((announcement) =>
             {
-                this._lugares.next(lugares);
+                this._announcement.next(announcement);
             }),
         );
     }
@@ -77,14 +77,14 @@ export class LugaresService
     /**
      * Get lugar by id
      */
-    getLugarById(id: string): Observable<Lugar>
+    getAnnouncementById(id: string): Observable<Announcement>
     {
-        return this._lugares.pipe(
+        return this._announcement.pipe(
             take(1),
-            map((lugares) =>
+            map((announcement) =>
             {
                 // Find the lugar
-                const lugar = lugares.find(item => item.id === id) || null;
+                const lugar = announcement.find(item => item.id === id) || null;
 
                 // Update the lugar
                 this._lugar.next(lugar);
@@ -107,18 +107,18 @@ export class LugaresService
     /**
      * Create lugar
      */
-    createLugar(): Observable<Lugar>
+    createAnnouncement(): Observable<Announcement>
     {
-        return this.lugares$.pipe(
+        return this.announcement$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.post<Lugar>(LUGAR_URL, {comunidadId: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}).pipe(
-                map((newLugar) =>
+            switchMap(announcement => this._httpClient.post<Announcement>(LUGAR_URL, {comunidadId: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}).pipe(
+                map((newAnnouncement) =>
                 {
-                    // Update the lugares with the new lugar
-                    this._lugares.next([newLugar, ...lugares]);
+                    // Update the announcement with the new lugar
+                    this._announcement.next([newAnnouncement, ...announcement]);
 
                     // Return the new lugar
-                    return newLugar;
+                    return newAnnouncement;
                 }),
             )),
         );
@@ -130,37 +130,37 @@ export class LugaresService
      * @param id
      * @param lugar
      */
-    updateLugar(id: string, lugar: Lugar): Observable<Lugar>
+    updateAnnouncement(id: string, lugar: Announcement): Observable<Announcement>
     {
-        return this.lugares$.pipe(
+        return this.announcement$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.patch<Lugar>(LUGAR_URL + "/" + id,
+            switchMap(announcement => this._httpClient.patch<Announcement>(LUGAR_URL + "/" + id,
                 lugar,
             ).pipe(
-                map((updatedLugar) =>
+                map((updatedAnnouncement) =>
                 {
                     // Find the index of the updated lugar
-                    const index = lugares.findIndex(item => item.id === id);
+                    const index = announcement.findIndex(item => item.id === id);
 
                     // Update the lugar
-                    lugares[index] = updatedLugar;
+                    announcement[index] = updatedAnnouncement;
 
-                    // Update the lugares
-                    this._lugares.next(lugares);
+                    // Update the announcement
+                    this._announcement.next(announcement);
 
                     // Return the updated lugar
-                    return updatedLugar;
+                    return updatedAnnouncement;
                 }),
-                switchMap(updatedLugar => this.lugar$.pipe(
+                switchMap(updatedAnnouncement => this.lugar$.pipe(
                     take(1),
                     filter(item => item && item.id === id),
                     tap(() =>
                     {
                         // Update the lugar if it's selected
-                        this._lugar.next(updatedLugar);
+                        this._lugar.next(updatedAnnouncement);
 
                         // Return the updated lugar
-                        return updatedLugar;
+                        return updatedAnnouncement;
                     }),
                 )),
             )),
@@ -172,21 +172,21 @@ export class LugaresService
      *
      * @param id
      */
-    deleteLugar(id: string): Observable<boolean>
+    deleteAnnouncement(id: string): Observable<boolean>
     {
-        return this.lugares$.pipe(
+        return this.announcement$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.delete(LUGAR_URL + "/" + id).pipe(
+            switchMap(announcement => this._httpClient.delete(LUGAR_URL + "/" + id).pipe(
                 map((isDeleted: boolean) =>
                 {
                     // Find the index of the deleted lugar
-                    const index = lugares.findIndex(item => item.id === id);
+                    const index = announcement.findIndex(item => item.id === id);
 
                     // Delete the lugar
-                    lugares.splice(index, 1);
+                    announcement.splice(index, 1);
 
-                    // Update the lugares
-                    this._lugares.next(lugares);
+                    // Update the announcement
+                    this._announcement.next(announcement);
 
                     // Return the deleted status
                     return isDeleted;
@@ -202,11 +202,11 @@ export class LugaresService
      * @param id
      * @param avatar
      */
-    uploadAvatar(id: string, avatar: File): Observable<Lugar>
+    uploadAvatar(id: string, avatar: File): Observable<Announcement>
     {
-        return this.lugares$.pipe(
+        return this.announcement$.pipe(
             take(1),
-            switchMap(lugares => this._httpClient.post<Lugar>('api/apps/lugares/avatar', {
+            switchMap(announcement => this._httpClient.post<Announcement>('api/apps/announcement/avatar', {
                 id,
                 avatar,
             }, {
@@ -215,30 +215,30 @@ export class LugaresService
                     'Content-Type': avatar.type,
                 },
             }).pipe(
-                map((updatedLugar) =>
+                map((updatedAnnouncement) =>
                 {
                     // Find the index of the updated lugar
-                    const index = lugares.findIndex(item => item.id === id);
+                    const index = announcement.findIndex(item => item.id === id);
 
                     // Update the lugar
-                    lugares[index] = updatedLugar;
+                    announcement[index] = updatedAnnouncement;
 
-                    // Update the lugares
-                    this._lugares.next(lugares);
+                    // Update the announcement
+                    this._announcement.next(announcement);
 
                     // Return the updated lugar
-                    return updatedLugar;
+                    return updatedAnnouncement;
                 }),
-                switchMap(updatedLugar => this.lugar$.pipe(
+                switchMap(updatedAnnouncement => this.lugar$.pipe(
                     take(1),
                     filter(item => item && item.id === id),
                     tap(() =>
                     {
                         // Update the lugar if it's selected
-                        this._lugar.next(updatedLugar);
+                        this._lugar.next(updatedAnnouncement);
 
                         // Return the updated lugar
-                        return updatedLugar;
+                        return updatedAnnouncement;
                     }),
                 )),
             )),

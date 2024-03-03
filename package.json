@@ -28,7 +28,7 @@
         "@sentry/angular-ivy": "^7.100.1",
         "@zxing/browser": "^0.1.4",
         "@zxing/library": "^0.20.0",
-        "@zxing/ngx-scanner": "^17.0.0",
+        "@zxing/ngx-scanner": "^17.0.1",
         "angular-oauth2-oidc": "^17.0.1",
         "apexcharts": "3.44.0",
         "crypto-js": "3.3.0",

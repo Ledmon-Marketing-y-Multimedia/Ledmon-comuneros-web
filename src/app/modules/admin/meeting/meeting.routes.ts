@@ -5,6 +5,8 @@ import { MeetingListComponent } from 'app/modules/admin/meeting/list/list.compon
 import { MeetingComponent } from 'app/modules/admin/meeting/meeting.component';
 import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { catchError, throwError } from 'rxjs';
+import { comuneroResolver } from '../comuneros/comuneros.routes';
+import { ComunerosService } from '../comuneros/comuneros.service';
 
 /**
  * Meeting resolver
@@ -88,6 +90,7 @@ export default [
                 component: MeetingListComponent,
                 resolve  : {
                     meetings: () => inject(MeetingService).getMeetings(),
+                    comuneros: () => inject(ComunerosService).getComuneros()
                 },
                 children : [
                     {

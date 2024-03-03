@@ -25,15 +25,15 @@
 
                     <!-- Title -->
                     <div>
-                        <div class="text-4xl font-extrabold tracking-tight leading-none">Comuneros</div>
+                        <div class="text-4xl font-extrabold tracking-tight leading-none">Lugares</div>
                         <div class="ml-0.5 font-medium text-secondary">
-                            <ng-container *ngIf="comunerosCount > 0">
-                                {{comunerosCount}}
+                            <ng-container *ngIf="lugaresCount > 0">
+                                {{lugaresCount}}
                             </ng-container>
-                            {{comunerosCount | i18nPlural: {
-                            '=0'   : 'No comuneros',
-                            '=1'   : 'comunero',
-                            'other': 'comuneros'
+                            {{lugaresCount | i18nPlural: {
+                            '=0'   : 'No lugares',
+                            '=1'   : 'lugar',
+                            'other': 'lugares'
                         } }}
                         </div>
                     </div>
@@ -53,63 +53,63 @@
                                     matInput
                                     [formControl]="searchInputControl"
                                     [autocomplete]="'off'"
-                                    [placeholder]="'Search comuneros'">
+                                    [placeholder]="'Search lugares'">
                             </mat-form-field>
                         </div>
-                        <!-- Add comunero button -->
+                        <!-- Add lugar button -->
                         <button
                             class="ml-4"
                             mat-flat-button
                             [color]="'primary'"
-                            [routerLink]="'new'">
+                            (click)="createLugar()">
                             <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
                             <span class="ml-2 mr-1">Add</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Comuneros list -->
+                <!-- Lugares list -->
                 <div class="relative">
-                    <ng-container *ngIf="comuneros$ | async as comuneros">
-                        <ng-container *ngIf="comuneros.length; else noComuneros">
-                            <ng-container *ngFor="let comunero of comuneros; let i = index; trackBy: trackByFn">
+                    <ng-container *ngIf="lugares$ | async as lugares">
+                        <ng-container *ngIf="lugares.length; else noLugares">
+                            <ng-container *ngFor="let lugar of lugares; let i = index; trackBy: trackByFn">
                                 <!-- Group -->
-                                <ng-container *ngIf="i === 0 || comunero.user.name.charAt(0) !== comuneros[i - 1].user.name.charAt(0)">
+                                <ng-container *ngIf="i === 0 || lugar.address?.charAt(0) !== lugares[i - 1].address?.charAt(0)">
                                     <div class="z-10 sticky top-0 -mt-px px-6 py-1 md:px-8 border-t border-b font-medium uppercase text-secondary bg-gray-50 dark:bg-gray-900">
-                                        {{comunero.user.name.charAt(0)}}
+                                        {{lugar.address?.charAt(0)}}
                                     </div>
                                 </ng-container>
-                                <!-- Comunero -->
+                                <!-- Lugar -->
                                 <a
                                     class="z-20 flex items-center px-6 py-4 md:px-8 cursor-pointer border-b"
-                                    [ngClass]="{'hover:bg-gray-100 dark:hover:bg-hover': !selectedComunero || selectedComunero.id !== comunero.id,
-                                                'bg-primary-50 dark:bg-hover': selectedComunero && selectedComunero.id === comunero.id}"
-                                    [routerLink]="['./', comunero.id]">
+                                    [ngClass]="{'hover:bg-gray-100 dark:hover:bg-hover': !selectedLugar || selectedLugar.id !== lugar.id,
+                                                'bg-primary-50 dark:bg-hover': selectedLugar && selectedLugar.id === lugar.id}"
+                                    [routerLink]="['./', lugar.id]">
                                     <div class="flex flex-0 items-center justify-center w-10 h-10 rounded-full overflow-hidden">
-                                        <ng-container *ngIf="comunero.avatar">
+                                        <ng-container *ngIf="lugar.avatar">
                                             <img
                                                 class="object-cover w-full h-full"
-                                                [src]="comunero.avatar"
-                                                alt="Comunero avatar"/>
+                                                [src]="lugar.avatar"
+                                                alt="Lugar avatar"/>
                                         </ng-container>
-                                        <ng-container *ngIf="!comunero.avatar">
+                                        <ng-container *ngIf="!lugar.avatar">
                                             <div class="flex items-center justify-center w-full h-full rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                                                {{comunero.user.name.charAt(0)}}
+                                                {{lugar.address?.charAt(0)}}
                                             </div>
                                         </ng-container>
                                     </div>
                                     <div class="min-w-0 ml-4">
-                                        <div class="font-medium leading-5 truncate">{{comunero.user.name}}</div>
-                                        <div class="leading-5 truncate text-secondary">{{comunero.lugar.address}}</div>
+                                        <div class="font-medium leading-5 truncate">{{lugar.address}}</div>
+                                        <div class="leading-5 truncate text-secondary">{{lugar.address}}</div>
                                     </div>
                                 </a>
                             </ng-container>
                         </ng-container>
                     </ng-container>
 
-                    <!-- No comuneros -->
-                    <ng-template #noComuneros>
-                        <div class="p-8 sm:p-16 border-t text-4xl font-semibold tracking-tight text-center">There are no comuneros!</div>
+                    <!-- No lugares -->
+                    <ng-template #noLugares>
+                        <div class="p-8 sm:p-16 border-t text-4xl font-semibold tracking-tight text-center">There are no lugares!</div>
                     </ng-template>
 
                 </div>

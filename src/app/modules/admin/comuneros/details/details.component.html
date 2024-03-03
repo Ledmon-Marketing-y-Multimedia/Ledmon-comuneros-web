@@ -83,7 +83,7 @@
                         </div>
                     </ng-container>
 
-                    <!-- Lugar -->
+                    <!-- Announcement -->
                     <ng-container *ngIf="comunero.lugar.address">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:home'"></mat-icon>
@@ -256,10 +256,10 @@
                         </mat-form-field>
                     </div>
 
-                    <!-- Lugares -->
+                    <!-- Announcementes -->
                     <div class="mt-8">
                         <mat-form-field *ngIf="lugares.length > 0" class="w-full fuse-mat-dense flex-auto">
-                            <mat-label>Lugares</mat-label>
+                            <mat-label>Announcementes</mat-label>
                             <mat-select [formControlName]="'lugarId'">
                                 <mat-option *ngFor="let lugar of lugares" [value]="lugar.id">{{lugar.address}}</mat-option>
                             </mat-select>

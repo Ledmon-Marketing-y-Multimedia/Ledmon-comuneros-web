@@ -1,24 +1,24 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, Routes } from '@angular/router';
-import { LugaresComponent } from 'app/modules/admin/lugares/lugares.component';
-import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
-import { LugaresDetailsComponent } from 'app/modules/admin/lugares/details/details.component';
-import { LugaresListComponent } from 'app/modules/admin/lugares/list/list.component';
+import { AnnouncementComponent } from 'app/modules/admin/announcement/announcement.component';
+import { AnnouncementService } from 'app/modules/admin/announcement/announcement.service';
+import { AnnouncementDetailsComponent } from 'app/modules/admin/announcement/details/details.component';
+import { AnnouncementListComponent } from 'app/modules/admin/announcement/list/list.component';
 import { catchError, throwError } from 'rxjs';
 import { ComunerosService } from '../comuneros/comuneros.service';
 
 /**
- * Lugar resolver
+ * Announcement resolver
  *
  * @param route
  * @param state
  */
 export const lugarResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
-    const lugaresService = inject(LugaresService);
+    const announcementService = inject(AnnouncementService);
     const router = inject(Router);
 
-    return lugaresService.getLugarById(route.paramMap.get('id'))
+    return announcementService.getAnnouncementById(route.paramMap.get('id'))
         .pipe(
             // Error here means the requested comunero is not available
             catchError((error) =>
@@ -39,15 +39,15 @@ export const lugarResolver = (route: ActivatedRouteSnapshot, state: RouterStateS
 };
 
 /**
- * Can deactivate lugares details
+ * Can deactivate announcement details
  *
  * @param component
  * @param currentRoute
  * @param currentState
  * @param nextState
  */
-const canDeactivateLugaresDetails = (
-    component: LugaresDetailsComponent,
+const canDeactivateAnnouncementDetails = (
+    component: AnnouncementDetailsComponent,
     currentRoute: ActivatedRouteSnapshot,
     currentState: RouterStateSnapshot,
     nextState: RouterStateSnapshot) =>
@@ -59,10 +59,10 @@ const canDeactivateLugaresDetails = (
         nextRoute = nextRoute.firstChild;
     }
 
-    // If the next state doesn't contain '/lugares'
+    // If the next state doesn't contain '/announcement'
     // it means we are navigating away from the
-    // lugares app
-    if ( !nextState.url.includes('/lugares') )
+    // announcement app
+    if ( !nextState.url.includes('/announcement') )
     {
         // Let it navigate
         return true;
@@ -82,23 +82,23 @@ const canDeactivateLugaresDetails = (
 export default [
     {
         path     : '',
-        component: LugaresComponent,
+        component: AnnouncementComponent,
         children : [
             {
                 path     : '',
-                component: LugaresListComponent,
+                component: AnnouncementListComponent,
                 resolve  : {
-                    lugares : () => inject(LugaresService).getLugares(),
+                    announcement : () => inject(AnnouncementService).getAnnouncement(),
                 },
                 children : [
                     {
                         path         : ':id',
-                        component    : LugaresDetailsComponent,
+                        component    : AnnouncementDetailsComponent,
                         resolve      : {
                             lugar  : lugarResolver,
                             comuneros: () => inject(ComunerosService).getComuneros(),
                         },
-                        canDeactivate: [canDeactivateLugaresDetails],
+                        canDeactivate: [canDeactivateAnnouncementDetails],
                     },
                 ],
             },

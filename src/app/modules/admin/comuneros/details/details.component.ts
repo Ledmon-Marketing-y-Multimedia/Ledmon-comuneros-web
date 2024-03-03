@@ -307,6 +307,42 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     }
 
     /**
+     * Add an empty phone number field
+     */
+    addPhoneNumberField(): void
+    {
+        // Create an empty phone number form group
+        const phoneNumberFormGroup = this._formBuilder.group({
+            country    : ['us'],
+            phoneNumber: [''],
+            label      : [''],
+        });
+
+        // Add the phone number form group to the phoneNumbers form array
+        (this.comuneroForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumberFormGroup);
+
+        // Mark for check
+        this._changeDetectorRef.markForCheck();
+    }
+
+    /**
+     * Remove the phone number field
+     *
+     * @param index
+     */
+    removePhoneNumberField(index: number): void
+    {
+        // Get form array for phone numbers
+        const phoneNumbersFormArray = this.comuneroForm.get('phoneNumbers') as UntypedFormArray;
+
+        // Remove the phone number field
+        phoneNumbersFormArray.removeAt(index);
+
+        // Mark for check
+        this._changeDetectorRef.markForCheck();
+    }
+
+    /**
      * Track by function for ngFor loops
      *
      * @param index

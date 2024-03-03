@@ -8,30 +8,29 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
-import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
-import { Comunero, Country } from 'app/modules/admin/comuneros/comuneros.types';
+import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
+import { Lugar } from 'app/modules/admin/lugares/lugares.types';
 import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
 
 @Component({
-    selector       : 'comuneros-list',
+    selector       : 'lugares-list',
     templateUrl    : './list.component.html',
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
     imports        : [MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
 })
-export class ComunerosListComponent implements OnInit, OnDestroy
+export class LugaresListComponent implements OnInit, OnDestroy
 {
     @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
 
-    comuneros$: Observable<Comunero[]>;
+    lugares$: Observable<Lugar[]>;
 
-    comunerosCount: number = 0;
-    comunerosTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
+    lugaresCount: number = 0;
+    lugaresTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedComunero: Comunero;
+    selectedLugar: Lugar;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -40,7 +39,7 @@ export class ComunerosListComponent implements OnInit, OnDestroy
     constructor(
         private _activatedRoute: ActivatedRoute,
         private _changeDetectorRef: ChangeDetectorRef,
-        private _comunerosService: ComunerosService,
+        private _lugaresService: LugaresService,
         @Inject(DOCUMENT) private _document: any,
         private _router: Router,
         private _fuseMediaWatcherService: FuseMediaWatcherService,
@@ -57,40 +56,39 @@ export class ComunerosListComponent implements OnInit, OnDestroy
      */
     ngOnInit(): void
     {
-        // Get the comuneros
-        this.comuneros$ = this._comunerosService.comuneros$;
-        this._comunerosService.comuneros$
+        // Get the lugares
+        this.lugares$ = this._lugaresService.lugares$;
+        this._lugaresService.lugares$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comuneros: Comunero[]) =>
+            .subscribe((lugares: Lugar[]) =>
             {
                 // Update the counts
-                this.comunerosCount = comuneros.length;
+                this.lugaresCount = lugares.length;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
             });
 
-        // Get the comunero
-        this._comunerosService.comunero$
+        // Get the lugar
+        this._lugaresService.lugar$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comunero: Comunero) =>
+            .subscribe((lugar: Lugar) =>
             {
-                // Update the selected comunero
-                this.selectedComunero = comunero;
+                // Update the selected lugar
+                this.selectedLugar = lugar;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-        });
-
+            });
 
         // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
             .pipe(
-                debounceTime(500), // Add debounce time of 300 milliseconds
                 takeUntil(this._unsubscribeAll),
                 switchMap(query =>
+
                     // Search
-                    this._comunerosService.searchComuneros(query),
+                    this._lugaresService.searchLugares(query),
                 ),
             )
             .subscribe();
@@ -100,8 +98,8 @@ export class ComunerosListComponent implements OnInit, OnDestroy
         {
             if ( !opened )
             {
-                // Remove the selected comunero when drawer closed
-                this.selectedComunero = null;
+                // Remove the selected lugar when drawer closed
+                this.selectedLugar = null;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -125,7 +123,21 @@ export class ComunerosListComponent implements OnInit, OnDestroy
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-        });
+            });
+
+        // Listen for shortcuts
+        fromEvent(this._document, 'keydown')
+            .pipe(
+                takeUntil(this._unsubscribeAll),
+                filter<KeyboardEvent>(event =>
+                    (event.ctrlKey === true || event.metaKey) // Ctrl or Cmd
+                    && (event.key === '/'), // '/'
+                ),
+            )
+            .subscribe(() =>
+            {
+                this.createLugar();
+            });
     }
 
     /**
@@ -152,6 +164,22 @@ export class ComunerosListComponent implements OnInit, OnDestroy
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
+    }
+
+    /**
+     * Create lugar
+     */
+    createLugar(): void
+    {
+        // Create the lugar
+        this._lugaresService.createLugares().subscribe((newLugar) =>
+        {
+            // Go to the new lugar
+            this._router.navigate(['./', newLugar.id], {relativeTo: this._activatedRoute});
+
+            // Mark for check
+            this._changeDetectorRef.markForCheck();
+        });
     }
 
     /**

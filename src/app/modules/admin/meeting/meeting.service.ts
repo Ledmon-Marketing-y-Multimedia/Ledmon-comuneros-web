@@ -182,6 +182,31 @@ export class MeetingService
             );
     }
 
+
+    /**
+     * Announcement attendance
+     *
+     * @param meetingId
+     * @param lugarId
+     */
+    getAnnouncementAttendance(meetingId: string, lugarId: string): Observable<MeetingAttendance[]>
+    {
+        return this._httpClient.get<MeetingAttendance[]>(ATTENDANCE_URL + "/" + meetingId + "/lugar/" + lugarId);
+    }
+
+
+    /**
+     *  Search attendance by comunero name
+     *
+     * @param meetingId
+     * @param name
+     */
+    getAttendancesByName(meetingId: string, name: string): Observable<MeetingAttendance[]>
+    {
+        return this._httpClient.get<MeetingAttendance[]>(ATTENDANCE_URL + "/" + meetingId + "/search", {params: {name}});
+    }
+
+
     /**
      * Register attendance
      *

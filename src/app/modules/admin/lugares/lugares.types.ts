@@ -1,3 +1,4 @@
+import { Comunero } from "../comuneros/comuneros.types";
 
 export interface Lugar
 {
@@ -7,4 +8,5 @@ export interface Lugar
     poblacion: string;
     provincia: string;
     cp: string;
+    comuneros: Comunero[];
 }

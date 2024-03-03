@@ -63,14 +63,14 @@ export class ComunerosService
      *
      * @param query
      */
-    searchComuneros(query: string): Observable<Comunero[]>
+    searchComuneros(name: string): Observable<Comunero[]>
     {
-        return this._httpClient.get<Comunero[]>('api/apps/comuneros/search', {
-            params: {query},
+        return this._httpClient.get<Comunero[]>(COMUNEROS_URL + "/search/" + "marcon", {
+            params: {name},
         }).pipe(
             tap((comuneros) =>
             {
-                this._comuneros.next(comuneros);
+                this._comuneros.next(comuneros.sort((a, b) => a.user.name.localeCompare(b.user.name)));
             }),
         );
     }
