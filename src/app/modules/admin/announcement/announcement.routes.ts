@@ -1,26 +1,27 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, Routes } from '@angular/router';
-import { AnnouncementComponent } from 'app/modules/admin/announcement/announcement.component';
 import { AnnouncementService } from 'app/modules/admin/announcement/announcement.service';
-import { AnnouncementDetailsComponent } from 'app/modules/admin/announcement/details/details.component';
 import { AnnouncementListComponent } from 'app/modules/admin/announcement/list/list.component';
+import { AnnouncementComponent } from './announcement.component';
 import { catchError, throwError } from 'rxjs';
+import { AnnouncementDetailsComponent } from './details/details.component';
 import { ComunerosService } from '../comuneros/comuneros.service';
 
+
 /**
- * Announcement resolver
+ * announcement resolver
  *
  * @param route
  * @param state
  */
-export const lugarResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+export const announcementResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
     const announcementService = inject(AnnouncementService);
     const router = inject(Router);
 
     return announcementService.getAnnouncementById(route.paramMap.get('id'))
         .pipe(
-            // Error here means the requested comunero is not available
+            // Error here means the requested announcement is not available
             catchError((error) =>
             {
                 // Log the error
@@ -38,47 +39,6 @@ export const lugarResolver = (route: ActivatedRouteSnapshot, state: RouterStateS
         );
 };
 
-/**
- * Can deactivate announcement details
- *
- * @param component
- * @param currentRoute
- * @param currentState
- * @param nextState
- */
-const canDeactivateAnnouncementDetails = (
-    component: AnnouncementDetailsComponent,
-    currentRoute: ActivatedRouteSnapshot,
-    currentState: RouterStateSnapshot,
-    nextState: RouterStateSnapshot) =>
-{
-    // Get the next route
-    let nextRoute: ActivatedRouteSnapshot = nextState.root;
-    while ( nextRoute.firstChild )
-    {
-        nextRoute = nextRoute.firstChild;
-    }
-
-    // If the next state doesn't contain '/announcement'
-    // it means we are navigating away from the
-    // announcement app
-    if ( !nextState.url.includes('/announcement') )
-    {
-        // Let it navigate
-        return true;
-    }
-
-    // If we are navigating to another comunero...
-    if ( nextRoute.paramMap.get('id') )
-    {
-        // Just navigate
-        return true;
-    }
-
-    // Otherwise, close the drawer first, and then navigate
-    return component.closeDrawer().then(() => true);
-};
-
 export default [
     {
         path     : '',
@@ -88,20 +48,24 @@ export default [
                 path     : '',
                 component: AnnouncementListComponent,
                 resolve  : {
-                    announcement : () => inject(AnnouncementService).getAnnouncement(),
+                    announcements : () => inject(AnnouncementService).getAnnouncements(),
                 },
-                children : [
-                    {
-                        path         : ':id',
-                        component    : AnnouncementDetailsComponent,
-                        resolve      : {
-                            lugar  : lugarResolver,
-                            comuneros: () => inject(ComunerosService).getComuneros(),
-                        },
-                        canDeactivate: [canDeactivateAnnouncementDetails],
-                    },
-                ],
             },
+            {
+                path     : 'new',
+                component: AnnouncementDetailsComponent,
+                resolve  : {
+                    comuneros: () => inject(ComunerosService).getComuneros(),
+                },
+            },
+            {
+                path     : ':id',
+                component: AnnouncementDetailsComponent,
+                resolve  : {
+                    announcement : announcementResolver,
+                    comuneros: () => inject(ComunerosService).getComuneros(),
+                },
+            }
         ],
     },
 ] as Routes;

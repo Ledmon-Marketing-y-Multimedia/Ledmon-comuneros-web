@@ -8,6 +8,8 @@ export interface Meeting
     attendance?: MeetingAttendance[];
     status?: string;
     date?: Date;
+    acta?: any;
+    announcementId?: string;
 }
 
 export interface MeetingAttendance

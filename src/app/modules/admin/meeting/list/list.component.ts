@@ -1,16 +1,17 @@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DatePipe, DOCUMENT, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { FuseNavigationService, FuseVerticalNavigationComponent } from '@fuse/components/navigation';
-import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { Meeting } from 'app/modules/admin/meeting/meeting.types';
-import { filter, fromEvent, Subject, takeUntil } from 'rxjs';
+import { Subject, switchMap, takeUntil } from 'rxjs';
 
 @Component({
     selector       : 'meeting-list',
@@ -18,15 +19,34 @@ import { filter, fromEvent, Subject, takeUntil } from 'rxjs';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [MatSidenavModule, RouterOutlet, NgIf, MatButtonModule, MatTooltipModule, MatIconModule, CdkDropList, NgFor, CdkDrag, NgClass, CdkDragPreview, CdkDragHandle, RouterLink, TitleCasePipe, DatePipe],
+    styles         : [
+        /* language=SCSS */
+        `
+            .meeting-grid {
+                grid-template-columns: 200px 200px 100px auto;
+
+                @screen sm {
+                    grid-template-columns: 200px 200px 100px auto;
+                }
+
+                @screen md {
+                    grid-template-columns: 180px 250px 100px auto;
+                }
+
+                @screen lg {
+                    grid-template-columns: 300px 250px 100px auto;
+                }
+            }
+        `
+    ],
+    imports        : [MatSidenavModule, RouterOutlet, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, NgIf, MatButtonModule, MatTooltipModule, MatIconModule, CdkDropList, NgFor, CdkDrag, NgClass, CdkDragPreview, CdkDragHandle, RouterLink, TitleCasePipe, DatePipe],
 })
 export class MeetingListComponent implements OnInit, OnDestroy
 {
     @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
 
-    drawerMode: 'side' | 'over';
-    selectedMeeting: Meeting;
-    meeting: Meeting[];
+    meetings: Meeting[];
+    searchInputControl: UntypedFormControl = new UntypedFormControl();
     meetingCount: any = {
         completed : 0,
         incomplete: 0,
@@ -43,8 +63,6 @@ export class MeetingListComponent implements OnInit, OnDestroy
         @Inject(DOCUMENT) private _document: any,
         private _router: Router,
         private _meetingService: MeetingService,
-        private _fuseMediaWatcherService: FuseMediaWatcherService,
-        private _fuseNavigationService: FuseNavigationService,
     )
     {
     }
@@ -61,57 +79,28 @@ export class MeetingListComponent implements OnInit, OnDestroy
         // Get the meeting
         this._meetingService.meetings$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((meeting: Meeting[]) =>
+            .subscribe((meetings: Meeting[]) =>
             {
-                this.meeting = meeting;
+                this.meetings = meetings;
 
                 // Update the counts
-                this.meetingCount.total = this.meeting.length;
+                this.meetingCount.total = this.meetings.length;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-            });
+        });
 
-        // Get the meeting
-        this._meetingService.meeting$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((meeting: Meeting) =>
-            {
-                this.selectedMeeting = meeting;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Subscribe to media query change
-        this._fuseMediaWatcherService.onMediaQueryChange$('(min-width: 1440px)')
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((state) =>
-            {
-                // Calculate the drawer mode
-                this.drawerMode = state.matches ? 'side' : 'over';
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Listen for shortcuts
-        fromEvent(this._document, 'keydown')
+        // Subscribe to search input field value changes
+        this.searchInputControl.valueChanges
             .pipe(
                 takeUntil(this._unsubscribeAll),
-                filter<KeyboardEvent>(event =>
-                    (event.ctrlKey === true || event.metaKey) // Ctrl or Cmd
-                    && (event.key === '/' || event.key === '.'), // '/' or '.' key
+                switchMap(query =>
+
+                    // Search
+                    this._meetingService.searchMeeting(query),
                 ),
             )
-            .subscribe((event: KeyboardEvent) =>
-            {
-                // If the '.' pressed
-                if ( event.key === '.' )
-                {
-                    this.createMeeting();
-                }
-            });
+        .subscribe();
     }
 
     /**
@@ -128,17 +117,6 @@ export class MeetingListComponent implements OnInit, OnDestroy
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * On backdrop clicked
-     */
-    onBackdropClicked(): void
-    {
-        // Go back to the list
-        this._router.navigate(['./'], {relativeTo: this._activatedRoute});
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
-    }
 
     /**
      * Create meeting
@@ -147,15 +125,8 @@ export class MeetingListComponent implements OnInit, OnDestroy
      */
     createMeeting(): void
     {
-        // Create the meeting
-        this._meetingService.createMeeting().subscribe((newMeeting) =>
-        {
-            // Go to the new meeting
-            this._router.navigate(['./', newMeeting.id], {relativeTo: this._activatedRoute});
-
-            // Mark for check
-            this._changeDetectorRef.markForCheck();
-        });
+        // Go to the new meeting
+        this._router.navigate(['new'], {relativeTo: this._activatedRoute});
     }
 
     /**

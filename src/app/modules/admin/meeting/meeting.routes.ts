@@ -39,47 +39,6 @@ const meetingResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
         );
 };
 
-/**
- * Can deactivate meeting details
- *
- * @param component
- * @param currentRoute
- * @param currentState
- * @param nextState
- */
-const canDeactivateMeetingDetails = (
-    component: MeetingDetailsComponent,
-    currentRoute: ActivatedRouteSnapshot,
-    currentState: RouterStateSnapshot,
-    nextState: RouterStateSnapshot) =>
-{
-    // Get the next route
-    let nextRoute: ActivatedRouteSnapshot = nextState.root;
-    while ( nextRoute.firstChild )
-    {
-        nextRoute = nextRoute.firstChild;
-    }
-
-    // If the next state doesn't contain '/meeting'
-    // it means we are navigating away from the
-    // meeting app
-    if ( !nextState.url.includes('/reuniones') )
-    {
-        // Let it navigate
-        return true;
-    }
-
-    // If we are navigating to another meeting...
-    if ( nextRoute.paramMap.get('id') )
-    {
-        // Just navigate
-        return true;
-    }
-
-    // Otherwise, close the drawer first, and then navigate
-    return component.closeDrawer().then(() => true);
-};
-
 export default [
     {
         path     : '',
@@ -92,16 +51,17 @@ export default [
                     meetings: () => inject(MeetingService).getMeetings(),
                     comuneros: () => inject(ComunerosService).getComuneros()
                 },
-                children : [
-                    {
-                        path         : ':id',
-                        component    : MeetingDetailsComponent,
-                        resolve      : {
-                            meeting: meetingResolver,
-                        },
-                        canDeactivate: [canDeactivateMeetingDetails],
-                    },
-                ],
+            },
+            {
+                path         : 'new',
+                component    : MeetingDetailsComponent,
+            },
+            {
+                path         : ':id',
+                component    : MeetingDetailsComponent,
+                resolve      : {
+                    meeting: meetingResolver,
+                }
             },
         ],
     },

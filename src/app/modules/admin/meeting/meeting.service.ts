@@ -91,27 +91,10 @@ export class MeetingService
      */
     getMeetingById(id: string): Observable<Meeting>
     {
-        return this._meetings.pipe(
-            take(1),
-            map((meetings) =>
+        return this._httpClient.get<Meeting>(MEETING_URL + "/" + id).pipe(
+            tap((meeting) =>
             {
-                // Find the meeting
-                const meeting = meetings.find(item => item.id === id) || null;
-
-                // Update the meeting
                 this._meeting.next(meeting);
-
-                // Return the meeting
-                return meeting;
-            }),
-            switchMap((meeting) =>
-            {
-                if ( !meeting )
-                {
-                    return throwError('Could not found meeting with id of ' + id + '!');
-                }
-
-                return of(meeting);
             }),
         );
     }
@@ -121,11 +104,11 @@ export class MeetingService
      *
      * @param type
      */
-    createMeeting(): Observable<Meeting>
+    createMeeting(meeting: Meeting): Observable<Meeting>
     {
         return this.meetings$.pipe(
             take(1),
-            switchMap(meetings => this._httpClient.post<Meeting>(MEETING_URL, {name:"", attendance: [], comunidad: {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}}).pipe(
+            switchMap(meetings => this._httpClient.post<Meeting>(MEETING_URL, meeting).pipe(
                 map((newMeeting) =>
                 {
                     // Update the meeting with the new meeting
@@ -136,6 +119,11 @@ export class MeetingService
                 }),
             )),
         );
+    }
+
+
+    uploadActa(meetingId: string, formData: FormData){
+        return this._httpClient.post<any>(MEETING_URL + "/" + meetingId + "/acta", formData);
     }
 
     /**

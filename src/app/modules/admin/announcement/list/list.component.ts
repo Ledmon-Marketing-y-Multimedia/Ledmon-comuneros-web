@@ -8,29 +8,50 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
-import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
-import { Lugar } from 'app/modules/admin/lugares/lugares.types';
-import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { TranslocoLocaleModule } from '@ngneat/transloco-locale';
+import { AnnouncementService } from 'app/modules/admin/announcement/announcement.service';
+import { Announcement } from 'app/modules/admin/announcement/announcement.types';
+import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { MatSortModule } from '@angular/material/sort';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @Component({
-    selector       : 'lugares-list',
+    selector       : 'announcement-list',
     templateUrl    : './list.component.html',
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
+    styles         : [
+        /* language=SCSS */
+        `
+            .announcement-grid {
+                grid-template-columns: 200px 200px auto;
+
+                @screen sm {
+                    grid-template-columns: 200px 200px auto;
+                }
+
+                @screen md {
+                    grid-template-columns: 180px 250px auto;
+                }
+
+                @screen lg {
+                    grid-template-columns: 300px 250px auto;
+                }
+            }
+        `
+    ],
+    imports        : [MatPaginatorModule, MatSortModule, TranslocoLocaleModule, MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
 })
-export class LugaresListComponent implements OnInit, OnDestroy
+export class AnnouncementListComponent implements OnInit, OnDestroy
 {
-    @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
+    announcements$: Observable<Announcement[]>;
 
-    lugares$: Observable<Lugar[]>;
-
-    lugaresCount: number = 0;
-    lugaresTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
+    announcementCount: number = 0;
+    announcementTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
-    selectedLugar: Lugar;
+    selectedAnnouncement: Announcement;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -39,7 +60,7 @@ export class LugaresListComponent implements OnInit, OnDestroy
     constructor(
         private _activatedRoute: ActivatedRoute,
         private _changeDetectorRef: ChangeDetectorRef,
-        private _lugaresService: LugaresService,
+        private _announcementService: AnnouncementService,
         @Inject(DOCUMENT) private _document: any,
         private _router: Router,
         private _fuseMediaWatcherService: FuseMediaWatcherService,
@@ -56,30 +77,18 @@ export class LugaresListComponent implements OnInit, OnDestroy
      */
     ngOnInit(): void
     {
-        // Get the lugares
-        this.lugares$ = this._lugaresService.lugares$;
-        this._lugaresService.lugares$
+        // Get the announcements
+        this.announcements$ = this._announcementService.announcements$;
+        this._announcementService.announcements$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((lugares: Lugar[]) =>
+            .subscribe((announcement: Announcement[]) =>
             {
                 // Update the counts
-                this.lugaresCount = lugares.length;
+                this.announcementCount = announcement.length;
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-            });
-
-        // Get the lugar
-        this._lugaresService.lugar$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((lugar: Lugar) =>
-            {
-                // Update the selected lugar
-                this.selectedLugar = lugar;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
+        });
 
         // Subscribe to search input field value changes
         this.searchInputControl.valueChanges
@@ -88,56 +97,10 @@ export class LugaresListComponent implements OnInit, OnDestroy
                 switchMap(query =>
 
                     // Search
-                    this._lugaresService.searchLugares(query),
+                    this._announcementService.searchAnnouncement(query),
                 ),
             )
-            .subscribe();
-
-        // Subscribe to MatDrawer opened change
-        this.matDrawer.openedChange.subscribe((opened) =>
-        {
-            if ( !opened )
-            {
-                // Remove the selected lugar when drawer closed
-                this.selectedLugar = null;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            }
-        });
-
-        // Subscribe to media changes
-        this._fuseMediaWatcherService.onMediaChange$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe(({matchingAliases}) =>
-            {
-                // Set the drawerMode if the given breakpoint is active
-                if ( matchingAliases.includes('lg') )
-                {
-                    this.drawerMode = 'side';
-                }
-                else
-                {
-                    this.drawerMode = 'over';
-                }
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Listen for shortcuts
-        fromEvent(this._document, 'keydown')
-            .pipe(
-                takeUntil(this._unsubscribeAll),
-                filter<KeyboardEvent>(event =>
-                    (event.ctrlKey === true || event.metaKey) // Ctrl or Cmd
-                    && (event.key === '/'), // '/'
-                ),
-            )
-            .subscribe(() =>
-            {
-                this.createLugar();
-            });
+        .subscribe();
     }
 
     /**
@@ -164,22 +127,6 @@ export class LugaresListComponent implements OnInit, OnDestroy
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
-    }
-
-    /**
-     * Create lugar
-     */
-    createLugar(): void
-    {
-        // Create the lugar
-        this._lugaresService.createLugares().subscribe((newLugar) =>
-        {
-            // Go to the new lugar
-            this._router.navigate(['./', newLugar.id], {relativeTo: this._activatedRoute});
-
-            // Mark for check
-            this._changeDetectorRef.markForCheck();
-        });
     }
 
     /**

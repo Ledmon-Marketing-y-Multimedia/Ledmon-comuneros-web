@@ -3,7 +3,7 @@ export interface Comunero
     id: string;
     user?: User;
     background?: string | null;
-    lugar?: Announcement;
+    lugar?: Lugar;
     code?: string;
     role?: ComuneroRole;
 }
@@ -13,14 +13,20 @@ export enum ComuneroRole{
     HOLDER = 'HOLDER',
 }
 
-export interface Announcement
+export interface Lugar
 {
     id: string;
     address: string;
     zona: string;
     poblacion: string;
     provincia: string;
+    status: LugarStatus
     cp: string;
+}
+
+export enum LugarStatus{
+    ACTIVE = 'ACTIVE',
+    SUSPENDED = 'SUSPENDED',
 }
 
 

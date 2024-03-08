@@ -80,6 +80,7 @@ export const appRoutes: Route[] = [
             {path: 'comuneros', loadChildren: () => import('app/modules/admin/comuneros/comuneros.routes')},
             {path: 'lugares', loadChildren: () => import('app/modules/admin/lugares/lugares.routes')},
             {path: 'reuniones', loadChildren: () => import('app/modules/admin/meeting/meeting.routes')},
+            {path: 'announcements', loadChildren: () => import('app/modules/admin/announcement/announcement.routes')},
         ]
     }
 ];

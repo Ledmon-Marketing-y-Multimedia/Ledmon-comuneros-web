@@ -13,20 +13,21 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDrawerToggleResult } from '@angular/material/sidenav';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
-import { fuseAnimations } from '@fuse/animations';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseFindByKeyPipe } from '@fuse/pipes/find-by-key/find-by-key.pipe';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
-import { BarcodeFormat } from '@zxing/library';
-import { ZXingScannerComponent, ZXingScannerModule } from '@zxing/ngx-scanner';
-import { MeetingListComponent } from 'app/modules/admin/meeting/list/list.component';
 import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { Meeting, MeetingAttendance } from 'app/modules/admin/meeting/meeting.types';
-import { assign } from 'lodash-es';
-import { BehaviorSubject, debounceTime, filter, Observable, Subject, take, takeUntil, tap } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ComunerosService } from '../../comuneros/comuneros.service';
-import { Comunero } from '../../comuneros/comuneros.types';
+import { Comunero, ComuneroRole, LugarStatus } from '../../comuneros/comuneros.types';
+import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { AnnouncementService } from '../../announcement/announcement.service';
+import { Announcement } from '../../announcement/announcement.types';
+import { FileService } from 'app/shared/services/file.service';
 
 @Component({
     selector       : 'meeting-details',
@@ -34,17 +35,20 @@ import { Comunero } from '../../comuneros/comuneros.types';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [FormsModule, ZXingScannerModule, ReactiveFormsModule, MatButtonModule, NgIf, MatIconModule, MatMenuModule, RouterLink, MatDividerModule, MatFormFieldModule, MatInputModule, TextFieldModule, NgFor, MatRippleModule, MatCheckboxModule, NgClass, MatDatepickerModule, FuseFindByKeyPipe, DatePipe],
+    imports        : [FormsModule, MatPaginatorModule, MatSortModule, MatTableModule, ReactiveFormsModule, MatButtonModule, NgIf, MatIconModule, MatMenuModule, RouterLink, MatDividerModule, MatFormFieldModule, MatInputModule, TextFieldModule, NgFor, MatRippleModule, MatCheckboxModule, NgClass, MatDatepickerModule, FuseFindByKeyPipe, DatePipe],
 })
 export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
 {
-    @ViewChild('nameField') private _nameField: ElementRef;
-
+    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatSort) sort: MatSort;
     meeting: Meeting;
     meetingForm: UntypedFormGroup;
     meetings: Meeting[];
     comuneros: Comunero[];
-    hasPermission: boolean;
+    selectedFilter: string = 'all';
+    editMode: boolean = false;
+    attendanceDataSource : MatTableDataSource<any> = new MatTableDataSource();
+    attendanceTableColumns: string[] = ['name', 'status', 'date'];
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -55,11 +59,12 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         private _changeDetectorRef: ChangeDetectorRef,
         private _formBuilder: UntypedFormBuilder,
         private _fuseConfirmationService: FuseConfirmationService,
-        private _renderer2: Renderer2,
         private _router: Router,
-        private _meetingListComponent: MeetingListComponent,
+        private _route: ActivatedRoute,
         private _meetingService: MeetingService,
         private _comunerosService: ComunerosService,
+        private _announcementService: AnnouncementService,
+        private _fileService: FileService
     )
     {
     }
@@ -73,8 +78,6 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
      */
     ngOnInit(): void
     {
-        // Open the drawer
-        this._meetingListComponent.matDrawer.open();
 
         // Create the meeting form
         this.meetingForm = this._formBuilder.group({
@@ -83,17 +86,6 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
             description : [''],
             date  : [null],
             status : [''],
-        });
-
-        // Get the meetings
-        this._meetingService.meetings$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((meetings: Meeting[]) =>
-            {
-                this.meetings = meetings;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
         });
 
         this._comunerosService.comuneros$
@@ -111,82 +103,38 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((meeting: Meeting) =>
             {
-                // Open the drawer in case it is closed
-                this._meetingListComponent.matDrawer.open();
-
                 // Get the meeting
                 this.meeting = meeting;
 
-                // Patch values to the form from the meeting
+                this.attendanceDataSource.data = meeting.attendance;
                 this.meetingForm.patchValue(meeting, {emitEvent: false});
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
-            });
-
-        // Update meeting when there is a value change on the meeting form
-        this.meetingForm.valueChanges
-            .pipe(
-                tap((value) =>
-                {
-                    // Update the meeting object
-                    this.meeting = assign(this.meeting, value);
-                }),
-                debounceTime(300),
-                takeUntil(this._unsubscribeAll),
-            )
-            .subscribe((value: Meeting) =>
-            {
-                const attendance : MeetingAttendance[] = [];
-                this.comuneros.forEach(comunero => {
-                    attendance.push({
-                        comunero: {id: comunero.id},
-                        meeting: {id: value.id},
-                        status: 'ASISTE',
-                        entryDate: new Date()
-                    });
-                });
-
-                value.attendance = attendance;
-                debugger
-                // Update the meeting on the server
-                this._meetingService.updateMeeting(value.id, value).subscribe();
-
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
-
-        // Listen for NavigationEnd event to focus on the title field
-        this._router.events
-            .pipe(
-                takeUntil(this._unsubscribeAll),
-                filter(event => event instanceof NavigationEnd),
-            )
-            .subscribe(() =>
-            {
-                // Focus on the title field
-                this._nameField.nativeElement.focus();
-            });
+        });
     }
 
-    /**
-     * After view init
-     */
-    ngAfterViewInit(): void
-    {
-        // Listen for matDrawer opened change
-        this._meetingListComponent.matDrawer.openedChange
-            .pipe(
-                takeUntil(this._unsubscribeAll),
-                filter(opened => opened),
-            )
-            .subscribe(() =>
-            {
-                // Focus on the title element
-                this._nameField.nativeElement.focus();
+    ngAfterViewInit(): void {
+        this.attendanceDataSource.filterPredicate =
+            (data: MeetingAttendance, filter: string) => data.comunero.user.name.toLowerCase().indexOf(filter) != -1;
+        this.attendanceDataSource.sortData = (data: MeetingAttendance[], sort: MatSort) => {
+            if (!sort.active || sort.direction === '') {
+              return data;
+            }
+            return data.sort((a, b) => {
+              const isAsc = sort.direction === 'asc';
+              switch (sort.active) {
+                case 'name': return this.compare(a.comunero.user.name, b.comunero.user.name, isAsc);
+                case 'status': return this.compare(a.status, b.status, isAsc);
+                case 'date': return this.compare(a.entryDate, b.entryDate, isAsc);
+                default: return 0;
+              }
             });
+        }
+        this.attendanceDataSource.paginator = this.paginator;
+        this.attendanceDataSource.sort = this.sort;
     }
+
 
     /**
      * On destroy
@@ -203,34 +151,72 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Close the drawer
+     * Update the meeting
      */
-    closeDrawer(): Promise<MatDrawerToggleResult>
+    saveMeeting(): void
     {
-        return this._meetingListComponent.matDrawer.close();
+        // Get the meeting object
+        const meeting = this.meetingForm.getRawValue();
+        meeting.comunidad = {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}
+        if(this.editMode){
+        // Update the meeting on the server
+            this._meetingService.updateMeeting(meeting.id, meeting)
+                .subscribe(() =>
+                {
+                    // Show a success message
+                    console.log('Meeting updated');
+
+                    // Mark for check
+                    this._changeDetectorRef.markForCheck();
+                });
+        }
+        else {
+            // Create the meeting on the server
+            this._meetingService.createMeeting(meeting)
+                .subscribe((meeting) =>
+                {
+                    this._router.navigate(['../' + meeting.id], {relativeTo: this._route});
+                    // Mark for check
+                    this._changeDetectorRef.markForCheck();
+            });
+        }
     }
 
     /**
-     * Toggle the completed status
+     * Open the scanning overlay
      */
-    toggleCompleted(): void
+    openScanningOverlay(): void
     {
-        // Get the form control for 'completed'
-        const completedFormControl = this.meetingForm.get('completed');
-
-        // Toggle the completed status
-        completedFormControl.setValue(!completedFormControl.value);
+        this._meetingService.scanning = this.meeting;
     }
 
-    /**
-     * Set the meeting priority
-     *
-     * @param priority
-     */
-    setMeetingPriority(priority): void
-    {
-        // Set the value
-        this.meetingForm.get('priority').setValue(priority);
+
+    applyFilter(event: Event) {
+        debugger
+        const filterValue = (event.target as HTMLInputElement).value;
+        this.attendanceDataSource.filter = filterValue.trim().toLowerCase();
+
+        if (this.attendanceDataSource.paginator) {
+          this.attendanceDataSource.paginator.firstPage();
+        }
+    }
+
+    createAnnouncement(){
+        const date = new Date(this.meeting.date).toLocaleDateString();
+        const announcement: Announcement = {title: "Convocatoria reunión " + date,meeting: this.meeting, comunidad: {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}}
+        this._announcementService.createAnnouncement(announcement).subscribe((announcement) => {
+            this._router.navigate(['/announcements/' + announcement.id], {relativeTo: this._route});
+        });
+    }
+
+    uploadActa(files : File[]){
+        const formData = new FormData();
+        formData.append('file', files[0]);
+        const document = {name: files[0].name, type: "ACTA", comunidad: {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}}
+        formData.append('document', new Blob([JSON.stringify(document)], { type: "application/json"}));
+        this._meetingService.uploadActa(this.meeting.id, formData).subscribe((response) => {
+            console.log(response);
+        });
     }
 
     /**
@@ -291,13 +277,14 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         });
     }
 
+    getFileExtension(file: File) {
+        return this._fileService.getFileExtensionImage(file);
+    }
 
-    /**
-     * Open the scanning overlay
-     */
-    openScanningOverlay(): void
-    {
-        this._meetingService.scanning = this.meeting;
+    getActa(){
+        this._fileService.getFileUrlByPath("a09b25f2-897b-4e33-bac5-d5e34f7245ce/" + this.meeting.acta.name).subscribe((url) => {
+            window.open(url, "_blank");
+        });
     }
 
     /**
@@ -310,4 +297,19 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     {
         return item.id || index;
     }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Private methods
+    // -----------------------------------------------------------------------------------------------------
+
+    private compare(a: any, b: any, isAsc: boolean): number {
+        if (a < b) {
+                return isAsc ? -1 : 1;
+        } else if (a > b) {
+                return isAsc ? 1 : -1;
+        } else {
+                return 0;
+        }
+    }
 }
+

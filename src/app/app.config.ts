@@ -13,10 +13,17 @@ import { provideIcons } from 'app/core/icons/icons.provider';
 import { mockApiServices } from 'app/mock-api';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
-import { environment } from 'environments/environment';
 import * as Sentry from "@sentry/angular-ivy";
 import { authAppInitializerFactory } from './core/auth/auth-app-initializer.factory';
 import { AuthService } from './core/auth/auth.service';
+import { provideTranslocoLocale } from '@ngneat/transloco-locale';
+
+
+const globalFormatConfig : any  = {
+    date: {
+      dateStyle: 'medium',
+    }
+  };
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -27,7 +34,7 @@ export const appConfig: ApplicationConfig = {
             withPreloading(PreloadAllModules),
             withInMemoryScrolling({scrollPositionRestoration: 'enabled'}),
         ),
-            
+
         { provide: APP_INITIALIZER, useFactory: authAppInitializerFactory, deps: [AuthService], multi: true },
 
 
@@ -88,6 +95,17 @@ export const appConfig: ApplicationConfig = {
             },
             loader: TranslocoHttpLoader,
         }),
+        provideTranslocoLocale({
+            localeConfig: {
+                global: globalFormatConfig,
+              },
+              langToLocaleMapping: {
+                  en: 'en-US',
+                  es: 'es-ES'
+              }
+        }),
+
+
         {
             // Preload the default language before the app starts to prevent empty/jumping content
             provide   : APP_INITIALIZER,

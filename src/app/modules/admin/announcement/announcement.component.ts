@@ -9,7 +9,7 @@ import { RouterOutlet } from '@angular/router';
     standalone     : true,
     imports        : [RouterOutlet],
 })
-export class AnnoucementComponent
+export class AnnouncementComponent
 {
     /**
      * Constructor

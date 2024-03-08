@@ -80,7 +80,7 @@ export const adminNavigation: FuseNavigationItem[] = [
         title: 'Comunicaciones',
         type : 'basic',
         icon : 'heroicons_outline:printer',
-        link : 'dashboard',
+        link : 'announcements',
         exactMatch: true,
     },
     {
