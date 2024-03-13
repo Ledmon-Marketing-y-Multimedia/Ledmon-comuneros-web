@@ -10,7 +10,7 @@ import { LayoutComponent } from 'app/layout/layout.component';
 export const appRoutes: Route[] = [
 
     // Redirect empty path to '/example'
-    {path: '', pathMatch : 'full', redirectTo: 'example'},
+    {path: '', pathMatch : 'full', redirectTo: 'home'},
 
     // Redirect signed-in user to the '/example'
     //
@@ -51,18 +51,6 @@ export const appRoutes: Route[] = [
         ]
     },
 
-    // Landing routes
-    {
-        path: '',
-        component: LayoutComponent,
-        data: {
-            layout: 'empty'
-        },
-        children: [
-            {path: 'home', loadChildren: () => import('app/modules/landing/home/home.routes')},
-        ]
-    },
-
     // Admin routes
     {
         path: '',
@@ -76,7 +64,7 @@ export const appRoutes: Route[] = [
             initialData: initialDataResolver
         },
         children: [
-            {path: 'example', loadChildren: () => import('app/modules/admin/example/example.routes')},
+            {path: 'home', loadChildren: () => import('app/modules/admin/home/home.routes')},
             {path: 'comuneros', loadChildren: () => import('app/modules/admin/comuneros/comuneros.routes')},
             {path: 'lugares', loadChildren: () => import('app/modules/admin/lugares/lugares.routes')},
             {path: 'reuniones', loadChildren: () => import('app/modules/admin/meeting/meeting.routes')},

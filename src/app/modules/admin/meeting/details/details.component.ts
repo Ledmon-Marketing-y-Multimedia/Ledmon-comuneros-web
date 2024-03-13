@@ -49,6 +49,7 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     editMode: boolean = false;
     attendanceDataSource : MatTableDataSource<any> = new MatTableDataSource();
     attendanceTableColumns: string[] = ['name', 'status', 'date'];
+    presentCount: number;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -105,8 +106,9 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
             {
                 // Get the meeting
                 this.meeting = meeting;
-
+                this.editMode = meeting.id !== undefined;
                 this.attendanceDataSource.data = meeting.attendance;
+                this.presentCount = meeting.attendance.filter((a) => a.status === 'PRESENT').length;
                 this.meetingForm.patchValue(meeting, {emitEvent: false});
 
                 // Mark for check

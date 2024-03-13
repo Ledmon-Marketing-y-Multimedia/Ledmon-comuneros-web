@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, finalize, take, takeUntil } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, filter, finalize, fromEvent, take, takeUntil } from 'rxjs';
 import { Meeting, MeetingAttendance } from './meeting.types';
 import { MeetingService } from './meeting.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { ZXingScannerComponent, ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
@@ -39,16 +39,34 @@ export class MeetingComponent
     meetingAttendance$ : Observable<MeetingAttendance> = this._meetingAttendance.asObservable();
     private _selectingMeeting: BehaviorSubject<MeetingAttendance[] | null> = new BehaviorSubject(null);
     selectingMeeting$ : Observable<MeetingAttendance[]> = this._selectingMeeting.asObservable();
+    presentCount: number;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     /**
      * Constructor
      */
     constructor(private _meetingService: MeetingService,
-                // private _manualSearch: ManualSearchComponent,
+                @Inject(DOCUMENT) private _document: any,
     )
     {
         this.scanning$ = this._meetingService.scanning$.pipe(takeUntil(this._unsubscribeAll))
+
+        this._meetingService.meeting$.pipe(takeUntil(this._unsubscribeAll)).subscribe((meeting) => {
+            this.presentCount = meeting.attendance.filter((a) => a.status === 'PRESENT').length;
+        });
         // this._manualSearch.openPanel();
+
+        // Listen for shortcuts
+        fromEvent(this._document, 'keydown')
+            .pipe(
+                takeUntil(this._unsubscribeAll),
+                filter<KeyboardEvent>(event =>
+                    (event.key === 'Escape')
+                ),
+            )
+            .subscribe(() =>
+            {
+                this.closeScanningOverlay();
+            });
     }
 
 
@@ -66,11 +84,12 @@ export class MeetingComponent
     }
 
     registerAttendance(attendance: MeetingAttendance){
-        debugger
+        attendance.status = 'PRESENT';
         this._meetingService.registerAttendance(attendance).pipe(take(1)).subscribe(
             (result) => {
                 this._selectingMeeting.next(null);
-                this._meetingAttendance.next(result);
+                this._meetingAttendance.next(attendance);
+                this.presentCount = result.filter((a) => a.status === 'PRESENT').length;
                 let snd = new Audio("assets/sounds/ping.mp3");
                 snd.play();
                 console.log('Attendance registered');

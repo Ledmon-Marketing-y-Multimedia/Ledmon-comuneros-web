@@ -189,6 +189,7 @@ export class ManualSearchComponent implements OnInit, OnDestroy
             this._createOverlay();
         }
 
+        this.opened = true;
         // Attach the portal to the overlay
         this._overlayRef.attach(new TemplatePortal(this._searchPanel, this._viewContainerRef));
     }
@@ -215,7 +216,7 @@ export class ManualSearchComponent implements OnInit, OnDestroy
              // If the appearance is 'bar' and the mat-autocomplete is not open, close the search
              if ( this.appearance === 'bar' && !this._matAutocomplete.isOpen )
              {
-                 this.close();
+                 this.closePanel();
              }
          }
      }

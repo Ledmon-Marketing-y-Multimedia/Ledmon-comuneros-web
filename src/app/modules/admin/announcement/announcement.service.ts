@@ -96,6 +96,14 @@ export class AnnouncementService
     }
 
     /**
+     * Send announcement email
+     */
+    sendEmail(announcement: Announcement): Observable<Announcement>
+    {
+        return this._httpClient.post<Announcement>(ANNOUNCEMENT_URL + "/email", announcement)
+    }
+
+    /**
      * Update announcement
      *
      * @param id
@@ -103,25 +111,9 @@ export class AnnouncementService
      */
     updateAnnouncement(id: string, announcement: Announcement): Observable<Announcement>
     {
-        return this.announcements$.pipe(
-            take(1),
-            switchMap(announcements => this._httpClient.patch<Announcement>(ANNOUNCEMENT_URL + "/" + id,
+        return this._httpClient.patch<Announcement>(ANNOUNCEMENT_URL + "/" + id,
             announcement,
             ).pipe(
-                map((updatedAnnouncement) =>
-                {
-                    // Find the index of the updated announcement
-                    const index = announcements.findIndex(item => item.id === id);
-
-                    // Update the announcement
-                    announcements[index] = updatedAnnouncement;
-
-                    // Update the announcement
-                    this._announcements.next(announcements);
-
-                    // Return the updated announcement
-                    return updatedAnnouncement;
-                }),
                 switchMap(updatedAnnouncement => this.announcement$.pipe(
                     take(1),
                     filter(item => item && item.id === id),
@@ -134,8 +126,7 @@ export class AnnouncementService
                         return updatedAnnouncement;
                     }),
                 )),
-            )),
-        );
+            );
     }
 
     /**

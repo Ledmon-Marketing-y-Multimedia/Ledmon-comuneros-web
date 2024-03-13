@@ -1,6 +1,6 @@
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -21,6 +21,8 @@ import { QuillEditorComponent, QuillModules } from 'ngx-quill';
 import { ComunerosService } from '../../comuneros/comuneros.service';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PdfService } from 'app/shared/services/pdf.service';
+import { MatDialog } from '@angular/material/dialog';
+import { LoaderModalComponent } from '../loader-modal/loader-modal.component';
 
 @Component({
     selector       : 'announcement-details',
@@ -35,7 +37,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     announcement: Announcement;
     announcementForm: UntypedFormGroup;
     comuneros: Comunero[];
-    selectedFilter: string = 'all';
+    selectedFilter: string = '';
     filters: string[] = ['all', 'active', 'suspended'];
     editMode: boolean = false;
     numberOfComuneros: any = {};
@@ -48,6 +50,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         ],
 
     };
+    blobs
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -60,7 +63,8 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         private _comunerosService: ComunerosService,
         private _router: Router,
         private _route: ActivatedRoute,
-        private _pdfService: PdfService
+        private _pdfService: PdfService,
+        private _matDialog: MatDialog,
     )
     {
     }
@@ -82,6 +86,19 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
             comuneros     : [[]],
         });
 
+        // Get the comuneros
+        this._comunerosService.comuneros$
+        .pipe(takeUntil(this._unsubscribeAll))
+        .subscribe((comuneros: Comunero[]) =>
+        {
+            this.comuneros = comuneros;
+
+            this._calcNumberOfCards();
+
+            // Mark for check
+            this._changeDetectorRef.markForCheck();
+        });
+
         // Get the announcement
         this._announcementService.announcement$
             .pipe(filter(Boolean),takeUntil(this._unsubscribeAll))
@@ -90,20 +107,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 this.announcement = announcement;
                 this.editMode = true;
                 this.announcementForm.patchValue(announcement);
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-        });
-
-        // Get the comuneros
-        this._comunerosService.comuneros$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((comuneros: Comunero[]) =>
-            {
-                this.comuneros = comuneros;
-
-                this._calcNumberOfCards();
-
+                this._filterCards();
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
         });
@@ -182,7 +186,30 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
 
 
     printComunications(){
-        this._pdfService.print(this.announcementForm.getRawValue());
+        const comuneros = this.announcementForm.get('comuneros').value;
+        const content = this.announcementForm.get('content').value;
+        const blobs = [];
+        const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: blobs, comuneros: comuneros.length}})
+        setTimeout(() => {
+            comuneros.forEach((comunero, index) => {
+                this._pdfService.print(comunero, content).then((result) => {
+                    blobs.push(result);
+                    if(index === comuneros.length - 1){
+                        this._pdfService.combinePdf(blobs).then((result) => {
+                            loader.close();
+                        });
+                    }
+            });
+        });
+        }, 1000);
+
+    }
+
+    sendEmail(){
+        const announcement = this.announcementForm.getRawValue();
+        this._announcementService.sendEmail(announcement).subscribe(() => {
+            console.log('Email sent');
+        });
     }
 
     // -----------------------------------------------------------------------------------------------------
@@ -235,7 +262,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 comuneros = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE);
                 break;
             default:
-                comuneros = [];
+                comuneros = this.comuneros;
                 break;
         }
         this.announcementForm.get('comuneros').setValue(comuneros);

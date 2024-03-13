@@ -44,11 +44,6 @@
                                 matSort
                                 matSortDisableClear>
                                 <div [mat-sort-header]="'name'">Titulo</div>
-                                <div
-                                    class="md:block"
-                                    [mat-sort-header]="'status'">
-                                    Estado
-                                </div>
 
                                 <div
                                     class="hidden md:block"
@@ -59,7 +54,7 @@
                             <!-- Rows -->
                             <ng-container *ngIf="meetings">
                                 <ng-container *ngFor="let meeting of meetings; trackBy: trackByFn">
-                                    <div [routerLink]="meeting.id" class="user-grid grid select-none hover:bg-gray-100 dark:hover:bg-hover items-center gap-4 py-3 px-6 md:px-8 border-b">
+                                    <div [routerLink]="meeting.id" class="meeting-grid grid select-none hover:bg-gray-100 dark:hover:bg-hover items-center gap-4 py-3 px-6 md:px-8 border-b cursor-pointer">
 
                                         <!-- Name -->
                                         <div class="truncate">
@@ -68,12 +63,7 @@
 
                                         <!-- Registro -->
                                         <div class="hidden md:block">
-                                            {{ meeting.status }}
-                                        </div>
-
-                                        <!-- Registro -->
-                                        <div class="hidden md:block">
-                                            {{ meeting.createdAt }}
+                                            {{ meeting.date | date }}
                                         </div>
 
                                     </div>
@@ -81,7 +71,11 @@
                             </ng-container>
                         </div>
 
-
+                        <mat-paginator
+                            class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
+                            [pageSizeOptions]="[5, 10, 25, 100]"
+                            [showFirstLastButtons]="true">
+                        </mat-paginator>
 
                     </ng-container>
                 </ng-container>

@@ -1,3 +1,4 @@
+import { Comunero } from "../comuneros/comuneros.types";
 import { Meeting } from "../meeting/meeting.types";
 
 export interface Announcement
@@ -9,4 +10,5 @@ export interface Announcement
     content?: string;
     meeting?: Meeting;
     comunidad?: any;
+    comuneros?: Comunero[];
 }

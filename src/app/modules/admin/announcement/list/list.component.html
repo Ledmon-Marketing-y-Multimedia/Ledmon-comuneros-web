@@ -59,13 +59,17 @@
                             <!-- Rows -->
                             <ng-container *ngIf="(announcements$ | async) as announcements">
                                 <ng-container *ngFor="let announcement of announcements; trackBy: trackByFn">
-                                    <div [routerLink]="announcement.id" class="user-grid grid select-none hover:bg-gray-100 dark:hover:bg-hover items-center gap-4 py-3 px-6 md:px-8 border-b">
+                                    <div [routerLink]="announcement.id" class="announcement-grid grid cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-hover items-center gap-4 py-3 px-6 md:px-8 border-b">
 
                                         <!-- Name -->
                                         <div class="truncate">
                                             {{announcement.title}}
                                         </div>
 
+                                        <!-- User -->
+                                        <div class="truncate">
+                                            {{announcement.user.name}}
+                                        </div>
 
                                         <!-- Registro -->
                                         <div class="hidden md:block">

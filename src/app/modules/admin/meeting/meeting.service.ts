@@ -201,10 +201,19 @@ export class MeetingService
      * @param meetingId
      * @param attendance
      */
-    registerAttendance(attendance: MeetingAttendance): Observable<any>
+    registerAttendance(attendance: MeetingAttendance): Observable<MeetingAttendance[]>
     {
         return this._httpClient.patch<any>(ATTENDANCE_URL + "/register", attendance);
     }
+
+     /**
+     * New meeting attendance
+     *
+     */
+     newMeeting(): void
+     {
+        this._meeting.next({attendance: []})
+     }
 
     /**
      * Delete the meeting

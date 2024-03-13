@@ -9,4 +9,5 @@ export interface Lugar
     provincia: string;
     cp: string;
     comuneros: Comunero[];
+    status: string;
 }

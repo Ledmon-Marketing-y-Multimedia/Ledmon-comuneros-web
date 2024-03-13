@@ -39,6 +39,20 @@ const meetingResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
         );
 };
 
+/**
+ * New Meeting resolver
+ *
+ * @param route
+ * @param state
+ */
+const newMeetingResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+{
+    const meetingService = inject(MeetingService);
+    const router = inject(Router);
+
+    return meetingService.newMeeting();
+};
+
 export default [
     {
         path     : '',
@@ -55,6 +69,9 @@ export default [
             {
                 path         : 'new',
                 component    : MeetingDetailsComponent,
+                resolve      : {
+                    meeting: newMeetingResolver
+                }
             },
             {
                 path         : ':id',

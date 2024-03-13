@@ -18,7 +18,7 @@
         <mat-drawer-content class="flex flex-col">
 
             <!-- Main -->
-            <div class="flex-auto">
+            <div class="flex-auto overflow-y-scroll sm:overflow-y-hidden">
 
                 <!-- Header -->
                 <div class="flex flex-col sm:flex-row md:flex-col flex-auto justify-between py-8 px-6 md:px-8 border-b">
@@ -39,11 +39,12 @@
                     </div>
 
                     <!-- Main actions -->
-                    <div class="flex items-center mt-4 sm:mt-0 md:mt-4">
+                    <div class="flex flex-wrap justify-end gap-y-2 items-center mt-4 sm:mt-0 md:mt-4">
                         <!-- Search -->
                         <div class="flex-auto">
+
                             <mat-form-field
-                                class="fuse-mat-dense fuse-mat-rounded w-full min-w-50"
+                                class="fuse-mat-dense fuse-mat-rounded w-full"
                                 subscriptSizing="dynamic">
                                 <mat-icon
                                     class="icon-size-5"
@@ -56,6 +57,21 @@
                                     [placeholder]="'Search lugares'">
                             </mat-form-field>
                         </div>
+
+                        <mat-form-field
+                        class="w-full sm:w-44 ml-4"
+                        [subscriptSizing]="'dynamic'">
+                        <mat-select
+                            class="rounded-md"
+                            [value]="'all'"
+                            (selectionChange)="filterByZona($event)"
+                            >
+                                <mat-option [value]="'all'">Todas las zonas</mat-option>
+                                <ng-container *ngFor="let zona of zonas; trackBy: trackByFn">
+                                    <mat-option [value]="zona">{{zona}}</mat-option>
+                                </ng-container>
+                            </mat-select>
+                        </mat-form-field>
                         <!-- Add lugar button -->
                         <button
                             class="ml-4"
@@ -68,52 +84,98 @@
                     </div>
                 </div>
 
-                <!-- Lugares list -->
-                <div class="relative">
-                    <ng-container *ngIf="lugares$ | async as lugares">
-                        <ng-container *ngIf="lugares.length; else noLugares">
-                            <ng-container *ngFor="let lugar of lugares; let i = index; trackBy: trackByFn">
-                                <!-- Group -->
-                                <ng-container *ngIf="i === 0 || lugar.address?.charAt(0) !== lugares[i - 1].address?.charAt(0)">
-                                    <div class="z-10 sticky top-0 -mt-px px-6 py-1 md:px-8 border-t border-b font-medium uppercase text-secondary bg-gray-50 dark:bg-gray-900">
-                                        {{lugar.address?.charAt(0)}}
-                                    </div>
-                                </ng-container>
-                                <!-- Lugar -->
-                                <a
-                                    class="z-20 flex items-center px-6 py-4 md:px-8 cursor-pointer border-b"
-                                    [ngClass]="{'hover:bg-gray-100 dark:hover:bg-hover': !selectedLugar || selectedLugar.id !== lugar.id,
-                                                'bg-primary-50 dark:bg-hover': selectedLugar && selectedLugar.id === lugar.id}"
-                                    [routerLink]="['./', lugar.id]">
-                                    <div class="flex flex-0 items-center justify-center w-10 h-10 rounded-full overflow-hidden">
-                                        <ng-container *ngIf="lugar.avatar">
-                                            <img
-                                                class="object-cover w-full h-full"
-                                                [src]="lugar.avatar"
-                                                alt="Lugar avatar"/>
-                                        </ng-container>
-                                        <ng-container *ngIf="!lugar.avatar">
-                                            <div class="flex items-center justify-center w-full h-full rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                                                {{lugar.address?.charAt(0)}}
-                                            </div>
-                                        </ng-container>
-                                    </div>
-                                    <div class="min-w-0 ml-4">
-                                        <div class="font-medium leading-5 truncate">{{lugar.address}}</div>
-                                        <div class="leading-5 truncate text-secondary">{{lugar.address}}</div>
-                                    </div>
-                                </a>
-                            </ng-container>
+                <div class="flex flex-col flex-auto mb-2 sm:mb-18 h-screen sm:overflow-hidden sm:overflow-y-auto">
+                    <table
+                        class="w-full bg-transparent overflow-y-auto"
+                        mat-table
+                        matSort
+                        [dataSource]="lugarDataSource"
+                        [trackBy]="trackByFn"
+                        #recentTransactionsTable
+                    >
+                        <!-- subject -->
+                        <ng-container matColumnDef="address">
+                            <th
+                                mat-header-cell
+                                mat-sort-header
+                                *matHeaderCellDef
+                            >
+                            Dirección
+                            </th>
+                            <td mat-cell *matCellDef="let lugar">
+                                <span
+                                    class="pr-6 font-medium text-sm text-secondary whitespace-nowrap"
+                                >
+                                    {{ lugar.address }}
+                                </span>
+                            </td>
                         </ng-container>
+                        <!-- status -->
+                        <ng-container matColumnDef="status">
+                            <th
+                                mat-header-cell
+                                mat-sort-header
+                                *matHeaderCellDef
+                            >
+                            Estado
+                            </th>
+                            <td
+                            mat-cell
+                            *matCellDef="let lugar">
+                            <span *ngIf="lugar.status"
+                            class="inline-flex items-center font-bold text-xs px-2.5 py-0.5 rounded-full tracking-wide uppercase">
+                                <span *ngIf="lugar.status" class="leading-relaxed whitespace-nowrap">{{lugar.status}}</span>
+                            </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- zona -->
+                        <ng-container matColumnDef="zona">
+                            <th
+                                mat-header-cell
+                                mat-sort-header
+                                *matHeaderCellDef
+                            >
+                            Zona
+                            </th>
+                            <td mat-cell *matCellDef="let lugar">
+                                <span
+                                    class="pr-6 font-medium text-sm text-secondary whitespace-nowrap"
+                                >
+                                    {{
+                                        lugar.zona
+                                    }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <tr
+                        class="py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5"
+                            mat-header-row
+                            *matHeaderRowDef="
+                                lugarTableColumns
+                            "
+                        ></tr>
+                        <tr
+                            [routerLink]="'./' + row.id"
+                            class="order-row h-12 cursor-pointer"
+                            mat-row
+                            *matRowDef="
+                                let row;
+                                columns: lugarTableColumns
+                            "
+                        ></tr>
+                    </table>
+                    <ng-container *ngIf="lugarDataSource.data.length == 0">
+                        <div class="p-8 sm:p-16 border-t text-4xl font-semibold tracking-tight text-center">No hay asistencia</div>
                     </ng-container>
-
-                    <!-- No lugares -->
-                    <ng-template #noLugares>
-                        <div class="p-8 sm:p-16 border-t text-4xl font-semibold tracking-tight text-center">There are no lugares!</div>
-                    </ng-template>
-
+                    <mat-paginator
+                        class="absolute inset-x-0 bottom-0 border-t border-b-0 z-10 bg-gray-50 dark:bg-transparent"
+                        [pageSizeOptions]="[5, 10, 20]"
+                        [showFirstLastButtons]="true"
+                        >
+                    </mat-paginator>
                 </div>
-
             </div>
 
         </mat-drawer-content>

@@ -1,11 +1,15 @@
 import { AsyncPipe, DOCUMENT, I18nPluralPipe, NgClass, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
@@ -18,20 +22,26 @@ import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rx
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
+    imports        : [MatPaginatorModule, MatSelectModule, MatTableModule, MatSortModule, MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
 })
-export class LugaresListComponent implements OnInit, OnDestroy
+export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
 {
     @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
+    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatSort) sort: MatSort;
 
     lugares$: Observable<Lugar[]>;
 
     lugaresCount: number = 0;
     lugaresTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
+    lugarDataSource: MatTableDataSource<Lugar> = new MatTableDataSource<Lugar>();
+    lugarTableColumns: string[] = ['address', 'status', 'zona'];
+    zonas: Set<String> =  new Set<String>();
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedLugar: Lugar;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    lugares: Lugar[];
 
     /**
      * Constructor
@@ -62,8 +72,12 @@ export class LugaresListComponent implements OnInit, OnDestroy
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((lugares: Lugar[]) =>
             {
+                this.lugares = lugares;
+                this.lugarDataSource.data = lugares;
                 // Update the counts
                 this.lugaresCount = lugares.length;
+
+                this.zonas = new Set(lugares.map((lugar) => lugar.zona));
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -114,7 +128,7 @@ export class LugaresListComponent implements OnInit, OnDestroy
                 // Set the drawerMode if the given breakpoint is active
                 if ( matchingAliases.includes('lg') )
                 {
-                    this.drawerMode = 'side';
+                    this.drawerMode = 'over';
                 }
                 else
                 {
@@ -138,6 +152,18 @@ export class LugaresListComponent implements OnInit, OnDestroy
             {
                 this.createLugar();
             });
+    }
+
+
+    filterByZona(zona: any): void
+    {
+        this.lugarDataSource.data = this.lugares.filter((lugar) => lugar.zona === zona.value);
+    }
+
+
+    ngAfterViewInit(): void {
+        this.lugarDataSource.paginator = this.paginator;
+        this.lugarDataSource.sort = this.sort;
     }
 
     /**

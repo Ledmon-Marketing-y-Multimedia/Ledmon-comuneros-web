@@ -11,7 +11,7 @@
         </div>
     </div>
     <div class="p-6 sm:p-10">
-        <div class="flex flex-wrap gap-y-2 items-center justify-end">
+        <div class="flex flex-wrap gap-y-2 items-center justify-end" *ngIf="editMode">
             <button
                 (click)="openScanningOverlay()"
                 class="px-6 ml-3"
@@ -85,15 +85,15 @@
                             <div class="font-medium">Fecha</div>
                             <div
                                 class="relative flex items-center mt-1.5 px-4 leading-9 rounded-full cursor-pointer"
-                                [ngClass]="{'text-gray-500 bg-gray-100 dark:text-gray-300 dark:bg-gray-700': !meeting?.date,
-                                            'text-green-800 bg-green-200 dark:text-green-100 dark:bg-green-500': meeting?.date}"
+                                [ngClass]="{'text-gray-500 bg-gray-100 dark:text-gray-300 dark:bg-gray-700': !meetingForm.get('date').value,
+                                            'text-green-800 bg-green-200 dark:text-green-100 dark:bg-green-500': meetingForm.get('date').value}"
                                 (click)="datePicker.open()">
                                 <mat-icon
                                     class="icon-size-5 text-current"
                                     [svgIcon]="'heroicons_solid:calendar'"></mat-icon>
                                 <span class="ml-2 text-md font-medium">
-                                    <ng-container *ngIf="meeting?.date">{{meeting?.date | date:'longDate'}}</ng-container>
-                                    <ng-container *ngIf="!meeting?.date">Not set</ng-container>
+                                    <ng-container *ngIf="meetingForm.get('date').value">{{meetingForm.get('date').value | date:'longDate'}}</ng-container>
+                                    <ng-container *ngIf="!meetingForm.get('date').value">Not set</ng-container>
                                 </span>
                                 <mat-form-field
                                     class="fuse-mat-dense invisible absolute inset-0 -mt-2.5 opacity-0 pointer-events-none"
@@ -187,6 +187,9 @@
                 <h2 class="text-3xl font-semibold tracking-tight leading-8">
                     Asistencia
                 </h2>
+                <div class="flex flex-auto">
+                    <span>{{presentCount}} asistentes</span>
+                </div>
                 <div class="flex-auto mt-2">
                     <mat-form-field
                         class="fuse-mat-dense fuse-mat-rounded w-full min-w-50"
