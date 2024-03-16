@@ -41,6 +41,7 @@ export class MeetingComponent
     selectingMeeting$ : Observable<MeetingAttendance[]> = this._selectingMeeting.asObservable();
     presentCount: number;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    inProgress: boolean;
     /**
      * Constructor
      */
@@ -71,16 +72,19 @@ export class MeetingComponent
 
 
     scanSuccessHandler(event: any, meeting: Meeting) {
-        this._meetingAttendance.value ? null :
-        this._meetingService.getAnnouncementAttendance(meeting.id, event).pipe(take(1))
-            .subscribe((attendances: MeetingAttendance[]) => {
-                if (attendances.length > 1) {
-                    this._selectingMeeting.next(attendances);
-                }
-                else {
-                    this.registerAttendance(attendances[0]);
-                }
-        }   );
+        if(!this.inProgress){
+            this.inProgress = true;
+            this._meetingAttendance.value ? null :
+            this._meetingService.getAnnouncementAttendance(meeting.id, event).pipe(take(1))
+                .subscribe((attendances: MeetingAttendance[]) => {
+                    if (attendances.length > 1) {
+                        this._selectingMeeting.next(attendances);
+                    }
+                    else {
+                        this.registerAttendance(attendances[0]);
+                    }
+            });
+        }
     }
 
     registerAttendance(attendance: MeetingAttendance){
@@ -95,6 +99,7 @@ export class MeetingComponent
                 console.log('Attendance registered');
                 setTimeout(() => {
                     this._meetingAttendance.next(null);
+                    this.inProgress = false;
                 }, 3000);
             },
             (error) => {

@@ -83,14 +83,14 @@ export const adminNavigation: FuseNavigationItem[] = [
         link : 'announcements',
         exactMatch: true,
     },
-    {
-        id   : 'dashboard.documentacion',
-        title: 'Documentación',
-        type : 'basic',
-        icon : 'heroicons_outline:document-duplicate',
-        link : 'dashboard',
-        exactMatch: true,
-    },
+    // {
+    //     id   : 'dashboard.documentacion',
+    //     title: 'Documentación',
+    //     type : 'basic',
+    //     icon : 'heroicons_outline:document-duplicate',
+    //     link : 'dashboard',
+    //     exactMatch: true,
+    // },
     {
         id   : 'dashboard.comunidad',
         title: 'Mi comunidad',

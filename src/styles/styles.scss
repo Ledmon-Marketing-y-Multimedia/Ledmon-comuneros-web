@@ -32,3 +32,23 @@
     }
   }
 
+.ql-snow .ql-picker-options .ql-picker-item {
+font-family: #{attr(data-value)};
+&::before {
+    content: attr(data-value) !important;
+}
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item::before {
+content: attr(data-value) !important;
+}
+
+$text-editor-fonts: 'IRANSans', 'roboto', 'cursive', 'fantasy', 'monospace';
+
+@each $text-editor-font in $text-editor-fonts {
+  .ql-font-#{$text-editor-font} {
+    font-family: $text-editor-font;
+  }
+}
+

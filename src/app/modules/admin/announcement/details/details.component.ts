@@ -1,6 +1,6 @@
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { DatePipe, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -17,12 +17,13 @@ import { AnnouncementService } from 'app/modules/admin/announcement/announcement
 import { Announcement } from 'app/modules/admin/announcement/announcement.types';
 import { Subject, filter, takeUntil } from 'rxjs';
 import { Comunero, ComuneroRole, LugarStatus } from '../../comuneros/comuneros.types';
-import { QuillEditorComponent, QuillModules } from 'ngx-quill';
+import { QuillEditorComponent, QuillModule, QuillModules, QuillService } from 'ngx-quill';
 import { ComunerosService } from '../../comuneros/comuneros.service';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PdfService } from 'app/shared/services/pdf.service';
 import { MatDialog } from '@angular/material/dialog';
 import { LoaderModalComponent } from '../loader-modal/loader-modal.component';
+import Quill from 'quill';
 
 @Component({
     selector       : 'announcement-details',
@@ -34,23 +35,30 @@ import { LoaderModalComponent } from '../loader-modal/loader-modal.component';
 })
 export class AnnouncementDetailsComponent implements OnInit, OnDestroy
 {
+    fontList = ['Arial', 'Courier', 'Garamond', 'Tahoma', 'Times New Roman', 'Verdana'];
     announcement: Announcement;
     announcementForm: UntypedFormGroup;
     comuneros: Comunero[];
     selectedFilter: string = '';
-    filters: string[] = ['all', 'active', 'suspended'];
+    filters: string[] = ['todos', 'activos', 'suspendidos'];
     editMode: boolean = false;
-    numberOfComuneros: any = {};
+    numberOfComunerosCarta: any = {};
+    numberOfComunerosEmail: any = {};
+    comunerosCarta: Comunero[];
+    comunerosEmail: Comunero[];
     quillModules: QuillModules = {
         toolbar: [
             ['bold', 'italic', 'underline'],
+            [{ font: ['IRANSans', 'roboto', 'cursive', 'fantasy', 'monospace'] }],
             [{align: []}, {list: 'ordered'}, {list: 'bullet'}],
             ['clean'],
-            [{ size: [ 'small', false, 'large', 'huge' ]}]
+            [{ size: [ 'small', false, 'large', 'huge' ]}],
+            ['image',],
         ],
 
+
+
     };
-    blobs
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -83,7 +91,8 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
             id          : [undefined],
             title        : ['', [Validators.required]],
             content       : [''],
-            comuneros     : [[]],
+            comunerosCarta     : [[]],
+            comunerosEmail     : [[]],
         });
 
         // Get the comuneros
@@ -92,6 +101,9 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         .subscribe((comuneros: Comunero[]) =>
         {
             this.comuneros = comuneros;
+
+            this.comunerosCarta = this.comuneros.filter(comunero => !comunero.user.email);
+            this.comunerosEmail = this.comuneros.filter(comunero => comunero.user.email);
 
             this._calcNumberOfCards();
 
@@ -107,10 +119,21 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 this.announcement = announcement;
                 this.editMode = true;
                 this.announcementForm.patchValue(announcement);
+                this.announcementForm.get('comunerosCarta').setValue(announcement.comuneros.filter(comunero => !comunero.user.email));
+                this.announcementForm.get('comunerosEmail').setValue(announcement.comuneros.filter(comunero => comunero.user.email));
                 this._filterCards();
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
         });
+        const FontAttributor = Quill.import('attributors/class/font');
+        FontAttributor.whitelist = [
+            'IRANSans',
+            'roboto',
+            'cursive',
+            'fantasy',
+            'monospace'
+        ];
+        Quill.register(FontAttributor, true);
     }
 
     /**
@@ -134,6 +157,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     {
         // Get the announcement object
         const announcement = this.announcementForm.getRawValue();
+        announcement.comuneros = announcement.comunerosCarta.concat(announcement.comunerosEmail);
         announcement.comunidad = {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}
         if(this.editMode){
         // Update the announcement on the server
@@ -186,27 +210,47 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
 
 
     printComunications(){
-        const comuneros = this.announcementForm.get('comuneros').value;
+        const comuneros = this.announcementForm.get('comunerosCarta').value;
         const content = this.announcementForm.get('content').value;
+        const a  = '<div style="width: 100%; font-family: "Inter", sans-serif; font-style: normal;" class="ql-editor">' + content + '</div>'
         const blobs = [];
-        const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: blobs, comuneros: comuneros.length}})
-        setTimeout(() => {
-            comuneros.forEach((comunero, index) => {
-                this._pdfService.print(comunero, content).then((result) => {
+        const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: blobs, comuneros: comuneros.length}});
+        const context = this;
+
+        async function printPDF(comunero) {
+            return new Promise((resolve) => {
+                context._pdfService.print(comunero, a).then((result) => {
                     blobs.push(result);
-                    if(index === comuneros.length - 1){
-                        this._pdfService.combinePdf(blobs).then((result) => {
-                            loader.close();
-                        });
-                    }
+                    resolve(true);
+                });
             });
-        });
+        }
+
+        async function combinePDF() {
+            return new Promise((resolve) => {
+                context._pdfService.combinePdf(blobs).then((result) => {
+                    loader.close();
+                    resolve(true);
+                });
+            });
+        }
+
+        async function printAllPDFs() {
+            for (let i = 0; i < comuneros.length; i++) {
+                await printPDF(comuneros[i]);
+            }
+            await combinePDF();
+        }
+
+        setTimeout(() => {
+            printAllPDFs();
         }, 1000);
 
     }
 
     sendEmail(){
         const announcement = this.announcementForm.getRawValue();
+        announcement.comuneros = announcement.comunerosEmail;
         this._announcementService.sendEmail(announcement).subscribe(() => {
             console.log('Email sent');
         });
@@ -219,27 +263,30 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     private _calcNumberOfCards(): void
     {
         // Prepare the numberOfCards object
-        this.numberOfComuneros = {};
+        this.numberOfComunerosCarta = {};
+        this.numberOfComunerosEmail = {};
 
         // Go through the filters
         this.filters.forEach((filter) =>
         {
             // For each filter, calculate the card count
             switch ( filter ){
-                case 'all':
-                    this.numberOfComuneros[filter] = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER).length;
+                case 'todos':
+                    this.numberOfComunerosCarta[filter] = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER).length;
+                    this.numberOfComunerosEmail[filter] = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER).length;
                     break;
-                case 'suspended':
-                    this.numberOfComuneros[filter] = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED).length;
+                case 'suspendidos':
+                    this.numberOfComunerosCarta[filter] = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED).length;
+                    this.numberOfComunerosEmail[filter] = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED).length;
                     break;
-                case 'active':
-                    this.numberOfComuneros[filter] = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE).length;
+                case 'activos':
+                    this.numberOfComunerosCarta[filter] = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE).length;
+                    this.numberOfComunerosEmail[filter] = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE).length;
                     break;
                 default:
                     break;
             }
 
-            // Fill the numberOfCards object with the counts
         });
     }
 
@@ -250,21 +297,32 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
      */
     private _filterCards(): void
     {
-        let comuneros = [];
+        let comunerosCarta = [];
+        let comunerosEmail = [];
         switch ( this.selectedFilter ){
-            case 'all':
-                comuneros = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER);
+            case 'todos':
+                comunerosCarta = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER);
+                comunerosEmail = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER);
                 break;
-            case 'suspended':
-                comuneros = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED);
+            case 'suspendidos':
+                comunerosCarta = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED);
+                comunerosEmail = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED);
                 break;
-            case 'active':
-                comuneros = this.comuneros.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE);
+            case 'activos':
+                comunerosCarta = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE);
+                comunerosEmail = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE);
                 break;
             default:
-                comuneros = this.comuneros;
+                comunerosCarta = this.comunerosCarta.filter(comuneroCarta =>
+                    this.announcement.comuneros.some(comunero => comunero.id === comuneroCarta.id)
+                );
+                comunerosEmail = this.comunerosEmail.filter(comunerosEmail =>
+                    this.announcement.comuneros.some(comunero => comunero.id === comunerosEmail.id)
+                );
                 break;
         }
-        this.announcementForm.get('comuneros').setValue(comuneros);
+        this.announcementForm.get('comunerosCarta').setValue(comunerosCarta);
+        this.announcementForm.get('comunerosEmail').setValue(comunerosEmail);
+        this._changeDetectorRef.markForCheck();
     }
 }
