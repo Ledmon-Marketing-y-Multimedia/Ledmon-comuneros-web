@@ -157,6 +157,10 @@ export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
 
     filterByZona(zona: any): void
     {
+        if(zona.value === 'all'){
+            this.lugarDataSource.data = this.lugares;
+            return;
+        }
         this.lugarDataSource.data = this.lugares.filter((lugar) => lugar.zona === zona.value);
     }
 

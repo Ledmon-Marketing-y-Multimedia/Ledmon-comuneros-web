@@ -122,8 +122,8 @@ export class MeetingService
     }
 
 
-    uploadActa(meetingId: string, formData: FormData){
-        return this._httpClient.post<any>(MEETING_URL + "/" + meetingId + "/acta", formData);
+    uploadDocument(meetingId: string, formData: FormData){
+        return this._httpClient.post<any>(MEETING_URL + "/" + meetingId + "/document", formData);
     }
 
     /**
@@ -212,7 +212,7 @@ export class MeetingService
      */
      newMeeting(): void
      {
-        this._meeting.next({attendance: []})
+        this._meeting.next({attendance: [], documents: []})
      }
 
     /**

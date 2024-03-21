@@ -19,7 +19,7 @@ getFileUrlByPath(path: string){
     return this._httpClient.get<any>(DOCUMENT_URL, { params, responseType: 'text' as any});
 }
 
-getFileExtensionImage(attachment: File){
+getFileExtensionImage(attachment){
     const split = attachment.name?.split('.')
     if (split){
       const extension = split[split?.length - 1]

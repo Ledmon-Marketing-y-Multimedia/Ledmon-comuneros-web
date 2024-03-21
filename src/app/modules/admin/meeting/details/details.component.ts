@@ -28,6 +28,8 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { AnnouncementService } from '../../announcement/announcement.service';
 import { Announcement } from '../../announcement/announcement.types';
 import { FileService } from 'app/shared/services/file.service';
+import { UploadDocumentComponent } from '../upload-document/upload-document.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
     selector       : 'meeting-details',
@@ -65,7 +67,8 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         private _meetingService: MeetingService,
         private _comunerosService: ComunerosService,
         private _announcementService: AnnouncementService,
-        private _fileService: FileService
+        private _fileService: FileService,
+        private _matDialog: MatDialog,
     )
     {
     }
@@ -194,7 +197,6 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
 
 
     applyFilter(event: Event) {
-        debugger
         const filterValue = (event.target as HTMLInputElement).value;
         this.attendanceDataSource.filter = filterValue.trim().toLowerCase();
 
@@ -211,13 +213,30 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         });
     }
 
-    uploadActa(files : File[]){
+
+     /**
+     * Open document dialog
+     */
+     openDocumentDialog(): void
+     {
+         // Open the dialog
+         const dialogRef = this._matDialog.open(UploadDocumentComponent);
+
+         dialogRef.afterClosed()
+             .subscribe((result) =>
+             {
+                this.uploadActa(result);
+             });
+     }
+
+    uploadActa(doc: {type: string, file: File}){
         const formData = new FormData();
-        formData.append('file', files[0]);
-        const document = {name: files[0].name, type: "ACTA", comunidad: {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}}
+        formData.append('file', doc.file);
+        const document = {name: doc.file.name, type: doc.type, comunidad: {id: "a09b25f2-897b-4e33-bac5-d5e34f7245ce"}}
         formData.append('document', new Blob([JSON.stringify(document)], { type: "application/json"}));
-        this._meetingService.uploadActa(this.meeting.id, formData).subscribe((response) => {
-            console.log(response);
+        this._meetingService.uploadDocument(this.meeting.id, formData).subscribe((response) => {
+            this.meeting.documents.push(response);
+            this._changeDetectorRef.markForCheck();
         });
     }
 
@@ -279,12 +298,12 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         });
     }
 
-    getFileExtension(file: File) {
-        return this._fileService.getFileExtensionImage(file);
+    getFileExtension(document) {
+        return this._fileService.getFileExtensionImage(document);
     }
 
-    getActa(){
-        this._fileService.getFileUrlByPath("a09b25f2-897b-4e33-bac5-d5e34f7245ce/" + this.meeting.acta.name).subscribe((url) => {
+    getDocument(document: any){
+        this._fileService.getFileUrlByPath("a09b25f2-897b-4e33-bac5-d5e34f7245ce/" + this.meeting.id + "/" + document.name).subscribe((url) => {
             window.open(url, "_blank");
         });
     }

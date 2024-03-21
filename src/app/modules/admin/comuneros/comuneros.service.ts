@@ -167,6 +167,43 @@ export class ComunerosService
         );
     }
 
+
+    updateComuneroStatus(id: string, comunero): Observable<Comunero>
+    {
+        return this.comuneros$.pipe(
+            take(1),
+            switchMap(comuneros => this._httpClient.patch<Comunero>(COMUNEROS_URL + "/" + id + "/status",
+                comunero).pipe(
+                map((updatedComunero) =>
+                {
+                    // Find the index of the updated comunero
+                    const index = comuneros.findIndex(item => item.id === id);
+
+                    // Update the comunero
+                    comuneros[index] = updatedComunero;
+
+                    // Update the comuneros
+                    this._comuneros.next(comuneros);
+
+                    // Return the updated comunero
+                    return updatedComunero;
+                }),
+                switchMap(updatedComunero => this.comunero$.pipe(
+                    take(1),
+                    filter(item => item && item.id === id),
+                    tap(() =>
+                    {
+                        // Update the comunero if it's selected
+                        this._comunero.next(updatedComunero);
+
+                        // Return the updated comunero
+                        return updatedComunero;
+                    }),
+                )),
+            )),
+        );
+    }
+
     /**
      * Delete the comunero
      *
@@ -201,7 +238,7 @@ export class ComunerosService
      */
     newComunero(): Observable<Comunero>
     {
-        const newComunero : Comunero = {background: '', user : {name: '', id : '', username: '', phoneNumbers: [], email: ''}, id: ''}
+        const newComunero : Comunero = {background: '', user : {name: '', id : '', username: '', phones: [], email: ''}, id: ''}
         this._comunero.next(newComunero);
         return of(newComunero);
     }

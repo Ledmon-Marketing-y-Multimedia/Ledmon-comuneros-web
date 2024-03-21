@@ -8,7 +8,7 @@ export interface Meeting
     attendance?: MeetingAttendance[];
     status?: string;
     date?: Date;
-    acta?: any;
+    documents?: any[];
     announcementId?: string;
 }
 

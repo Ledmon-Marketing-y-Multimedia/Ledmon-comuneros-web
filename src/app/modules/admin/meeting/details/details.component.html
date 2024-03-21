@@ -20,12 +20,11 @@
                 Escanear QRs
             </button>
             <button
-            *ngIf="!meeting?.acta"
-            (click)="fileInput.click()"
+            (click)="openDocumentDialog()"
                 class="px-6 ml-3"
                 mat-flat-button
                 [color]="'primary'">
-                Subir acta de reunion
+                Subir documento de reunion
             </button>
             <input
                 #fileInput
@@ -53,7 +52,10 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" >
             <div [formGroup]="meetingForm">
                 <div class="flex flex-col mt-4 p-8 pb-5 bg-card shadow rounded overflow-hidden">
-                    <div class="flex flex-col gt-xs:flex-row">
+                    <h2 class="text-3xl font-semibold tracking-tight leading-8">
+                        Información de la reunión
+                    </h2>
+                    <div class="flex flex-col gt-xs:flex-row mt-2">
                         <mat-form-field class="flex-auto gt-xs:pr-3">
                             <mat-label>Título</mat-label>
                             <input
@@ -122,12 +124,12 @@
                         </div>
                     </div>
                 </div>
-                <div *ngIf="meeting.acta" class="flex flex-col mt-4 p-8 pb-5 bg-card shadow rounded overflow-hidden">
+                <div *ngIf="meeting.documents.length > 0" class="flex flex-col mt-4 p-8 pb-5 bg-card shadow rounded overflow-hidden">
                     <h2 class="text-3xl font-semibold tracking-tight leading-8">
-                        Acta
+                        Documentos
                     </h2>
                     <div class="flex flex-wrap -m-2 mt-2">
-                        <a  (click)="getActa()"
+                        <a *ngFor="let document of meeting.documents"  (click)="getDocument(document)"
                             class="flex flex-col w-30 h-30 m-2 p-3 border rounded-2xl cursor-pointer bg-card hover:bg-gray-100"
                             target="_blank"
                         >
@@ -146,7 +148,7 @@
                                         <div
                                             *ngIf="
                                                 getFileExtension(
-                                                    meeting.acta
+                                                    document
                                                 );
                                                 let extension
                                             "
@@ -176,7 +178,7 @@
                                 class="flex flex-col flex-auto justify-center text-center text-sm font-medium"
                             >
                                 <div class="truncate">
-                                    {{ meeting.acta.name }}
+                                    {{ document.type }}
                                 </div>
                             </div>
                         </a>
@@ -265,7 +267,7 @@
                                     class="pr-6 font-medium text-sm text-secondary whitespace-nowrap"
                                 >
                                     {{
-                                        attendance.entryDate | date
+                                        attendance.entryDate | date : "medium"
                                     }}
                                 </span>
                             </td>
@@ -278,7 +280,6 @@
                             "
                         ></tr>
                         <tr
-                            [routerLink]="'case/' + row.id"
                             class="order-row h-16"
                             mat-row
                             *matRowDef="

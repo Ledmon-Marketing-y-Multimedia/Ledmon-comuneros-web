@@ -105,7 +105,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
                 // Patch values to the form
                 this.lugarForm.patchValue(lugar);
 
-                // Clear the phoneNumbers form arrays
+                // Clear the phones form arrays
                 (this.lugarForm.get('autorizados') as UntypedFormArray).clear();
 
                 // Setup the phone numbers form array
@@ -298,7 +298,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
             dni: [''],
         });
 
-        // Add the phone number form group to the phoneNumbers form array
+        // Add the phone number form group to the phones form array
         (this.lugarForm.get('autorizados') as UntypedFormArray).push(autorizadoFormGroup);
 
         // Mark for check

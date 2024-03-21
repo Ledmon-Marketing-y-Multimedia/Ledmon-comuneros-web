@@ -219,7 +219,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
 
         async function printPDF(comunero) {
             return new Promise((resolve) => {
-                context._pdfService.print(comunero, a).then((result) => {
+                context._pdfService.print(comunero, a, context.announcement.meeting != undefined).then((result) => {
                     blobs.push(result);
                     resolve(true);
                 });

@@ -43,7 +43,23 @@
                         </div>
                     </div>
                     <!-- Actions -->
-                    <div class="flex items-center ml-auto mb-1">
+                    <div class="flex items-center gap-2 ml-auto mb-1">
+                        <button *ngIf="comunero.status == 'ACTIVE'"
+                            mat-stroked-button
+                            (click)="changeStatus()">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
+                            <span class="ml-2">Dar de baja</span>
+                        </button>
+                        <button
+                            mat-stroked-button
+                            (click)="comuneroCard()">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:qr-code'"></mat-icon>
+                            <span class="ml-2">Tarjeta</span>
+                        </button>
                         <button
                             mat-stroked-button
                             (click)="toggleEditMode(true)">
@@ -83,20 +99,26 @@
                         </div>
                     </ng-container>
 
-                    <!-- Announcement -->
                     <ng-container *ngIf="comunero.lugar.address">
-                        <div class="flex sm:items-center">
+                        <a [routerLink]="'/lugares/' + comunero.lugar.id" class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:home'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.lugar.address}}</div>
+                        </a>
+                    </ng-container>
+
+                    <ng-container *ngIf="comunero.status">
+                        <div class="flex sm:items-center">
+                            <mat-icon [svgIcon]="'heroicons_outline:home'"></mat-icon>
+                            <div class="ml-6 leading-6">{{comunero.status}}</div>
                         </div>
                     </ng-container>
 
                     <!-- Phone -->
-                    <ng-container *ngIf="comunero.user.phoneNumbers?.length">
+                    <ng-container *ngIf="comunero.user.phones?.length">
                         <div class="flex">
                             <mat-icon [svgIcon]="'heroicons_outline:phone'"></mat-icon>
                             <div class="min-w-0 ml-6 space-y-1">
-                                <ng-container *ngFor="let phoneNumber of comunero.user.phoneNumbers; trackBy: trackByFn">
+                                <ng-container *ngFor="let phoneNumber of comunero.user.phones; trackBy: trackByFn">
                                     <div class="flex items-center leading-6">
                                         <div class="ml-2.5 font-mono">{{phoneNumber.phoneNumber}}</div>
                                         <div
@@ -137,6 +159,20 @@
                         </div>
                     </ng-container>
                 </div>
+
+                <div class="mt-8">
+                    <h3 class="font-medium text-gray-900">Registro de asistencia {{attendanceCount}} / {{comunero.attendances.length}}</h3>
+                    <dl class="mt-2 divide-y divide-gray-200 border-b border-t border-gray-200">
+                    <ng-container *ngFor="let attendance of comunero.attendances">
+                        <div *ngIf="attendance.meeting" class="flex justify-between py-3 text-sm font-medium">
+                            <dt class="text-gray-500">{{attendance.meeting.name}}</dt>
+                            <dd class="text-gray-900">{{attendance.status}}</dd>
+                          </div>
+                    </ng-container>
+                    </dl>
+                  </div>
+                </div>
+                  <div>
 
             </div>
         </div>
@@ -274,7 +310,7 @@
                     <!-- Phone numbers -->
                     <div class="mt-8">
                         <div class="space-y-4">
-                            <ng-container *ngFor="let phoneNumber of comuneroForm.get('phoneNumbers')['controls']; let i = index; let first = first; let last = last; trackBy: trackByFn">
+                            <ng-container *ngFor="let phoneNumber of comuneroForm.get('phones')['controls']; let i = index; let first = first; let last = last; trackBy: trackByFn">
                                 <div class="relative flex">
                                     <mat-form-field
                                         class="flex-auto"

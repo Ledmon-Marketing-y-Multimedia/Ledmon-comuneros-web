@@ -18,11 +18,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseFindByKeyPipe } from '@fuse/pipes/find-by-key/find-by-key.pipe';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
-import { Comunero, Country, NewComunero, Tag } from 'app/modules/admin/comuneros/comuneros.types';
+import { Comunero, ComuneroStatus, Country, NewComunero, Tag } from 'app/modules/admin/comuneros/comuneros.types';
 import { ComunerosListComponent } from 'app/modules/admin/comuneros/list/list.component';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { LugaresService } from '../../lugares/lugares.service';
 import { Lugar } from '../../lugares/lugares.types';
+import { PdfService } from 'app/shared/services/pdf.service';
+import { MatDialog } from '@angular/material/dialog';
+import { StatusModalComponent } from '../status-modal/status-modal.component';
 
 @Component({
     selector       : 'comuneros-details',
@@ -45,6 +48,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     lugares: Lugar[];
     private _tagsPanelOverlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    attendanceCount: number;
 
     /**
      * Constructor
@@ -57,7 +61,9 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         private _formBuilder: UntypedFormBuilder,
         private _fuseConfirmationService: FuseConfirmationService,
         private _router: Router,
-        private _lugaresService: LugaresService
+        private _lugaresService: LugaresService,
+        private _pdfService: PdfService,
+        private _matDialog: MatDialog,
     )
     {
     }
@@ -79,7 +85,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
             id          : [''],
             avatar      : [null],
             name        : ['', [Validators.required]],
-            phoneNumbers: this._formBuilder.array([]),
+            phones: this._formBuilder.array([]),
             lugarId       : [''],
             email       : [''],
             username    : [''],
@@ -119,10 +125,12 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 // Get the comunero
                 this.comunero = comunero;
 
+                this.attendanceCount = comunero.attendances.filter(x => x.status == 'PRESENT').length;
+
                 this.comuneroForm.get('lugarId').setValue(comunero.lugar?.id || '');
 
-                // Clear the phoneNumbers form arrays
-                (this.comuneroForm.get('phoneNumbers') as UntypedFormArray).clear();
+                // Clear the phones form arrays
+                (this.comuneroForm.get('phones') as UntypedFormArray).clear();
 
                 // Patch values to the form
                 this.comuneroForm.patchValue(comunero.user);
@@ -130,15 +138,15 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 this.comuneroForm.get('id').setValue(comunero.id);
 
                 // Setup the phone numbers form array
-                const phoneNumbersFormGroups = [];
+                const phonesFormGroups = [];
 
-                if ( comunero.user?.phoneNumbers?.length > 0 )
+                if ( comunero.user?.phones?.length > 0 )
                 {
                     // Iterate through them
-                    comunero.user.phoneNumbers.forEach((phoneNumber) =>
+                    comunero.user.phones.forEach((phoneNumber) =>
                     {
                         // Create an email form group
-                        phoneNumbersFormGroups.push(
+                        phonesFormGroups.push(
                             this._formBuilder.group({
                                 phoneNumber: [phoneNumber.phoneNumber],
                                 label      : [phoneNumber.label],
@@ -149,7 +157,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 else
                 {
                     // Create a phone number form group
-                    phoneNumbersFormGroups.push(
+                    phonesFormGroups.push(
                         this._formBuilder.group({
                             phoneNumber: [''],
                             label      : [''],
@@ -158,9 +166,9 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 }
 
                 // Add the phone numbers form groups to the phone numbers form array
-                phoneNumbersFormGroups.forEach((phoneNumbersFormGroup) =>
+                phonesFormGroups.forEach((phonesFormGroup) =>
                 {
-                    (this.comuneroForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumbersFormGroup);
+                    (this.comuneroForm.get('phones') as UntypedFormArray).push(phonesFormGroup);
                 });
 
                 // Toggle the edit mode off
@@ -226,14 +234,14 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     {
         // Get the comunero object
         const comunero = this.comuneroForm.getRawValue();
-        comunero.phoneNumbers = comunero.phoneNumbers.filter(phoneNumber => phoneNumber.phoneNumber);
+        comunero.phones = comunero.phones.filter(phoneNumber => phoneNumber.phoneNumber);
 
         if(comunero.id == ''){
             const newComunero : NewComunero = comunero;
+            newComunero.role = 'HOLDER';
             // Update the comunero on the server
             this._comunerosService.createComunero(newComunero).subscribe((comunero : Comunero) => {
-                // Toggle the edit mode off
-                this.toggleEditMode(false);
+                this._router.navigate(['../', comunero.id], {relativeTo: this._activatedRoute});
             })
         }
         // Update the comunero on the server
@@ -241,6 +249,16 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
         {
             // Toggle the edit mode off
             this.toggleEditMode(false);
+        });
+    }
+
+    changeStatus(): void {
+        this._matDialog.open(StatusModalComponent, {data: this.comunero}).afterClosed().subscribe((result) => {
+            if(result){
+                const comunero = {comments: result.comments, status: ComuneroStatus.UNSUBSCRIBED};
+                this._comunerosService.updateComuneroStatus(this.comunero.id, comunero).subscribe((comunero) => {
+                });
+            }
         });
     }
 
@@ -318,8 +336,8 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
             label      : [''],
         });
 
-        // Add the phone number form group to the phoneNumbers form array
-        (this.comuneroForm.get('phoneNumbers') as UntypedFormArray).push(phoneNumberFormGroup);
+        // Add the phone number form group to the phones form array
+        (this.comuneroForm.get('phones') as UntypedFormArray).push(phoneNumberFormGroup);
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
@@ -333,13 +351,17 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     removePhoneNumberField(index: number): void
     {
         // Get form array for phone numbers
-        const phoneNumbersFormArray = this.comuneroForm.get('phoneNumbers') as UntypedFormArray;
+        const phonesFormArray = this.comuneroForm.get('phones') as UntypedFormArray;
 
         // Remove the phone number field
-        phoneNumbersFormArray.removeAt(index);
+        phonesFormArray.removeAt(index);
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
+    }
+
+    comuneroCard(){
+        this._pdfService.comuneroCard(this.comunero);
     }
 
     /**

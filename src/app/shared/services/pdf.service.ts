@@ -3,6 +3,8 @@ import { ShadingPattern } from 'jspdf';
 import { PDFDocument } from 'pdf-lib';
 import { jsPDF } from 'jspdf';
 import printJS from 'print-js';
+import { Comunero } from 'app/modules/admin/comuneros/comuneros.types';
+import QRCode from 'QRCode';
 
 @Injectable({
   providedIn: 'root'
@@ -43,7 +45,7 @@ export class PdfService {
     jsPDF.API.events.push(['addFonts', callAddFont])
   }
 
-  async print(comunero: any, content: string){
+  async print(comunero: any, content: string, meeting: boolean = false){
     console.log("printing comunero ", comunero.user.name);
     comunero = Object.assign(comunero, {});
     const doc: any = new jsPDF();
@@ -54,11 +56,15 @@ export class PdfService {
     doc.setFont(doc.vars.fontFamily);
     doc.setFontSize(12);
 
-    return await new Promise<void>((resolve) => {
+    return await new Promise<void>(async (resolve) => {
         doc.text(comunero.user.name.trim(), 200, 40, null, null, "right");
         doc.text(comunero.lugar.address, 200, 50, null, null, "right");
         doc.text(comunero.lugar.cp + " " + comunero.lugar.poblacion, 200, 60, null, null, "right");
         doc.text(comunero.lugar.provincia || "", 200, 70, null, null, "right");
+        if(meeting){
+          const qr = await QRCode.toDataURL(comunero.lugar.address, {width: 150, margin: 0})
+          doc.addImage(qr, 'PNG', 25, 30, 40, 40);
+        }
         doc.html(content, {
             callback: function () {
             resolve(doc.output('blob'));
@@ -67,9 +73,9 @@ export class PdfService {
             margin: [35,0,20,0],
             html2canvas: { scale: .4 },
             x: 10,
-            y: 80,
+            y: 50,
             width: 180,
-            windowWidth: 500,
+            windowWidth: 480,
             autoPaging: "text"
         });
     });
@@ -95,4 +101,16 @@ export class PdfService {
 
   }
 
+  async comuneroCard(comunero: Comunero){
+    const doc: any = new jsPDF("l", "mm", "credit-card");
+    doc.setFontSize(12);
+    doc.text(comunero.user.name, 10, 10);
+    doc.text(comunero.lugar.address, 10, 20);
+    doc.text(comunero.lugar.cp + " " + comunero.lugar.poblacion, 10, 30);
+    doc.text(comunero.lugar.provincia || "", 10, 40);
+    doc.addPage();
+    const qr = await QRCode.toDataURL(comunero.lugar.address, {width: 150, margin: 0})
+    doc.addImage(qr, 'JPEG', 23, 7, 40, 40);
+    doc.output('dataurlnewwindow');
+  }
 }

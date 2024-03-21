@@ -84,10 +84,10 @@
                     </ng-container>
                     <!-- Comunero -->
                     <ng-container *ngIf="comunero">
-                        <div class="flex sm:items-center">
+                        <a [routerLink]="'/comuneros/' + comunero.id" class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.user.name}} (Comunero)</div>
-                        </div>
+                        </a>
                     </ng-container>
                     <ng-container *ngFor="let autorizado of autorizados">
                         <div class="flex sm:items-center">

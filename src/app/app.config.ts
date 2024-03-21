@@ -3,7 +3,7 @@ import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, inject } from '@angul
 import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
 import { DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { PreloadAllModules, Router, provideRouter, withInMemoryScrolling, withPreloading } from '@angular/router';
+import { PreloadAllModules, Router, provideRouter, withInMemoryScrolling, withPreloading, withViewTransitions } from '@angular/router';
 import { provideFuse } from '@fuse';
 import { provideTransloco, TranslocoService } from '@ngneat/transloco';
 import { firstValueFrom } from 'rxjs';
@@ -31,6 +31,7 @@ export const appConfig: ApplicationConfig = {
         provideOAuthClient(),
         provideAnimations(),
         provideRouter(appRoutes,
+            withViewTransitions(),
             withPreloading(PreloadAllModules),
             withInMemoryScrolling({scrollPositionRestoration: 'enabled'}),
         ),

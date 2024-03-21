@@ -1,3 +1,5 @@
+import { MeetingAttendance } from "../meeting/meeting.types";
+
 export interface Comunero
 {
     id: string;
@@ -6,6 +8,14 @@ export interface Comunero
     lugar?: Lugar;
     code?: string;
     role?: ComuneroRole;
+    status?: ComuneroStatus;
+    comments?: string;
+    attendances?: MeetingAttendance[];
+}
+
+export enum ComuneroStatus{
+    ACTIVE = 'ACTIVE',
+    UNSUBSCRIBED = 'UNSUBSCRIBED',
 }
 
 export enum ComuneroRole{
@@ -37,9 +47,8 @@ export interface User
     email?: string;
     dni?: string;
     username?: string;
-    phones?: string;
     createdAt?: string;
-    phoneNumbers?: {
+    phones?: {
         country: string;
         phoneNumber: string;
         label: string;
@@ -53,7 +62,7 @@ export interface NewComunero {
     dni?: string;
     code: string;
     fechaAlta?: string;
-    phoneNumbers?: {
+    phones?: {
         country: string;
         phoneNumber: string;
         label: string;
