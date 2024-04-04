@@ -44,11 +44,13 @@ font-family: #{attr(data-value)};
 content: attr(data-value) !important;
 }
 
-$text-editor-fonts: 'IRANSans', 'roboto', 'cursive', 'fantasy', 'monospace';
+$text-editor-fonts: 'Arial';
 
 @each $text-editor-font in $text-editor-fonts {
   .ql-font-#{$text-editor-font} {
     font-family: $text-editor-font;
+    font-size: 13px;
+    color: black;
   }
 }
 

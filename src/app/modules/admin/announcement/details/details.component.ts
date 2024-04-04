@@ -31,6 +31,7 @@ import Quill from 'quill';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
+    providers  : [TitleCasePipe],
     imports        : [NgIf, MatButtonToggleModule, TitleCasePipe, MatButtonModule, QuillEditorComponent, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
 })
 export class AnnouncementDetailsComponent implements OnInit, OnDestroy
@@ -49,10 +50,9 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     quillModules: QuillModules = {
         toolbar: [
             ['bold', 'italic', 'underline'],
-            [{ font: ['IRANSans', 'roboto', 'cursive', 'fantasy', 'monospace'] }],
+            [{ font: ['Arial'] }],
             [{align: []}, {list: 'ordered'}, {list: 'bullet'}],
             ['clean'],
-            [{ size: [ 'small', false, 'large', 'huge' ]}],
             ['image',],
         ],
 
@@ -73,6 +73,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         private _route: ActivatedRoute,
         private _pdfService: PdfService,
         private _matDialog: MatDialog,
+        private titleCasePipe: TitleCasePipe
     )
     {
     }
@@ -127,11 +128,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         });
         const FontAttributor = Quill.import('attributors/class/font');
         FontAttributor.whitelist = [
-            'IRANSans',
-            'roboto',
-            'cursive',
-            'fantasy',
-            'monospace'
+            'Arial'
         ];
         Quill.register(FontAttributor, true);
     }
@@ -212,13 +209,16 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     printComunications(){
         const comuneros = this.announcementForm.get('comunerosCarta').value;
         const content = this.announcementForm.get('content').value;
-        const a  = '<div style="width: 100%; font-family: "Inter", sans-serif; font-style: normal;" class="ql-editor">' + content + '</div>'
+        const a  = '<div style="background-color: #11ffee00;width: 100%; font-family: "Arial", sans-serif; font-style: normal;" class="ql-editor">' + content + '</div>'
         const blobs = [];
         const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: blobs, comuneros: comuneros.length}});
         const context = this;
 
         async function printPDF(comunero) {
             return new Promise((resolve) => {
+                comunero.user.name = context.titleCasePipe.transform(comunero.user.name);
+                comunero.lugar.address = context.titleCasePipe.transform(comunero.lugar.address);
+                comunero.lugar.poblacion = context.titleCasePipe.transform(comunero.lugar.poblacion);
                 context._pdfService.print(comunero, a, context.announcement.meeting != undefined).then((result) => {
                     blobs.push(result);
                     resolve(true);

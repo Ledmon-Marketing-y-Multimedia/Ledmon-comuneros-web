@@ -2,6 +2,7 @@ import { AsyncPipe, DOCUMENT, I18nPluralPipe, NgClass, NgFor, NgIf } from '@angu
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -10,8 +11,10 @@ import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/route
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
 import { Comunero, Country } from 'app/modules/admin/comuneros/comuneros.types';
+import { PdfService } from 'app/shared/services/pdf.service';
 import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { ExportModalComponent } from '../export-modal/export-modal.component';
 
 @Component({
     selector       : 'comuneros-list',
@@ -32,6 +35,7 @@ export class ComunerosListComponent implements OnInit, OnDestroy
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedComunero: Comunero;
+    comuneros: Comunero[];
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -44,6 +48,9 @@ export class ComunerosListComponent implements OnInit, OnDestroy
         @Inject(DOCUMENT) private _document: any,
         private _router: Router,
         private _fuseMediaWatcherService: FuseMediaWatcherService,
+        private _pdfService: PdfService,
+        private _matDialog: MatDialog,
+
     )
     {
     }
@@ -64,6 +71,7 @@ export class ComunerosListComponent implements OnInit, OnDestroy
             .subscribe((comuneros: Comunero[]) =>
             {
                 // Update the counts
+                this.comuneros = comuneros;
                 this.comunerosCount = comuneros.length;
 
                 // Mark for check
@@ -154,6 +162,19 @@ export class ComunerosListComponent implements OnInit, OnDestroy
         this._changeDetectorRef.markForCheck();
     }
 
+
+    export(): void {
+        this._matDialog.open(ExportModalComponent).afterClosed().subscribe((result) => {
+            if(result){
+                if(result.type === 'SIMPLE'){
+                    this._pdfService.comuneroSimpleList(this.comuneros);
+                }
+                else {
+                    this._pdfService.comuneroCompleteList(this.comuneros);
+                }
+            }
+        });
+    }
     /**
      * Track by function for ngFor loops
      *

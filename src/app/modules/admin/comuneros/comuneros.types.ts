@@ -47,6 +47,7 @@ export interface User
     email?: string;
     dni?: string;
     username?: string;
+    fechaAlta?: Date;
     createdAt?: string;
     phones?: {
         country: string;
