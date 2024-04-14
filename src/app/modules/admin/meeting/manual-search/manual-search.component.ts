@@ -2,8 +2,8 @@ import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { DatePipe, NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostBinding, Input, OnDestroy, OnInit, Output, TemplateRef, ViewChild, ViewContainerRef, ViewEncapsulation } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, TemplateRef, ViewChild, ViewContainerRef, ViewEncapsulation } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { MatAutocomplete, MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButton, MatButtonModule } from '@angular/material/button';
 import { MatOptionModule } from '@angular/material/core';
@@ -16,6 +16,7 @@ import { fuseAnimations } from '@fuse/animations';
 import { Subject, concatMap, debounceTime, filter, map, takeUntil } from 'rxjs';
 import { MeetingService } from '../meeting.service';
 import { MeetingAttendance } from '../meeting.types';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
     selector       : 'manual-search',
@@ -25,24 +26,26 @@ import { MeetingAttendance } from '../meeting.types';
     standalone     : true,
     exportAs       : 'manualSearch',
     animations     : [fuseAnimations],
-    imports        : [MatButtonModule, NgIf, MatIconModule, MatTooltipModule, NgFor, NgClass, NgTemplateOutlet, RouterLink, DatePipe,
+    imports        : [MatButtonModule, NgIf, MatIconModule, MatTooltipModule, NgFor, NgClass, NgTemplateOutlet, RouterLink, DatePipe, MatCheckboxModule,
                         FormsModule, MatAutocompleteModule, ReactiveFormsModule,  MatFormFieldModule, MatInputModule, MatOptionModule],
 })
-export class ManualSearchComponent implements OnInit, OnDestroy
+export class ManualSearchComponent implements OnInit, OnChanges, OnDestroy
 {
     @Input() appearance: 'basic' | 'bar' = 'bar';
     @Input() debounce: number = 300;
     @Input() minLength: number = 2;
+    @Input() attendance: MeetingAttendance;
     @Output() search: EventEmitter<any> = new EventEmitter<any>();
     @ViewChild('searchOrigin') private _searchOrigin: MatButton;
     @ViewChild('searchPanel') private _searchPanel: TemplateRef<any>;
     opened: boolean = true;
     resultSets: any[];
-    searchControl: UntypedFormControl = new UntypedFormControl();
+    searchControl: UntypedFormGroup;
     private _matAutocomplete: MatAutocomplete;
     private _overlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     attendances: MeetingAttendance[];
+    selectedAttendance: MeetingAttendance;
 
     /**
      * Constructor
@@ -52,6 +55,7 @@ export class ManualSearchComponent implements OnInit, OnDestroy
         private _viewContainerRef: ViewContainerRef,
         private _httpClient: HttpClient,
         private _meetingService: MeetingService,
+        private _formBuilder: FormBuilder
     )
     {
     }
@@ -113,8 +117,13 @@ export class ManualSearchComponent implements OnInit, OnDestroy
      */
     ngOnInit(): void
     {
+        this.searchControl = this._formBuilder.group({
+            id       : [''],
+            search    : [''],
+            representation : [''],
+        });
         // Subscribe to the search field value changes
-        this.searchControl.valueChanges
+        this.searchControl.get('search').valueChanges
             .pipe(
                 debounceTime(this.debounce),
                 takeUntil(this._unsubscribeAll),
@@ -123,7 +132,6 @@ export class ManualSearchComponent implements OnInit, OnDestroy
                     // Set the resultSets to null if there is no value or
                     // the length of the value is smaller than the minLength
                     // so the autocomplete panel can be closed
-                    debugger
                     if ( !value || value.length < this.minLength )
                     {
                         this.resultSets = null;
@@ -150,6 +158,25 @@ export class ManualSearchComponent implements OnInit, OnDestroy
                         // this.search.next(resultSets);
                     });
             });
+    }
+
+    /**
+     * On changes
+     *
+     * @param changes
+     */
+    ngOnChanges(changes: SimpleChanges): void
+    {
+        // Attendance
+        if ( 'attendance' in changes )
+        {
+            // If the attendance is set, patch the value
+            if ( this.attendance )
+            {
+                this.searchControl.get('search').setValue(this.attendance.comunero.user.name);
+                this.openPanel();
+            }
+        }
     }
 
     /**
@@ -234,7 +261,7 @@ export class ManualSearchComponent implements OnInit, OnDestroy
          }
 
          // Clear the search input
-         this.searchControl.setValue('');
+         this.searchControl.get('search').setValue('');
 
          // Close the search
          this.opened = false;
@@ -242,7 +269,18 @@ export class ManualSearchComponent implements OnInit, OnDestroy
 
     selectAttendance(attendance: MeetingAttendance): void
     {
-        this.search.emit(attendance);
+        this.selectedAttendance = attendance;
+        this.searchControl.get('search').setValue(attendance.comunero.user.name);
+
+    }
+
+    /**
+     * Register attendance
+     */
+    registerAttendance(): void
+    {
+        this.selectedAttendance.representation = this.searchControl.get('representation').value;
+        this.search.emit(this.selectedAttendance);
         this.close();
         this.closePanel();
     }

@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, inject } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, ErrorHandler, LOCALE_ID, inject } from '@angular/core';
 import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
 import { DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -17,13 +17,15 @@ import * as Sentry from "@sentry/angular-ivy";
 import { authAppInitializerFactory } from './core/auth/auth-app-initializer.factory';
 import { AuthService } from './core/auth/auth.service';
 import { provideTranslocoLocale } from '@ngneat/transloco-locale';
-
-
+import { registerLocaleData } from '@angular/common';
+import localeES from '@angular/common/locales/es';
 const globalFormatConfig : any  = {
     date: {
       dateStyle: 'medium',
     }
   };
+
+registerLocaleData(localeES, 'es')
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -44,6 +46,8 @@ export const appConfig: ApplicationConfig = {
             provide : DateAdapter,
             useClass: LuxonDateAdapter,
         },
+        {provide: LOCALE_ID, useValue: 'es' },
+        { provide: MatPaginatorIntl, useValue: getesPaginatorIntl() },
         {
             provide : MAT_DATE_FORMATS,
             useValue: {
@@ -169,3 +173,36 @@ export const appConfig: ApplicationConfig = {
         }),
     ],
 };
+
+
+
+import { MatPaginatorIntl } from "@angular/material/paginator";
+
+
+
+
+export function getesPaginatorIntl() {
+
+    const rangeLabel = (page: number, pageSize: number, length: number) => {
+        if (length == 0 || pageSize == 0) { return `0 de ${length}`; }
+
+        length = Math.max(length, 0);
+
+        const startIndex = page * pageSize;
+
+        // If the start index exceeds the list length, do not try and fix the end index to the end.
+        const endIndex = startIndex < length ?
+            Math.min(startIndex + pageSize, length) :
+            startIndex + pageSize;
+
+        return `${startIndex + 1} - ${endIndex} de ${length}`;
+        }
+        const paginatorIntl = new MatPaginatorIntl();
+        paginatorIntl.itemsPerPageLabel = 'Items por página:';
+        paginatorIntl.nextPageLabel = 'Próxima página';
+        paginatorIntl.previousPageLabel = 'Página anterior';
+        paginatorIntl.firstPageLabel = 'Primeira página';
+        paginatorIntl.lastPageLabel = 'Ultima página';
+        paginatorIntl.getRangeLabel = rangeLabel;
+        return paginatorIntl;
+}

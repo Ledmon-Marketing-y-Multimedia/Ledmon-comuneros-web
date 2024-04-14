@@ -21,7 +21,8 @@ import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
 import { Lugar } from 'app/modules/admin/lugares/lugares.types';
 import { LugaresListComponent } from 'app/modules/admin/lugares/list/list.component';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
-import { Comunero, ComuneroRole } from '../../comuneros/comuneros.types';
+import { Comunero, ComuneroRole, LugarStatus } from '../../comuneros/comuneros.types';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector       : 'lugares-details',
@@ -29,7 +30,7 @@ import { Comunero, ComuneroRole } from '../../comuneros/comuneros.types';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [NgIf, MatButtonModule, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
+    imports        : [NgIf, MatButtonModule, TranslocoModule, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
 })
 export class LugaresDetailsComponent implements OnInit, OnDestroy
 {
@@ -40,8 +41,10 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
     lugares: Lugar[];
     comunero: Comunero;
     autorizados: Comunero[];
+    statuses = Object.values(LugarStatus);
     private _tagsPanelOverlayRef: OverlayRef;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    zonas: Set<string>;
 
     /**
      * Constructor
@@ -77,6 +80,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
             poblacion       : [''],
             zona     : [''],
             cp     : [''],
+            status     : [''],
             autorizados: this._formBuilder.array([]),
         });
 
@@ -86,6 +90,8 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
             .subscribe((lugares: Lugar[]) =>
             {
                 this.lugares = lugares;
+
+                this.zonas = new Set(lugares.map((lugar) => lugar.zona));
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -111,12 +117,12 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
                 // Setup the phone numbers form array
                 const autorizadosFormGroups = [];
 
-                this.comunero = lugar.comuneros.find(x => x.role == ComuneroRole.HOLDER);
+                this.comunero = lugar.comuneros?.find(x => x.role == ComuneroRole.HOLDER);
 
-                this.autorizados = lugar.comuneros.filter(x => x.role ==  ComuneroRole.AUTHORIZED);
-                if ( this.autorizados.length > 0 )
+                this.autorizados = lugar.comuneros?.filter(x => x.role ==  ComuneroRole.AUTHORIZED);
+                if ( this.autorizados?.length > 0 )
                 {
-                    this.autorizados.forEach((autorizado) =>
+                    this.autorizados?.forEach((autorizado) =>
                     {
                         const formGroup = this._formBuilder.group({
                             id: [autorizado.id],
@@ -145,7 +151,7 @@ export class LugaresDetailsComponent implements OnInit, OnDestroy
                 });
 
                 // Toggle the edit mode off
-                this.toggleEditMode(false);
+                this.toggleEditMode(lugar.address == null);
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();

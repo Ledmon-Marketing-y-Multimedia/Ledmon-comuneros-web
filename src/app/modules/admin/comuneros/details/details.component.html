@@ -66,7 +66,7 @@
                             <mat-icon
                                 class="icon-size-5"
                                 [svgIcon]="'heroicons_solid:pencil-square'"></mat-icon>
-                            <span class="ml-2">Edit</span>
+                            <span class="ml-2">Editar</span>
                         </button>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
 
                 <div class="flex flex-col mt-4 pt-6 border-t space-y-8">
                     <!-- Username -->
-                    <ng-container *ngIf="comunero.user.username">
+                    <ng-container *ngIf="comunero?.user?.username">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.user.username}}</div>
@@ -84,7 +84,7 @@
                     </ng-container>
 
                     <!-- Email -->
-                    <ng-container *ngIf="comunero.user.email">
+                    <ng-container *ngIf="comunero?.user?.email">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:at-symbol'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.user.email}}</div>
@@ -92,21 +92,21 @@
                     </ng-container>
 
                     <!-- DNI -->
-                    <ng-container *ngIf="comunero.user.dni">
+                    <ng-container *ngIf="comunero?.user?.dni">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:credit-card'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.user.dni}}</div>
                         </div>
                     </ng-container>
 
-                    <ng-container *ngIf="comunero.lugar.address">
+                    <ng-container *ngIf="comunero?.lugar?.address">
                         <a [routerLink]="'/lugares/' + comunero.lugar.id" class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:home'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.lugar.address}}</div>
                         </a>
                     </ng-container>
 
-                    <ng-container *ngIf="comunero.status">
+                    <ng-container *ngIf="comunero?.status">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:home'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.status}}</div>
@@ -114,7 +114,7 @@
                     </ng-container>
 
                     <!-- Phone -->
-                    <ng-container *ngIf="comunero.user.phones?.length">
+                    <ng-container *ngIf="comunero?.user.phones?.length">
                         <div class="flex">
                             <mat-icon [svgIcon]="'heroicons_outline:phone'"></mat-icon>
                             <div class="min-w-0 ml-6 space-y-1">
@@ -134,7 +134,7 @@
                     </ng-container>
 
                     <!-- Address -->
-                    <ng-container *ngIf="comunero.address">
+                    <ng-container *ngIf="comunero?.address">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:map-pin'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.address}}</div>
@@ -142,7 +142,7 @@
                     </ng-container>
 
                     <!-- Birthday -->
-                    <ng-container *ngIf="comunero.birthday">
+                    <ng-container *ngIf="comunero?.birthday">
                         <div class="flex sm:items-center">
                             <mat-icon [svgIcon]="'heroicons_outline:cake'"></mat-icon>
                             <div class="ml-6 leading-6">{{comunero.birthday | date:'longDate'}}</div>
@@ -150,7 +150,7 @@
                     </ng-container>
 
                     <!-- Notes -->
-                    <ng-container *ngIf="comunero.notes">
+                    <ng-container *ngIf="comunero?.notes">
                         <div class="flex">
                             <mat-icon [svgIcon]="'heroicons_outline:bars-3-bottom-left'"></mat-icon>
                             <div
@@ -160,13 +160,13 @@
                     </ng-container>
                 </div>
 
-                <div class="mt-8">
-                    <h3 class="font-medium text-gray-900">Registro de asistencia {{attendanceCount}} / {{comunero.attendances.length}}</h3>
+                <div class="mt-8" *ngIf="comunero?.attendances">
+                    <h3 class="font-medium text-gray-900">Registro de asistencia {{attendanceCount}} / {{comunero?.attendances?.length}}</h3>
                     <dl class="mt-2 divide-y divide-gray-200 border-b border-t border-gray-200">
-                    <ng-container *ngFor="let attendance of comunero.attendances">
+                    <ng-container *ngFor="let attendance of comunero?.attendances">
                         <div *ngIf="attendance.meeting" class="flex justify-between py-3 text-sm font-medium">
                             <dt class="text-gray-500">{{attendance.meeting.name}}</dt>
-                            <dd class="text-gray-900">{{attendance.status}}</dd>
+                            <dd class="text-gray-900">{{'ATTENDANCE.' + attendance.status | transloco}}</dd>
                           </div>
                     </ng-container>
                     </dl>
@@ -193,7 +193,7 @@
             <div class="flex items-center justify-end w-full max-w-3xl mx-auto pt-6">
                 <a
                     mat-icon-button
-                    [matTooltip]="'Close'"
+                    [matTooltip]="'Cerrar'"
                     [routerLink]="['../']">
                     <mat-icon
                         class="text-white"
@@ -292,10 +292,28 @@
                         </mat-form-field>
                     </div>
 
-                    <!-- Announcementes -->
+
+                    <!-- Código -->
+                    <div class="mt-8">
+                        <mat-form-field
+                            class="w-full"
+                            [subscriptSizing]="'dynamic'">
+                            <mat-label>Nº de comunero</mat-label>
+                            <mat-icon
+                                matPrefix
+                                class="hidden sm:flex icon-size-5"
+                                [svgIcon]="'heroicons_solid:map-pin'"></mat-icon>
+                            <input
+                                matInput
+                                [formControlName]="'code'"
+                                [placeholder]="'Nº comunero'">
+                        </mat-form-field>
+                    </div>
+
+                    <!-- Lugar -->
                     <div class="mt-8">
                         <mat-form-field *ngIf="lugares.length > 0" class="w-full fuse-mat-dense flex-auto">
-                            <mat-label>Announcementes</mat-label>
+                            <mat-label>Lugar</mat-label>
                             <mat-select [formControlName]="'lugarId'">
                                 <mat-option *ngFor="let lugar of lugares" [value]="lugar.id">{{lugar.address}}</mat-option>
                             </mat-select>
@@ -315,7 +333,7 @@
                                     <mat-form-field
                                         class="flex-auto"
                                         [subscriptSizing]="'dynamic'">
-                                        <mat-label *ngIf="first">Phone</mat-label>
+                                        <mat-label *ngIf="first">Nº de teléfono</mat-label>
                                         <input
                                             matInput
                                             [formControl]="phoneNumber.get('phoneNumber')"
@@ -324,7 +342,7 @@
                                     <mat-form-field
                                         class="flex-auto w-full max-w-24 sm:max-w-40 ml-2 sm:ml-4"
                                         [subscriptSizing]="'dynamic'">
-                                        <mat-label *ngIf="first">Label</mat-label>
+                                        <mat-label *ngIf="first">Etiqueta</mat-label>
                                         <mat-icon
                                             matPrefix
                                             class="hidden sm:flex icon-size-5"
@@ -359,37 +377,19 @@
                             <mat-icon
                                 class="icon-size-5"
                                 [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
-                            <span class="ml-2 font-medium text-secondary group-hover:underline">Add a phone number</span>
+                            <span class="ml-2 font-medium text-secondary group-hover:underline">Añadir otro teléfono</span>
                         </div>
                     </div>
-
-                    <!-- Código -->
-                    <div class="mt-8">
-                        <mat-form-field
-                            class="w-full"
-                            [subscriptSizing]="'dynamic'">
-                            <mat-label>Código de comunero</mat-label>
-                            <mat-icon
-                                matPrefix
-                                class="hidden sm:flex icon-size-5"
-                                [svgIcon]="'heroicons_solid:map-pin'"></mat-icon>
-                            <input
-                                matInput
-                                [formControlName]="'code'"
-                                [placeholder]="'Código'">
-                        </mat-form-field>
-                    </div>
-
 
                     <!-- Actions -->
                     <div class="flex items-center mt-10 -mx-6 sm:-mx-12 py-4 pr-4 pl-1 sm:pr-12 sm:pl-7 border-t bg-gray-50 dark:bg-transparent">
                         <!-- Delete -->
-                        <button
+                        <button *ngIf="comunero.id"
                             mat-button
                             [color]="'warn'"
-                            [matTooltip]="'Delete'"
-                            (click)="deleteContact()">
-                            Delete
+                            [matTooltip]="'Borrar'"
+                            (click)="deleteComunero()">
+                            Borrar comunero
                         </button>
                         <!-- Cancel -->
                         <button
@@ -397,7 +397,7 @@
                             mat-button
                             [matTooltip]="'Cancel'"
                             (click)="toggleEditMode(false)">
-                            Cancel
+                            Cancelar
                         </button>
                         <!-- Save -->
                         <button
@@ -405,9 +405,9 @@
                             mat-flat-button
                             [color]="'primary'"
                             [disabled]="comuneroForm.invalid"
-                            [matTooltip]="'Save'"
+                            [matTooltip]="'Guardar'"
                             (click)="updateComunero()">
-                            Save
+                            Guardar
                         </button>
                     </div>
 

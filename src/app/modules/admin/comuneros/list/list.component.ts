@@ -10,11 +10,13 @@ import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
-import { Comunero, Country } from 'app/modules/admin/comuneros/comuneros.types';
+import { Comunero, ComuneroStatus, Country } from 'app/modules/admin/comuneros/comuneros.types';
 import { PdfService } from 'app/shared/services/pdf.service';
 import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { ExportModalComponent } from '../export-modal/export-modal.component';
+import { MatSelectModule } from '@angular/material/select';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector       : 'comuneros-list',
@@ -22,20 +24,22 @@ import { ExportModalComponent } from '../export-modal/export-modal.component';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
+    imports        : [MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, TranslocoModule, MatSelectModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
 })
 export class ComunerosListComponent implements OnInit, OnDestroy
 {
     @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
 
     comuneros$: Observable<Comunero[]>;
-
     comunerosCount: number = 0;
     comunerosTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedComunero: Comunero;
     comuneros: Comunero[];
+    comuneroStatuses = Object.values(ComuneroStatus);
+    comuneroStatus = ComuneroStatus;
+    selectedStatus : string = '';
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -98,10 +102,12 @@ export class ComunerosListComponent implements OnInit, OnDestroy
                 takeUntil(this._unsubscribeAll),
                 switchMap(query =>
                     // Search
-                    this._comunerosService.searchComuneros(query),
+                    this._comunerosService.searchComuneros(query, this.selectedStatus),
                 ),
             )
             .subscribe();
+
+
 
         // Subscribe to MatDrawer opened change
         this.matDrawer.openedChange.subscribe((opened) =>
@@ -175,6 +181,11 @@ export class ComunerosListComponent implements OnInit, OnDestroy
             }
         });
     }
+
+    filterByStatus(): void {
+        this._comunerosService.searchComuneros(this.searchInputControl.value, this.selectedStatus).subscribe();
+    }
+
     /**
      * Track by function for ngFor loops
      *

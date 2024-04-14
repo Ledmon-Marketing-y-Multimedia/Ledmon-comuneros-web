@@ -1,6 +1,6 @@
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPreview, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DatePipe, DOCUMENT, NgClass, NgFor, NgIf, TitleCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { Meeting } from 'app/modules/admin/meeting/meeting.types';
-import { Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, map, merge, switchMap, takeUntil } from 'rxjs';
 
 @Component({
     selector       : 'meeting-list',
@@ -43,7 +43,7 @@ import { Subject, switchMap, takeUntil } from 'rxjs';
     ],
     imports        : [MatSidenavModule, MatSortModule, MatPaginatorModule, RouterOutlet, MatFormFieldModule, MatInputModule, FormsModule, ReactiveFormsModule, NgIf, MatButtonModule, MatTooltipModule, MatIconModule, CdkDropList, NgFor, CdkDrag, NgClass, CdkDragPreview, CdkDragHandle, RouterLink, TitleCasePipe, DatePipe],
 })
-export class MeetingListComponent implements OnInit, OnDestroy
+export class MeetingListComponent implements OnInit, AfterViewInit, OnDestroy
 {
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
     @ViewChild(MatSort) private _sort: MatSort;
@@ -106,6 +106,47 @@ export class MeetingListComponent implements OnInit, OnDestroy
         .subscribe();
     }
 
+    /**
+     * After view init
+     */
+    ngAfterViewInit(): void
+    {
+        if ( this._sort && this._paginator )
+        {
+            // Set the initial sort
+            this._sort.sort({
+                id          : 'name',
+                start       : 'asc',
+                disableClear: true
+            });
+
+            // Mark for check
+            this._changeDetectorRef.markForCheck();
+
+            // If the user changes the sort order...
+            this._sort.sortChange
+                .pipe(takeUntil(this._unsubscribeAll))
+                .subscribe(() => {
+                    // Reset back to the first page
+                    this._paginator.pageIndex = 0;
+
+                });
+
+            // Get categories if sort or page changes
+            merge(this._sort.sortChange, this._paginator.page).pipe(
+                switchMap(() => {
+                    return this._meetingService.meetings$;
+                }),
+                map((meetings: Meeting[]) => {
+                    this._paginator.length = meetings.length;
+                    this.meetings = meetings.slice(
+                        this._paginator.pageIndex * this._paginator.pageSize,
+                        this._paginator.pageIndex * this._paginator.pageSize + this._paginator.pageSize
+                    );
+                })
+            ).subscribe();
+        }
+    }
     /**
      * On destroy
      */

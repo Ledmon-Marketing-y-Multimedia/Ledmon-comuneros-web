@@ -30,6 +30,7 @@ import { Announcement } from '../../announcement/announcement.types';
 import { FileService } from 'app/shared/services/file.service';
 import { UploadDocumentComponent } from '../upload-document/upload-document.component';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector       : 'meeting-details',
@@ -37,7 +38,7 @@ import { MatDialog } from '@angular/material/dialog';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [FormsModule, MatPaginatorModule, MatSortModule, MatTableModule, ReactiveFormsModule, MatButtonModule, NgIf, MatIconModule, MatMenuModule, RouterLink, MatDividerModule, MatFormFieldModule, MatInputModule, TextFieldModule, NgFor, MatRippleModule, MatCheckboxModule, NgClass, MatDatepickerModule, FuseFindByKeyPipe, DatePipe],
+    imports        : [FormsModule, MatPaginatorModule, TranslocoModule, MatSortModule, MatTableModule, ReactiveFormsModule, MatButtonModule, NgIf, MatIconModule, MatMenuModule, RouterLink, MatDividerModule, MatFormFieldModule, MatInputModule, TextFieldModule, NgFor, MatRippleModule, MatCheckboxModule, NgClass, MatDatepickerModule, FuseFindByKeyPipe, DatePipe],
 })
 export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
 {
@@ -193,6 +194,24 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     openScanningOverlay(): void
     {
         this._meetingService.scanning = this.meeting;
+    }
+
+    togglePresence(attendance){
+        if(attendance.status === 'PRESENT'){
+            attendance.status = 'ABSENT';
+            attendance.entryDate = new Date();
+        }
+        else {
+            attendance.status = 'PRESENT';
+            attendance.entryDate = new Date();
+        }
+        attendance.meetingId = this.meeting.id;
+        this._meetingService.registerAttendance(attendance).subscribe(
+            () => {
+                this.presentCount = this.meeting.attendance.filter((a) => a.status === 'PRESENT').length;
+                this._changeDetectorRef.markForCheck();
+            }
+        );
     }
 
 

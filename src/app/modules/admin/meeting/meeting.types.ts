@@ -19,4 +19,5 @@ export interface MeetingAttendance
     entryDate: Date;
     meeting?: Meeting;
     comunero?: Comunero;
+    representation?: string;
 }

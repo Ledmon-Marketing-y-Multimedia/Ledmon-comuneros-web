@@ -1,5 +1,14 @@
 {
     "welcome-back": "Welcome back",
     "Project": "Project",
-    "Analytics": "Analytics"
+    "Analytics": "Analytics",
+    "STATUS" : {
+        "ACTIVE": "Alta",
+        "UNSUBSCRIBED": "Baja",
+        "SUSPENDED": "Suspenso"
+    },
+    "ATTENDANCE": {
+        "ABSENT": "Ausente",
+        "PRESENT": "Presente"
+    }
 }

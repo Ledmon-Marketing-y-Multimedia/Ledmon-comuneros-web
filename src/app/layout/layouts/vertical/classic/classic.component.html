@@ -11,16 +11,16 @@
     <!-- Navigation header hook -->
     <ng-container fuseVerticalNavigationContentHeader>
         <!-- Logo -->
-        <div class="flex items-center h-20 p-6 pb-0">
+        <div class="flex items-center justify-center h-30 p-6 pb-0">
             <!-- Light version -->
             <img
-                class="dark:hidden w-30"
-                src="assets/images/logo/logo-text.svg"
+                class="dark:hidden w-44 invert"
+                src="assets/images/logo_corto.png"
                 alt="Logo image">
             <!-- Dark version -->
             <img
-                class="hidden dark:flex w-30"
-                src="assets/images/logo/logo-text-on-dark.svg"
+                class="hidden dark:flex w-44 invert"
+                src="assets/images/logo_corto.png"
                 alt="Logo image">
         </div>
     </ng-container>
@@ -37,6 +37,14 @@
             (click)="toggleNavigation('mainNavigation')">
             <mat-icon [svgIcon]="'heroicons_outline:bars-3'"></mat-icon>
         </button>
+
+        <div class="flex items-center justify-center w-full p-6">
+            <!-- Light version -->
+            <img
+                class="dark:hidden w-72"
+                src="assets/images/logo.png"
+                alt="Logo image">
+        </div>
         <!-- Components -->
         <div class="flex items-center pl-2 ml-auto space-x-0.5 sm:space-x-2">
             <!-- <languages></languages>
@@ -58,7 +66,7 @@
 
     <!-- Footer -->
     <div class="relative flex flex-0 items-center justify-start w-full h-14 px-4 md:px-6 z-49 border-t bg-card dark:bg-transparent print:hidden">
-        <span class="font-medium text-secondary">Fuse &copy; {{currentYear}}</span>
+        <span class="font-medium text-secondary">Comunidad de Montes de Marcón &copy; {{currentYear}}</span>
     </div>
 
 </div>

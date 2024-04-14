@@ -91,12 +91,12 @@ export const adminNavigation: FuseNavigationItem[] = [
     //     link : 'dashboard',
     //     exactMatch: true,
     // },
-    {
-        id   : 'dashboard.comunidad',
-        title: 'Mi comunidad',
-        type : 'basic',
-        icon : 'heroicons_outline:cog',
-        link : 'dashboard',
-        exactMatch: true,
-    }
+    // {
+    //     id   : 'dashboard.comunidad',
+    //     title: 'Mi comunidad',
+    //     type : 'basic',
+    //     icon : 'heroicons_outline:cog',
+    //     link : 'dashboard',
+    //     exactMatch: true,
+    // }
 ]

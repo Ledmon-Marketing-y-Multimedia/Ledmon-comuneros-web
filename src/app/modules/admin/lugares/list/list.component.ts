@@ -12,9 +12,10 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
+import { TranslocoModule } from '@ngneat/transloco';
 import { LugaresService } from 'app/modules/admin/lugares/lugares.service';
 import { Lugar } from 'app/modules/admin/lugares/lugares.types';
-import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { filter, fromEvent, map, merge, Observable, Subject, switchMap, takeUntil } from 'rxjs';
 
 @Component({
     selector       : 'lugares-list',
@@ -22,20 +23,39 @@ import { filter, fromEvent, Observable, Subject, switchMap, takeUntil } from 'rx
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [MatPaginatorModule, MatSelectModule, MatTableModule, MatSortModule, MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
+    styles         : [
+        /* language=SCSS */
+        `
+            .lugar-grid {
+                grid-template-columns: 200px 200px 200px auto;
+
+                @screen sm {
+                    grid-template-columns: 200px 200px 200px auto;
+                }
+
+                @screen md {
+                    grid-template-columns: 180px 250px 200px auto;
+                }
+
+                @screen lg {
+                    grid-template-columns: 300px 250px 200px auto;
+                }
+            }
+        `
+    ],
+    imports        : [MatPaginatorModule, TranslocoModule, MatSelectModule, MatTableModule, MatSortModule, MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
 })
 export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
 {
     @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
-    @ViewChild(MatPaginator) paginator: MatPaginator;
-    @ViewChild(MatSort) sort: MatSort;
+    @ViewChild(MatPaginator) private _paginator: MatPaginator;
+    @ViewChild(MatSort) private _sort: MatSort;
 
     lugares$: Observable<Lugar[]>;
 
     lugaresCount: number = 0;
     lugaresTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
-    lugarDataSource: MatTableDataSource<Lugar> = new MatTableDataSource<Lugar>();
     lugarTableColumns: string[] = ['address', 'status', 'zona'];
     zonas: Set<String> =  new Set<String>();
     searchInputControl: UntypedFormControl = new UntypedFormControl();
@@ -72,8 +92,16 @@ export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((lugares: Lugar[]) =>
             {
-                this.lugares = lugares;
-                this.lugarDataSource.data = lugares;
+                if(this._paginator){
+                    this.lugares = lugares.slice(
+                        this._paginator.pageIndex * this._paginator.pageSize,
+                        this._paginator.pageIndex * this._paginator.pageSize + this._paginator.pageSize
+                    );
+                    this._paginator.length = lugares.length;
+                }
+                else{
+                    this.lugares = lugares.slice(0,10);
+                }
                 // Update the counts
                 this.lugaresCount = lugares.length;
 
@@ -157,18 +185,65 @@ export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
 
     filterByZona(zona: any): void
     {
-        if(zona.value === 'all'){
-            this.lugarDataSource.data = this.lugares;
-            return;
-        }
-        this.lugarDataSource.data = this.lugares.filter((lugar) => lugar.zona === zona.value);
+        this.lugares$.subscribe((l: Lugar[]) =>
+        {
+            let lugares = [];
+            if (zona.value === 'all') {
+                lugares = l;
+            } else {
+                lugares = l.filter((lugar) => lugar.zona === zona.value);
+            }
+            this.lugares = lugares.slice(
+                this._paginator.pageIndex * this._paginator.pageSize,
+                this._paginator.pageIndex * this._paginator.pageSize + this._paginator.pageSize
+            );
+            this._paginator.length = lugares.length;
+        });
     }
 
 
-    ngAfterViewInit(): void {
-        this.lugarDataSource.paginator = this.paginator;
-        this.lugarDataSource.sort = this.sort;
-    }
+     /**
+     * After view init
+     */
+     ngAfterViewInit(): void
+     {
+         if ( this._sort && this._paginator )
+         {
+             // Set the initial sort
+             this._sort.sort({
+                 id          : 'name',
+                 start       : 'asc',
+                 disableClear: true
+             });
+
+             // Mark for check
+             this._changeDetectorRef.markForCheck();
+
+             this._paginator.length = this.lugaresCount;
+             // If the user changes the sort order...
+             this._sort.sortChange
+                 .pipe(takeUntil(this._unsubscribeAll))
+                 .subscribe(() => {
+                     // Reset back to the first page
+                     this._paginator.pageIndex = 0;
+
+                 });
+
+             // Get categories if sort or page changes
+             merge(this._sort.sortChange, this._paginator.page).pipe(
+                 switchMap(() => {
+                     return this._lugaresService.lugares$;
+                 }),
+                 map((lugares: Lugar[]) => {
+                     this._paginator.length = lugares.length;
+                     this.lugares = lugares.slice(
+                         this._paginator.pageIndex * this._paginator.pageSize,
+                         this._paginator.pageIndex * this._paginator.pageSize + this._paginator.pageSize
+                     );
+                 })
+             ).subscribe();
+         }
+     }
 
     /**
      * On destroy
@@ -220,6 +295,6 @@ export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
      */
     trackByFn(index: number, item: any): any
     {
-        return item.id || index;
+        return item?.id || index;
     }
 }

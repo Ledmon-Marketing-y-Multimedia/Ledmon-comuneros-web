@@ -26,6 +26,7 @@ import { Lugar } from '../../lugares/lugares.types';
 import { PdfService } from 'app/shared/services/pdf.service';
 import { MatDialog } from '@angular/material/dialog';
 import { StatusModalComponent } from '../status-modal/status-modal.component';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector       : 'comuneros-details',
@@ -33,13 +34,10 @@ import { StatusModalComponent } from '../status-modal/status-modal.component';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [NgIf, MatButtonModule, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
+    imports        : [NgIf, TranslocoModule, MatButtonModule, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
 })
 export class ComunerosDetailsComponent implements OnInit, OnDestroy
 {
-    @ViewChild('avatarFileInput') private _avatarFileInput: ElementRef;
-    @ViewChild('tagsPanel') private _tagsPanel: TemplateRef<any>;
-    @ViewChild('tagsPanelOrigin') private _tagsPanelOrigin: ElementRef;
 
     editMode: boolean = false;
     comunero: Comunero;
@@ -125,7 +123,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 // Get the comunero
                 this.comunero = comunero;
 
-                this.attendanceCount = comunero.attendances.filter(x => x.status == 'PRESENT').length;
+                this.attendanceCount = comunero.attendances?.filter(x => x.status == 'PRESENT').length;
 
                 this.comuneroForm.get('lugarId').setValue(comunero.lugar?.id || '');
 
@@ -269,12 +267,15 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
     {
         // Open the confirmation dialog
         const confirmation = this._fuseConfirmationService.open({
-            title  : 'Delete comunero',
-            message: 'Are you sure you want to delete this comunero? This action cannot be undone!',
+            title  : 'Borrar comunero',
+            message: '¿Estás seguro de que quieres borrar este comunero? Esta acción no se puede deshacer.',
             actions: {
                 confirm: {
-                    label: 'Delete',
+                    label: 'Borrar',
                 },
+                cancel : {
+                    label: 'Cancelar',
+                }
             },
         });
 
@@ -287,31 +288,11 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
                 // Get the current comunero's id
                 const id = this.comunero.id;
 
-                // Get the next/previous comunero's id
-                const currentComuneroIndex = this.comuneros.findIndex(item => item.id === id);
-                const nextComuneroIndex = currentComuneroIndex + ((currentComuneroIndex === (this.comuneros.length - 1)) ? -1 : 1);
-                const nextComuneroId = (this.comuneros.length === 1 && this.comuneros[0].id === id) ? null : this.comuneros[nextComuneroIndex].id;
-
                 // Delete the comunero
                 this._comunerosService.deleteComunero(id)
                     .subscribe((isDeleted) =>
                     {
-                        // Return if the comunero wasn't deleted...
-                        if ( !isDeleted )
-                        {
-                            return;
-                        }
-
-                        // Navigate to the next comunero if available
-                        if ( nextComuneroId )
-                        {
-                            this._router.navigate(['../', nextComuneroId], {relativeTo: this._activatedRoute});
-                        }
-                        // Otherwise, navigate to the parent
-                        else
-                        {
-                            this._router.navigate(['../'], {relativeTo: this._activatedRoute});
-                        }
+                        this._router.navigate(['../'], {relativeTo: this._activatedRoute});
 
                         // Toggle the edit mode off
                         this.toggleEditMode(false);

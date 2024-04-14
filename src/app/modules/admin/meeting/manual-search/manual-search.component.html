@@ -29,49 +29,98 @@
 
         <!-- Content -->
         <div class="relative flex flex-col flex-auto divide-y overflow-y-auto bg-card">
-            <ng-container *ngIf="appearance === 'bar'">
-                <div
-                    class="absolute top-4 inset-0 flex items-start shrink-0 z-99 bg-card"
-                    *ngIf="opened"
-                    @slideInTop
-                    @slideOutTop>
-                    <input
-                        class="w-full px-16 sm:px-18"
-                        [formControl]="searchControl"
-                        [matAutocomplete]="matAutocomplete"
-                        [placeholder]="'Search...'"
-                        (keydown)="onKeydown($event)"
-                        #barSearchInput>
-                    <mat-autocomplete
-                        class="sm:px-2 border-t rounded-b shadow-md"
-                        [autoSelectActiveOption]="true"
-                        [disableRipple]="true"
-                        #matAutocomplete="matAutocomplete">
-                        <mat-option
-                            class="py-0 px-6 text-md pointer-events-none text-secondary bg-transparent"
-                            *ngIf="resultSets && !resultSets.length">
-                            No results found!
-                        </mat-option>
-                            <mat-optgroup class="flex items-center mt-2 px-2">
-                                <span class="text-sm font-semibold tracking-wider text-secondary">Comuneros</span>
-                            </mat-optgroup>
-                            <ng-container *ngFor="let attendance of attendances; trackBy: trackByFn">
-                                <mat-option
-                                    class="group relative mb-1 py-0 px-6 text-md rounded-md hover:bg-gray-100 dark:hover:bg-hover"
-                                    (click)="selectAttendance(attendance)"
-                                    [value]="attendance.comunero.user.name">
-                                    <ng-container *ngTemplateOutlet="contactResult; context: {$implicit: attendance.comunero.user}"></ng-container>
-                                </mat-option>
-                            </ng-container>
-                    </mat-autocomplete>
+            <form [formGroup]="searchControl" class="flex flex-col mt-4 px-8 rounded overflow-hidden">
+                <p class="text-lg font-medium">Comunero</p>
+                <p class="text-secondary mb-6">
+                    Busca al comunero que asiste a la reunión
+                </p>
+                <div class="flex">
+                    <mat-form-field class="flex-auto">
+                        <input
+                            matInput
+                            class="w-full"
+                            [formControlName]="'search'"
+                            [matAutocomplete]="matAutocomplete"
+                            [placeholder]="'Buscar comunero...'"
+                            (keydown)="onKeydown($event)"
+                            #barSearchInput>
+                        <mat-autocomplete
+                            class="sm:px-2 border-t rounded-b shadow-md"
+                            [autoSelectActiveOption]="true"
+                            [disableRipple]="true"
+                            #matAutocomplete="matAutocomplete">
+                            <mat-option
+                                class="py-0 px-6 text-md pointer-events-none text-secondary bg-transparent"
+                                *ngIf="resultSets && !resultSets.length">
+                                No results found!
+                            </mat-option>
+                                <mat-optgroup class="flex items-center mt-2 px-2">
+                                    <span class="text-sm font-semibold tracking-wider text-secondary">Comuneros</span>
+                                </mat-optgroup>
+                                <ng-container *ngFor="let attendance of attendances; trackBy: trackByFn">
+                                    <mat-option
+                                        class="group relative mb-1 py-0 px-6 text-md rounded-md hover:bg-gray-100 dark:hover:bg-hover"
+                                        (click)="selectAttendance(attendance)"
+                                        [value]="attendance.comunero.user.name">
+                                        <ng-container *ngTemplateOutlet="contactResult; context: {$implicit: attendance.comunero.user}"></ng-container>
+                                    </mat-option>
+                                </ng-container>
+                        </mat-autocomplete>
+                        <mat-icon
+                            class="icon-size-5"
+                            matPrefix
+                            [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <mat-divider class="mt-2 mb-2"></mat-divider>
+
+                <p class="text-lg font-medium">Representante</p>
+                <p class="text-secondary mb-2">
+                    Viene otra persona en nombre del comunero
+                </p>
+                <div class="flex flex-col gt-sm:flex-row">
+                    <div class="flex flex-col">
+                        <div class="flex flex-col">
+                            <mat-checkbox
+                                #representationCheckbox
+                                class="mb-2"
+                                [checked]="false"
+                                [color]="'primary'">
+                                Viene en representación
+                            </mat-checkbox>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex" *ngIf="representationCheckbox.checked">
+                    <mat-form-field class="flex-auto">
+                        <input
+                            matInput
+                            [formControlName]="'representation'"
+                            [placeholder]="'Nombre y apellidos del representante'">
+                        <mat-icon
+                            class="icon-size-5"
+                            matPrefix
+                            [svgIcon]="'heroicons_solid:envelope'"></mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <div class="flex items-center justify-end border-t -mx-8 mt-8 px-8 py-5 bg-gray-50 dark:bg-gray-700">
+                    <button mat-button>
+                        Atrás
+                    </button>
                     <button
-                        class="absolute top-2 right-5 sm:right-7 shrink-0 w-10 h-10 -mt-5"
-                        mat-icon-button
-                        (click)="close()">
-                        <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                        [disabled]="searchControl.invalid || !selectedAttendance"
+                        (click)="registerAttendance()"
+                        class="px-6 ml-3"
+                        mat-flat-button
+                        [color]="'primary'">
+                        Registrar
                     </button>
                 </div>
-            </ng-container>
+            </form>
+
         </div>
 
     </div>

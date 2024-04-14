@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Comunero, Country, NewComunero, Tag } from 'app/modules/admin/comuneros/comuneros.types';
+import { Comunero, ComuneroStatus, Country, NewComunero, Tag } from 'app/modules/admin/comuneros/comuneros.types';
 import { environment } from 'environments/environment';
 import { BehaviorSubject, filter, map, Observable, of, switchMap, take, tap, throwError } from 'rxjs';
 
@@ -63,10 +63,12 @@ export class ComunerosService
      *
      * @param query
      */
-    searchComuneros(name: string): Observable<Comunero[]>
+    searchComuneros(name: string, status: string): Observable<Comunero[]>
     {
+        name = name ? name : '';
+        status = status === 'all' ? undefined : status;
         return this._httpClient.get<Comunero[]>(COMUNEROS_URL + "/search/" + "marcon", {
-            params: {name},
+            params: {name, status},
         }).pipe(
             tap((comuneros) =>
             {
@@ -213,7 +215,7 @@ export class ComunerosService
     {
         return this.comuneros$.pipe(
             take(1),
-            switchMap(comuneros => this._httpClient.delete('api/apps/comuneros/comunero', {params: {id}}).pipe(
+            switchMap(comuneros => this._httpClient.delete(COMUNEROS_URL + "/" + id).pipe(
                 map((isDeleted: boolean) =>
                 {
                     // Find the index of the deleted comunero

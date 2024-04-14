@@ -246,8 +246,6 @@ export class AuthService
 
     public runInitialLoginSequence(): Promise<void> {
         if (location.hash) {
-          console.log('Encountered hash fragment, plotting as table...');
-          console.table(location.hash.substr(1).split('&').map(kvp => kvp.split('=')));
         }
 
         // 0. LOAD CONFIG:
@@ -314,7 +312,6 @@ export class AuthService
               if (stateUrl.startsWith('/') === false) {
                 stateUrl = decodeURIComponent(stateUrl);
               }
-              console.log(`There was state of ${this._oauthService.state}, so we are sending you to: ${stateUrl}`);
               this._router.navigateByUrl(stateUrl);
             }
           })

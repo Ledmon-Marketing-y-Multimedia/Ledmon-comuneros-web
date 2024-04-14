@@ -39,7 +39,7 @@
                     </div>
 
                     <!-- Main actions -->
-                    <div class="flex items-center mt-4 sm:mt-0 md:mt-4">
+                    <div class="flex flex-wrap gap-2 items-center mt-4 sm:mt-0 md:mt-4">
                         <!-- Search -->
                         <div class="flex-auto">
                             <mat-form-field
@@ -53,18 +53,23 @@
                                     matInput
                                     [formControl]="searchInputControl"
                                     [autocomplete]="'off'"
-                                    [placeholder]="'Search comuneros'">
+                                    [placeholder]="'Búsqueda de comuneros'">
                             </mat-form-field>
                         </div>
-                        <!-- Add comunero button -->
-                        <button
-                            class="ml-4"
-                            mat-flat-button
-                            [color]="'primary'"
-                            [routerLink]="'new'">
-                            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                            <span class="ml-2 mr-1">Add</span>
-                        </button>
+                        <mat-form-field
+                        class="w-full sm:w-44 ml-4 fuse-mat-dense fuse-mat-rounded"
+                        [subscriptSizing]="'dynamic'">
+                        <mat-select
+                            class="rounded-md"
+                            (selectionChange)="filterByStatus()"
+                            [(value)]="selectedStatus"
+                            >
+                                <mat-option [value]="''">Todos</mat-option>
+                                <ng-container *ngFor="let status of comuneroStatuses; trackBy: trackByFn">
+                                    <mat-option [value]="status">{{'STATUS.' + status | transloco}}</mat-option>
+                                </ng-container>
+                            </mat-select>
+                        </mat-form-field>
                         <button
                             class="ml-4"
                             mat-flat-button
@@ -73,6 +78,15 @@
                             >
                             <mat-icon [svgIcon]="'heroicons_outline:arrow-down-tray'"></mat-icon>
                             <span class="ml-2 mr-1">Exportar</span>
+                        </button>
+                        <!-- Add comunero button -->
+                        <button
+                            class="ml-4"
+                            mat-flat-button
+                            [color]="'primary'"
+                            [routerLink]="'new'">
+                            <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+                            <span class="ml-2 mr-1">Nuevo</span>
                         </button>
                     </div>
                 </div>
@@ -85,31 +99,59 @@
                                 <!-- Group -->
                                 <ng-container *ngIf="i === 0 || comunero.user.name.charAt(0) !== comuneros[i - 1].user.name.charAt(0)">
                                     <div class="z-10 sticky top-0 -mt-px px-6 py-1 md:px-8 border-t border-b font-medium uppercase text-secondary bg-gray-50 dark:bg-gray-900">
-                                        {{comunero.user.name.charAt(0)}}
+
+                                        <div class="grid grid-cols-6 items-center">
+                                            <div class="col-span-3">
+                                                <span>{{comunero.user.name.charAt(0)}}</span>
+                                            </div>
+                                            <span class="col-span-1 ml-4">DNI</span>
+                                            <span class="col-span-1 ml-4">Código de comunero</span>
+                                            <span class="col-span-1 ml-4">Estado</span>
+                                        </div>
+
                                     </div>
                                 </ng-container>
                                 <!-- Comunero -->
                                 <a
-                                    class="z-20 flex items-center px-6 py-4 md:px-8 cursor-pointer border-b"
+                                    class="z-20 grid grid-cols-6 px-6 py-4 md:px-8 cursor-pointer border-b"
                                     [ngClass]="{'hover:bg-gray-100 dark:hover:bg-hover': !selectedComunero || selectedComunero.id !== comunero.id,
                                                 'bg-primary-50 dark:bg-hover': selectedComunero && selectedComunero.id === comunero.id}"
                                     [routerLink]="['./', comunero.id]">
-                                    <div class="flex flex-0 items-center justify-center w-10 h-10 rounded-full overflow-hidden">
-                                        <ng-container *ngIf="comunero.avatar">
-                                            <img
-                                                class="object-cover w-full h-full"
-                                                [src]="comunero.avatar"
-                                                alt="Comunero avatar"/>
-                                        </ng-container>
-                                        <ng-container *ngIf="!comunero.avatar">
-                                            <div class="flex items-center justify-center w-full h-full rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
-                                                {{comunero.user.name.charAt(0)}}
-                                            </div>
-                                        </ng-container>
+                                    <div class="col-span-3 flex items-center">
+                                        <div class="flex flex-0 items-center justify-center w-10 h-10 rounded-full overflow-hidden">
+                                            <ng-container *ngIf="comunero.avatar">
+                                                <img
+                                                    class="object-cover w-full h-full"
+                                                    [src]="comunero.avatar"
+                                                    alt="Comunero avatar"/>
+                                            </ng-container>
+                                            <ng-container *ngIf="!comunero.avatar">
+                                                <div class="flex items-center justify-center w-full h-full rounded-full text-lg uppercase bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                                                    {{comunero.user.name.charAt(0)}}
+                                                </div>
+                                            </ng-container>
+                                        </div>
+                                        <div class="min-w-0 ml-4">
+                                            <div class="font-medium leading-5 truncate">{{comunero.user.name}}</div>
+                                            <div class="leading-5 truncate text-secondary">{{comunero.lugar.address}}</div>
+                                        </div>
                                     </div>
-                                    <div class="min-w-0 ml-4">
-                                        <div class="font-medium leading-5 truncate">{{comunero.user.name}}</div>
-                                        <div class="leading-5 truncate text-secondary">{{comunero.lugar.address}}</div>
+
+                                    <div class="flex min-w-0 ml-4 items-center">
+                                        <div class="font-medium leading-5 truncate">{{comunero.user.dni}}</div>
+                                    </div>
+
+                                    <div class="flex min-w-0 ml-4 items-center">
+                                        <div class="font-medium leading-5 truncate">{{comunero.code}}</div>
+                                    </div>
+
+                                    <div class="flex min-w-0 ml-4 items-center">
+                                        <span *ngIf="comunero.status"
+                                            class="inline-flex items-center font-bold text-xs px-2.5 py-0.5 rounded-full tracking-wide uppercase"
+                                            [ngClass]="{'bg-red-200 text-red-800 dark:bg-red-600 dark:text-red-50': comunero.status == comuneroStatus.UNSUBSCRIBED,
+                                                        'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50': comunero.status == comuneroStatus.ACTIVE}">
+                                            <span *ngIf="comunero.status" class="leading-relaxed whitespace-nowrap">{{'STATUS.' + comunero.status | transloco}}</span>
+                                        </span>
                                     </div>
                                 </a>
                             </ng-container>
@@ -118,7 +160,7 @@
 
                     <!-- No comuneros -->
                     <ng-template #noComuneros>
-                        <div class="p-8 sm:p-16 border-t text-4xl font-semibold tracking-tight text-center">There are no comuneros!</div>
+                        <div class="p-8 sm:p-16 border-t text-4xl font-semibold tracking-tight text-center">No existen comuneros</div>
                     </ng-template>
 
                 </div>

@@ -41,6 +41,7 @@ export class MeetingComponent
     selectingMeeting$ : Observable<MeetingAttendance[]> = this._selectingMeeting.asObservable();
     presentCount: number;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    selectedAttendance: MeetingAttendance;
     inProgress: boolean;
     /**
      * Constructor
@@ -77,7 +78,7 @@ export class MeetingComponent
             this._meetingAttendance.value ? null :
             this._meetingService.getAnnouncementAttendance(meeting.id, event).pipe(take(1))
                 .subscribe((attendances: MeetingAttendance[]) => {
-                    if (attendances.length > 1) {
+                    if (attendances.length) {
                         this._selectingMeeting.next(attendances);
                     }
                     else {
@@ -116,5 +117,9 @@ export class MeetingComponent
 
     closeScanningOverlay(){
         this._meetingService.scanning = null;
+    }
+
+    registerRepresentation(attendances: MeetingAttendance[]){
+        this.selectedAttendance = attendances[0];
     }
 }

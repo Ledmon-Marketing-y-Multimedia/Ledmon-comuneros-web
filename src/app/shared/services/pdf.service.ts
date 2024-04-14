@@ -205,7 +205,7 @@ export class PdfService {
               };
             });
           });
-        doc.output('dataurlnewwindow');
+          doc.save('tarjeta_'+ comunero.user.name.replace(',', '_').replace(' ', '_').trim().toLowerCase() +'_.pdf');
     }
 
     async comuneroSimpleList(comuneros: Comunero[]) {
