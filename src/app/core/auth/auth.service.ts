@@ -17,7 +17,7 @@ export const authConfig : AuthConfig = {
     responseType: 'code',
     requireHttps: environment.production,
     redirectUri: window.location.origin + '/',
-    logoutUrl: window.location.origin + '/',
+    logoutUrl: window.location.origin + '&client_id=comuneros-app',
     silentRefreshRedirectUri: window.location.origin + '/silent-refresh.html',
     scope: 'openid profile email', // Ask offline_access to support refresh token refreshes
     useSilentRefresh: true, // Needed for Code Flow to suggest using iframe-based refreshes
