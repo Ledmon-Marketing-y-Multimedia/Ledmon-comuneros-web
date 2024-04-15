@@ -3,7 +3,7 @@ import { PDFDocument } from 'pdf-lib';
 import { jsPDF } from 'jspdf';
 import printJS from 'print-js';
 import { Comunero } from 'app/modules/admin/comuneros/comuneros.types';
-import QRCode from 'QRCode';
+import QRCode from 'qrcode';
 import 'jspdf-autotable';
 import { UserOptions } from 'jspdf-autotable';
 
