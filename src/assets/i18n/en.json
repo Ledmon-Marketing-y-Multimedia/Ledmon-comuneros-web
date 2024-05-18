@@ -5,7 +5,12 @@
     "STATUS" : {
         "ACTIVE": "Alta",
         "UNSUBSCRIBED": "Baja",
-        "SUSPENDED": "Suspenso"
+        "SUSPENDED": "Suspenso",
+        "LUGAR": {
+            "ACTIVE": "Alta",
+            "UNSUBSCRIBED": "Baja",
+            "SUSPENDED": "Baja"
+        }
     },
     "ATTENDANCE": {
         "ABSENT": "Ausente",

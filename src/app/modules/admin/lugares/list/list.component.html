@@ -23,7 +23,7 @@
 
                     <!-- Title -->
                     <div>
-                        <div class="text-4xl font-extrabold tracking-tight leading-none">Lugares</div>
+                        <div class="text-4xl font-extrabold tracking-tight leading-none">Direcciones</div>
                         <div class="ml-0.5 font-medium text-secondary">
                             <ng-container *ngIf="lugaresCount > 0">
                                 {{lugaresCount}}
@@ -52,7 +52,7 @@
                                     matInput
                                     [formControl]="searchInputControl"
                                     [autocomplete]="'off'"
-                                    [placeholder]="'Buscar lugares'">
+                                    [placeholder]="'Buscar direcciones'">
                             </mat-form-field>
                         </div>
 
@@ -64,7 +64,7 @@
                             [value]="'all'"
                             (selectionChange)="filterByZona($event)"
                             >
-                                <mat-option [value]="'all'">Todas las zonas</mat-option>
+                                <mat-option [value]="'all'">Todos los lugares</mat-option>
                                 <ng-container *ngFor="let zona of zonas; trackBy: trackByFn">
                                     <mat-option [value]="zona">{{zona}}</mat-option>
                                 </ng-container>
@@ -77,7 +77,7 @@
                             [color]="'primary'"
                             (click)="createLugar()">
                             <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
-                            <span class="ml-2 mr-1">Nuevo lugar</span>
+                            <span class="ml-2 mr-1">Nueva dirección</span>
                         </button>
                     </div>
                 </div>
@@ -124,7 +124,7 @@
                                                         class="inline-flex items-center font-bold text-xs px-2.5 py-0.5 rounded-full tracking-wide uppercase"
                                                         [ngClass]="{'bg-red-200 text-red-800 dark:bg-red-600 dark:text-red-50': lugar.status == 'SUSPENDED',
                                                                     'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50': lugar.status == 'ACTIVE'}">
-                                                        <span *ngIf="lugar.status" class="leading-relaxed whitespace-nowrap">{{'STATUS.' + lugar.status | transloco}}</span>
+                                                        <span *ngIf="lugar.status" class="leading-relaxed whitespace-nowrap">{{'STATUS.LUGAR.' + lugar.status | transloco}}</span>
                                                     </span>
                                                 </div>
 

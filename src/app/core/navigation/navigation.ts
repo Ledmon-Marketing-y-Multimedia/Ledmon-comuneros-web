@@ -53,7 +53,7 @@ export const adminNavigation: FuseNavigationItem[] = [
     },
     {
         id   : 'dashboard.lugares',
-        title: 'Lugares',
+        title: 'Direcciones',
         type : 'basic',
         icon : 'heroicons_outline:building-storefront',
         link : 'lugares',

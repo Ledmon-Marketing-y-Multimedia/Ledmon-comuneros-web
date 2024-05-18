@@ -221,14 +221,14 @@ export class PdfService {
         const verticalOffset = margin;
         var columns = [
             { title: 'NOMBRE Y APELLIDOS', dataKey: 'col1' },
-            { title: 'ESTADO', dataKey: 'col2' },
-            { title: 'FECHA ALTA', dataKey: 'col3' },
+            { title: 'DNI', dataKey: 'col2' },
+            { title: 'ESTADO', dataKey: 'col3' },
         ];
         let rows = comuneros.map((comunero) => {
             return {
                 col1: comunero.user.name,
-                col2: comunero.status == 'ACTIVE' ? 'ALTA' : 'BAJA',
-                col3: comunero.user.fechaAlta,
+                col2: comunero.user.dni,
+                col3: comunero.status == 'ACTIVE' ? 'ALTA' : 'BAJA',
             };
         });
 
@@ -285,8 +285,9 @@ export class PdfService {
             { title: 'PROVINCIA', dataKey: 'col6' },
             { title: 'ESTADO', dataKey: 'col7' },
             { title: 'FECHA ALTA', dataKey: 'col8' },
+            { title: 'FECHA BAJA', dataKey: 'col9'}
         ];
-        let rows = comuneros.map((comunero) => {
+        let rows : any = comuneros.map((comunero) => {
             return {
                 col1: comunero.user.name,
                 col2: comunero.user.dni,
@@ -294,16 +295,33 @@ export class PdfService {
                 col4: comunero.lugar.cp,
                 col5: comunero.lugar.poblacion,
                 col6: comunero.lugar.provincia,
-                col7: comunero.status == 'ACTIVE' ? 'ALTA' : 'BAJA',
+                col7: comunero.lugar.status == 'SUSPENDED' ? 'SUSPENDED' : comunero.status == 'ACTIVE' ? 'ALTA' : 'BAJA',
                 col8: comunero.user.fechaAlta,
+                col9: comunero.lugar.status == 'SUSPENDED' ? comunero.lugar.suspendedDate : comunero.unsubscribedDate
             };
         });
+
+        rows = rows.map((row) => {
+            return {
+                col1: row.col1,
+                col2: row.col2,
+                col3: row.col3,
+                col4: row.col4,
+                col5: row.col5,
+                col6: row.col6,
+                col7: row.col7,
+                col8: row.col8 ? new Date(row.col8).toLocaleDateString() : '',
+                col9: row.col9 ? new Date(row.col9).toLocaleDateString() : ''
+            };
+        });
+
 
         doc.autoTable(columns, rows, {
             styles: {
                 fillColor: [51, 51, 51],
                 lineColor: 240,
                 lineWidth: 1,
+                fontSize: 8
             },
             columnStyles: {
                 col1: { fillColor: false },
@@ -314,6 +332,7 @@ export class PdfService {
                 col6: { fillColor: false },
                 col7: { fillColor: false },
                 col8: { fillColor: false },
+                col9: { fillColor: false },
             },
             margin: { top: 60 },
             addPageContent: function (data) {

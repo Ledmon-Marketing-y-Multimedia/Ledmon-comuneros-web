@@ -41,12 +41,15 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     announcementForm: UntypedFormGroup;
     comuneros: Comunero[];
     selectedFilter: string = '';
-    filters: string[] = ['todos', 'activos', 'suspendidos'];
+    filters: string[] = ['todos', 'altas', 'suspensos'];
     editMode: boolean = false;
     numberOfComunerosCarta: any = {};
     numberOfComunerosEmail: any = {};
     comunerosCarta: Comunero[];
     comunerosEmail: Comunero[];
+    zonas: Set<String> =  new Set<String>();
+    selectedZona: string = 'all';
+    includeEmailUsers: boolean = false;
     quillModules: QuillModules = {
         toolbar: [
             ['bold', 'italic', 'underline'],
@@ -55,7 +58,6 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
             ['clean'],
             ['image',],
         ],
-
 
 
     };
@@ -103,8 +105,9 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         {
             this.comuneros = comuneros;
 
-            this.comunerosCarta = this.comuneros.filter(comunero => !comunero.user.email);
-            this.comunerosEmail = this.comuneros.filter(comunero => comunero.user.email);
+            this.comunerosCarta = this.comuneros.filter(comunero => !comunero.emailCommunication);
+            this.comunerosEmail = this.comuneros.filter(comunero => comunero.user.email && comunero.emailCommunication);
+            this.zonas = new Set(comuneros.map((comunero) => comunero.lugar).map((lugar) => lugar.zona));
 
             this._calcNumberOfCards();
 
@@ -195,6 +198,17 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     }
 
     /**
+     * On zona change
+     *
+     */
+    onChange(): void
+    {
+        this._calcNumberOfCards();
+        // Filter the cards
+        this._filterCards();
+    }
+
+    /**
      * Track by function for ngFor loops
      *
      * @param index
@@ -275,11 +289,11 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                     this.numberOfComunerosCarta[filter] = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER).length;
                     this.numberOfComunerosEmail[filter] = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER).length;
                     break;
-                case 'suspendidos':
+                case 'suspensos':
                     this.numberOfComunerosCarta[filter] = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED).length;
                     this.numberOfComunerosEmail[filter] = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED).length;
                     break;
-                case 'activos':
+                case 'altas':
                     this.numberOfComunerosCarta[filter] = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE).length;
                     this.numberOfComunerosEmail[filter] = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE).length;
                     break;
@@ -287,8 +301,13 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                     break;
             }
 
+            if(this.includeEmailUsers){
+                this.numberOfComunerosCarta[filter] += this.numberOfComunerosEmail[filter];
+            }
+
         });
     }
+
 
     /**
      * Filter the cards based on the selected filter
@@ -304,11 +323,11 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 comunerosCarta = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER);
                 comunerosEmail = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER);
                 break;
-            case 'suspendidos':
+            case 'suspensos':
                 comunerosCarta = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED);
                 comunerosEmail = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.SUSPENDED);
                 break;
-            case 'activos':
+            case 'altas':
                 comunerosCarta = this.comunerosCarta.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE);
                 comunerosEmail = this.comunerosEmail.filter(comunero => comunero.role === ComuneroRole.HOLDER && comunero.lugar.status === LugarStatus.ACTIVE);
                 break;
@@ -320,6 +339,13 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                     this.announcement.comuneros.some(comunero => comunero.id === comunerosEmail.id)
                 );
                 break;
+        }
+        if(this.selectedZona !== 'all'){
+            comunerosCarta = comunerosCarta.filter(comunero => comunero.lugar.zona === this.selectedZona);
+            comunerosEmail = comunerosEmail.filter(comunero => comunero.lugar.zona === this.selectedZona);
+        }
+        if(this.includeEmailUsers){
+            comunerosCarta = comunerosCarta.concat(comunerosEmail);
         }
         this.announcementForm.get('comunerosCarta').setValue(comunerosCarta);
         this.announcementForm.get('comunerosEmail').setValue(comunerosEmail);

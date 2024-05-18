@@ -34,7 +34,7 @@ import { TranslocoModule } from '@ngneat/transloco';
     encapsulation  : ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone     : true,
-    imports        : [NgIf, TranslocoModule, MatButtonModule, MatTooltipModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
+    imports        : [NgIf, TranslocoModule, MatButtonModule, MatTooltipModule, MatCheckboxModule, RouterLink, MatIconModule, NgFor, FormsModule, ReactiveFormsModule, MatRippleModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, NgClass, MatSelectModule, MatOptionModule, MatDatepickerModule, TextFieldModule, FuseFindByKeyPipe, DatePipe],
 })
 export class ComunerosDetailsComponent implements OnInit, OnDestroy
 {
@@ -87,6 +87,7 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
             lugarId       : [''],
             email       : [''],
             username    : [''],
+            emailCommunication: [false],
             code       : [''],
             dni     : [''],
         });
@@ -132,6 +133,8 @@ export class ComunerosDetailsComponent implements OnInit, OnDestroy
 
                 // Patch values to the form
                 this.comuneroForm.patchValue(comunero.user);
+
+                this.comuneroForm.get('emailCommunication').setValue(comunero.emailCommunication);
 
                 this.comuneroForm.get('id').setValue(comunero.id);
 

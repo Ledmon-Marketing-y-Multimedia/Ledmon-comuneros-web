@@ -10,6 +10,8 @@ export interface Comunero
     role?: ComuneroRole;
     status?: ComuneroStatus;
     comments?: string;
+    unsubscribedDate?: Date;
+    emailCommunication?: boolean;
     attendances?: MeetingAttendance[];
 }
 
@@ -32,11 +34,14 @@ export interface Lugar
     provincia: string;
     status: LugarStatus
     cp: string;
+    unsubscribedDate?: Date;
+    suspendedDate?: Date;
 }
 
 export enum LugarStatus{
     ACTIVE = 'ACTIVE',
     SUSPENDED = 'SUSPENDED',
+    UNSUBSCRIBED = 'UNSUBSCRIBED',
 }
 
 
