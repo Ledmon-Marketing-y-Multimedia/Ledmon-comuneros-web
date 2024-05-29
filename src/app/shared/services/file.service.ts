@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
+import { concatMap } from 'rxjs';
 
 const DOCUMENT_URL = environment.apiUrl + '/document';
 
@@ -18,6 +19,16 @@ getFileUrlByPath(path: string){
     const params = new HttpParams().set('path', path);
     return this._httpClient.get<any>(DOCUMENT_URL, { params, responseType: 'text' as any});
 }
+
+
+getFileByPath(path: string){
+    const params = new HttpParams().set('path', path);
+    return this._httpClient.get<any>(DOCUMENT_URL, { params, responseType: 'text' as any}).pipe(
+        concatMap((response: any) => {
+            return this._httpClient.get<any>(response, {responseType: 'blob' as 'json'});
+    }));
+};
+
 
 getFileExtensionImage(attachment){
     const split = attachment.name?.split('.')

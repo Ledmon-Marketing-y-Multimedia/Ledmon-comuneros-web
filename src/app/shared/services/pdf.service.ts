@@ -60,7 +60,6 @@ export class PdfService {
         doc.vars.fontWeightBold = 'bold';
         doc.vars.fontWeightNormal = 'normal';
         this.addFontNormal();
-        debugger
         doc.getFontList()
         doc.setFont("Arial-Regular", "normal");
         doc.setFontSize(15);

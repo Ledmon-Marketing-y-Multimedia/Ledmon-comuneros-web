@@ -15,7 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuseFindByKeyPipe } from '@fuse/pipes/find-by-key/find-by-key.pipe';
 import { AnnouncementService } from 'app/modules/admin/announcement/announcement.service';
 import { Announcement } from 'app/modules/admin/announcement/announcement.types';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { Observable, Subject, concatMap, filter, takeUntil } from 'rxjs';
 import { Comunero, ComuneroRole, LugarStatus } from '../../comuneros/comuneros.types';
 import { QuillEditorComponent, QuillModule, QuillModules, QuillService } from 'ngx-quill';
 import { ComunerosService } from '../../comuneros/comuneros.service';
@@ -24,6 +24,8 @@ import { PdfService } from 'app/shared/services/pdf.service';
 import { MatDialog } from '@angular/material/dialog';
 import { LoaderModalComponent } from '../loader-modal/loader-modal.component';
 import Quill from 'quill';
+import { FileService } from 'app/shared/services/file.service';
+import { concat } from 'lodash';
 
 @Component({
     selector       : 'announcement-details',
@@ -75,7 +77,8 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         private _route: ActivatedRoute,
         private _pdfService: PdfService,
         private _matDialog: MatDialog,
-        private titleCasePipe: TitleCasePipe
+        private titleCasePipe: TitleCasePipe,
+        private _fileService: FileService,
     )
     {
     }
@@ -208,6 +211,11 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         this._filterCards();
     }
 
+
+    getDocument(document: any): Observable<any>{
+        return this._fileService.getFileByPath("a09b25f2-897b-4e33-bac5-d5e34f7245ce/" + this.announcement.meeting.id + "/" + document.name);
+    }
+
     /**
      * Track by function for ngFor loops
      *
@@ -220,14 +228,23 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
     }
 
 
-    printComunications(){
+    async printComunications(){
         const comuneros = this.announcementForm.get('comunerosCarta').value;
         const content = this.announcementForm.get('content').value;
         const a  = '<div style="background-color: #11ffee00;width: 100%; font-family: "Arial", sans-serif; font-style: normal;" class="ql-editor">' + content + '</div>'
         const blobs = [];
         const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: blobs, comuneros: comuneros.length}});
         const context = this;
-
+        let cuentasDocument = null;
+        if(this.announcement.meeting){
+            const cuentas = this.announcement.meeting.documents.find((doc) => doc.type === 'Cuentas');
+            if(cuentas){
+                await this.getDocument(cuentas).toPromise().then((result) => {
+                    cuentasDocument = result;
+                });
+            }
+        }
+        debugger
         async function printPDF(comunero) {
             return new Promise((resolve) => {
                 comunero.user.name = context.titleCasePipe.transform(comunero.user.name);
@@ -235,6 +252,9 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 comunero.lugar.poblacion = context.titleCasePipe.transform(comunero.lugar.poblacion);
                 context._pdfService.print(comunero, a, context.announcement.meeting != undefined).then((result) => {
                     blobs.push(result);
+                    if(cuentasDocument){
+                        blobs.push(cuentasDocument);
+                    }
                     resolve(true);
                 });
             });
