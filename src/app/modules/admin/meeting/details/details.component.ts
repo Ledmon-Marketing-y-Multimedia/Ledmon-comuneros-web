@@ -3,7 +3,7 @@ import { TemplatePortal } from '@angular/cdk/portal';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { CommonModule, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, Renderer2, TemplateRef, ViewChild, ViewContainerRef, ViewEncapsulation } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
@@ -87,9 +87,9 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         // Create the meeting form
         this.meetingForm = this._formBuilder.group({
             id       : [''],
-            name    : [''],
+            name    : ['', [Validators.required]],
             description : [''],
-            date  : [null],
+            date  : [null, [Validators.required]],
             status : [''],
         });
 
@@ -246,7 +246,7 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
              {
                 this.uploadActa(result);
              });
-     }
+    }
 
     uploadActa(doc: {type: string, file: File}){
         const formData = new FormData();
@@ -257,6 +257,31 @@ export class MeetingDetailsComponent implements OnInit, AfterViewInit, OnDestroy
             this.meeting.documents.push(response);
             this._changeDetectorRef.markForCheck();
         });
+    }
+
+    deleteDocument(document){
+        // Open the confirmation dialog
+        const confirmation = this._fuseConfirmationService.open({
+            title  : 'Borrar documento',
+            message: '¿Estás seguro de que quieres borrar este documento? ¡Esta acción no se puede deshacer!',
+            actions: {
+                confirm: {
+                    label: 'Borrar',
+                },
+            },
+        });
+
+        confirmation.afterClosed().subscribe((result) =>
+            {
+                if ( result === 'confirmed' )
+                {
+                    this._meetingService.deleteDocument(this.meeting.id, document.id).subscribe(() => {
+                        this.meeting.documents = this.meeting.documents.filter((d) => d.id !== document.id);
+                        this._changeDetectorRef.markForCheck();
+                    });
+                }
+            }
+        );
     }
 
     /**

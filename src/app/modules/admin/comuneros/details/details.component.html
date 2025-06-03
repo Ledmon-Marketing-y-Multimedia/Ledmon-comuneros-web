@@ -108,8 +108,8 @@
 
                     <ng-container *ngIf="comunero?.status">
                         <div class="flex sm:items-center">
-                            <mat-icon [svgIcon]="'heroicons_outline:home'"></mat-icon>
-                            <div class="ml-6 leading-6">{{comunero.status}}</div>
+                            <mat-icon [svgIcon]="'heroicons_outline:information-circle'"></mat-icon>
+                            <div class="ml-6 leading-6">{{'STATUS.' + comunero.status | transloco}}</div>
                         </div>
                     </ng-container>
 

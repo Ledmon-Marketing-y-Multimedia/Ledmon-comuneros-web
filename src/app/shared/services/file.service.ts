@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
 import { concatMap } from 'rxjs';
@@ -25,7 +25,7 @@ getFileByPath(path: string){
     const params = new HttpParams().set('path', path);
     return this._httpClient.get<any>(DOCUMENT_URL, { params, responseType: 'text' as any}).pipe(
         concatMap((response: any) => {
-            return this._httpClient.get<any>(response, {responseType: 'blob' as 'json'});
+            return fetch(response).then(res => res.blob());
     }));
 };
 

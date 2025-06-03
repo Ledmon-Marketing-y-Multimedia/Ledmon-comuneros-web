@@ -1,9 +1,8 @@
 {
-    "name": "fuse-angular",
+    "name": "comuneros-marcon",
     "version": "19.0.0",
-    "description": "Fuse - Angular Admin Template and Starter Project",
-    "author": "https://themeforest.net/user/srcn",
-    "license": "https://themeforest.net/licenses/standard",
+    "description": "App comunidad de montes de marcon",
+    "author": "https://miguelmontero.dev",
     "engines": {
         "node": "20.9.0"
     },

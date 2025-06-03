@@ -9,7 +9,7 @@
         "LUGAR": {
             "ACTIVE": "Alta",
             "UNSUBSCRIBED": "Baja",
-            "SUSPENDED": "Baja"
+            "SUSPENDED": "Suspenso"
         }
     },
     "ATTENDANCE": {

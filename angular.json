@@ -3,7 +3,7 @@
     "version": 1,
     "newProjectRoot": "projects",
     "projects": {
-        "fuse": {
+        "comuneros": {
             "projectType": "application",
             "schematics": {
                 "@schematics/angular:component": {
@@ -17,7 +17,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
-                        "outputPath": "dist/fuse",
+                        "outputPath": "dist/comuneros",
                         "index": "src/index.html",
                         "main": "src/main.ts",
                         "polyfills": [
@@ -97,10 +97,10 @@
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                          "buildTarget": "fuse:build:production"
+                          "buildTarget": "comuneros:build:production"
                         },
                         "development": {
-                          "buildTarget": "fuse:build:development"
+                          "buildTarget": "comuneros:build:development"
                         }
                     },
                     "options": {
@@ -111,7 +111,7 @@
                 "extract-i18n": {
                     "builder": "@angular-devkit/build-angular:extract-i18n",
                     "options": {
-                      "buildTarget": "fuse:build"
+                      "buildTarget": "comuneros:build"
                     }
                 },
                 "test": {

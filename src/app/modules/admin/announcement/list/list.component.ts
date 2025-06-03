@@ -1,4 +1,4 @@
-import { AsyncPipe, DOCUMENT, I18nPluralPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DOCUMENT, DatePipe, I18nPluralPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,9 +11,9 @@ import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { TranslocoLocaleModule } from '@ngneat/transloco-locale';
 import { AnnouncementService } from 'app/modules/admin/announcement/announcement.service';
 import { Announcement } from 'app/modules/admin/announcement/announcement.types';
-import { Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { Observable, Subject, map, merge, switchMap, takeUntil } from 'rxjs';
 import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 
 @Component({
     selector       : 'announcement-list',
@@ -41,18 +41,19 @@ import { MatPaginatorModule } from '@angular/material/paginator';
             }
         `
     ],
-    imports        : [MatPaginatorModule, MatSortModule, TranslocoLocaleModule, MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
+    imports        : [MatPaginatorModule, DatePipe, MatSortModule, TranslocoLocaleModule, MatSidenavModule, RouterOutlet, NgIf, MatFormFieldModule, MatIconModule, MatInputModule, FormsModule, ReactiveFormsModule, MatButtonModule, NgFor, NgClass, RouterLink, AsyncPipe, I18nPluralPipe],
 })
 export class AnnouncementListComponent implements OnInit, OnDestroy
 {
-    announcements$: Observable<Announcement[]>;
+    @ViewChild(MatPaginator) private _paginator: MatPaginator;
 
+    announcements$: Observable<Announcement[]>;
     announcementCount: number = 0;
-    announcementTableColumns: string[] = ['name', 'email', 'phoneNumber', 'job'];
     drawerMode: 'side' | 'over';
     searchInputControl: UntypedFormControl = new UntypedFormControl();
     selectedAnnouncement: Announcement;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    announcements: Announcement[];
 
     /**
      * Constructor
@@ -81,10 +82,9 @@ export class AnnouncementListComponent implements OnInit, OnDestroy
         this.announcements$ = this._announcementService.announcements$;
         this._announcementService.announcements$
             .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((announcement: Announcement[]) =>
+            .subscribe((announcements: Announcement[]) =>
             {
-                // Update the counts
-                this.announcementCount = announcement.length;
+                this.announcements = announcements.slice(0, 5);
 
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
@@ -95,12 +95,41 @@ export class AnnouncementListComponent implements OnInit, OnDestroy
             .pipe(
                 takeUntil(this._unsubscribeAll),
                 switchMap(query =>
-
                     // Search
                     this._announcementService.searchAnnouncement(query),
                 ),
             )
         .subscribe();
+    }
+
+    /**
+     * After view init
+     */
+    ngAfterViewInit(): void
+    {
+        if ( this._paginator )
+        {
+
+            // Mark for check
+            this._changeDetectorRef.markForCheck();
+
+            this._paginator.length = this.announcements.length;
+            this._paginator.pageSize = 5;
+
+            // Get categories if sort or page changes
+            this._paginator.page.pipe(
+                switchMap(() => {
+                    return this._announcementService.announcements$;
+                }),
+                map((announcements: Announcement[]) => {
+                    this._paginator.length = announcements.length;
+                    this.announcements = announcements.slice(
+                        this._paginator.pageIndex * this._paginator.pageSize,
+                        this._paginator.pageIndex * this._paginator.pageSize + this._paginator.pageSize
+                    );
+                })
+            ).subscribe();
+        }
     }
 
     /**

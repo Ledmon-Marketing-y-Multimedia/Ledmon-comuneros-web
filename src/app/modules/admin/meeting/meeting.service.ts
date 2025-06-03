@@ -3,10 +3,12 @@ import { Injectable } from '@angular/core';
 import { Meeting, MeetingAttendance } from 'app/modules/admin/meeting/meeting.types';
 import { environment } from 'environments/environment';
 import { BehaviorSubject, filter, map, Observable, of, switchMap, take, tap, throwError } from 'rxjs';
+import { Comunero } from '../comuneros/comuneros.types';
+import { Announcement } from '../announcement/announcement.types';
 
 const MEETING_URL = environment.apiUrl + '/meeting';
 const ATTENDANCE_URL = environment.apiUrl + '/attendance';
-
+const COMUNIDAD_URL = environment.apiUrl + '/comunidad/';
 
 @Injectable({providedIn: 'root'})
 export class MeetingService
@@ -182,6 +184,17 @@ export class MeetingService
         return this._httpClient.get<MeetingAttendance[]>(ATTENDANCE_URL + "/" + meetingId + "/lugar/" + lugarId);
     }
 
+    getSuspendedComuneros(comunidadId: string): Observable<Comunero[]>
+    {
+        return this._httpClient.get<Comunero[]>(COMUNIDAD_URL  + comunidadId + "/absents");
+    }
+
+
+    suspendComuneros(comunidadId: string, comuneros: Comunero[]): Observable<Announcement>
+    {
+        return this._httpClient.post<Announcement>(COMUNIDAD_URL  + comunidadId + "/suspend", {comuneros: comuneros});
+    }
+
 
     /**
      *  Search attendance by comunero name
@@ -192,6 +205,11 @@ export class MeetingService
     getAttendancesByName(meetingId: string, name: string): Observable<MeetingAttendance[]>
     {
         return this._httpClient.get<MeetingAttendance[]>(ATTENDANCE_URL + "/" + meetingId + "/search", {params: {name}});
+    }
+
+    deleteDocument(meetingId: string, documentId: string): Observable<boolean>
+    {
+        return this._httpClient.delete<boolean>(MEETING_URL + "/" + meetingId + "/document/" + documentId);
     }
 
 

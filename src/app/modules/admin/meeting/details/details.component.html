@@ -14,14 +14,14 @@
         <div class="flex flex-wrap gap-y-2 items-center justify-end" *ngIf="editMode">
             <button
                 (click)="openScanningOverlay()"
-                class="px-6 ml-3"
+                class="w-full md:w-fit md:px-6 md:ml-3"
                 mat-flat-button
                 [color]="'primary'">
                 Escanear QRs
             </button>
             <button
             (click)="openDocumentDialog()"
-                class="px-6 ml-3"
+                class="w-full md:w-fit md:px-6 md:ml-3"
                 mat-flat-button
                 [color]="'primary'">
                 Subir documento de reunion
@@ -35,7 +35,7 @@
             <button
                 *ngIf="!meeting.announcementId"
                 (click)="createAnnouncement()"
-                class="px-6 ml-3"
+                class="w-full md:w-fit md:px-6 md:ml-3"
                 mat-flat-button
                 [color]="'primary'">
                 Crear convocatoria
@@ -43,7 +43,7 @@
             <button
                 *ngIf="meeting.announcementId"
                 [routerLink]="['/announcements/', meeting.announcementId]"
-                class="px-6 ml-3"
+                class="w-full md:w-fit md:px-6 md:ml-3"
                 mat-flat-button
                 [color]="'primary'">
                 Ir a convocatoria
@@ -130,9 +130,17 @@
                     </h2>
                     <div class="flex flex-wrap -m-2 mt-2">
                         <a *ngFor="let document of meeting.documents"  (click)="getDocument(document)"
-                            class="flex flex-col w-30 h-30 m-2 p-3 border rounded-2xl cursor-pointer bg-card hover:bg-gray-100"
+                            class="relative flex flex-col w-30 h-30 m-2 p-3 border rounded-2xl cursor-pointer bg-card hover:bg-gray-100"
                             target="_blank"
                         >
+                        <a
+                            class="absolute z-20 top-1.5 right-1.5 w-8 h-8 min-h-8"
+                            (click)="$event.preventDefault(); $event.stopPropagation(); deleteDocument(document)"
+                            mat-icon-button>
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
+                        </a>
                             <div class="aspect-[9/6]">
                                 <div
                                     class="flex items-center justify-center h-full"
@@ -304,10 +312,11 @@
         </div>
 
         <div class="flex items-center justify-end mt-10">
-            <button mat-button>
+            <button routerLink="../" mat-button>
                 Cancelar
             </button>
             <button
+                [disabled]="!meetingForm.valid"
                 (click)="saveMeeting()"
                 class="px-6 ml-3"
                 mat-flat-button

@@ -5,10 +5,10 @@
             <!-- Title -->
             <div class="text-4xl font-extrabold tracking-tight">Reuniones</div>
             <!-- Actions -->
-            <div class="flex shrink-0 items-center mt-6 sm:mt-0 sm:ml-4">
+            <div class="flex flex-wrap gap-2 items-center mt-4 sm:mt-0 md:mt-4">
                 <!-- Search -->
                 <mat-form-field
-                    class="fuse-mat-dense fuse-mat-rounded min-w-30 md:min-w-64"
+                    class="fuse-mat-dense fuse-mat-rounded w-full md:w-64"
                     [subscriptSizing]="'dynamic'">
                     <mat-icon
                         class="icon-size-5"
@@ -20,9 +20,18 @@
                         [autocomplete]="'off'"
                         [placeholder]="'Buscar reuniones'">
                 </mat-form-field>
+                <button
+                    class="w-full md:ml-4 md:w-fit"
+                    mat-flat-button
+                    (click)="openSuspendDialog()"
+                    [color]="'primary'"
+                    >
+                    <mat-icon [svgIcon]="'heroicons_outline:x-circle'"></mat-icon>
+                    <span class="ml-2 mr-1">Suspender</span>
+                </button>
                 <!-- Add user button -->
                 <button
-                    class="ml-4"
+                    class="w-full md:ml-4 md:w-fit"
                     mat-flat-button
                     [routerLink]="'new'"
                     [color]="'primary'"
@@ -42,13 +51,11 @@
                             <!-- Header -->
                             <div
                                 class="meeting-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5"
-                                matSort
-                                matSortDisableClear>
-                                <div [mat-sort-header]="'name'">Titulo</div>
+                                >
+                                <div>Titulo</div>
 
                                 <div
-                                    class="hidden md:block"
-                                    [mat-sort-header]="'createdAt'">
+                                    class="hidden md:block">
                                     Fecha
                                 </div>
                             </div>
@@ -75,6 +82,7 @@
                         <mat-paginator
                             class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
                             [pageSizeOptions]="[5, 10, 25, 100]"
+                            [pageSize]="10"
                             [showFirstLastButtons]="true">
                         </mat-paginator>
 

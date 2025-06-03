@@ -1,4 +1,4 @@
-<div class="absolute inset-0 flex flex-col min-w-0 overflow-hidden">
+<div class="sm:absolute sm:inset-0 flex flex-col flex-auto min-w-0 sm:overflow-hidden bg-card dark:bg-transparent">
 
     <mat-drawer-container
         class="flex-auto h-full bg-card dark:bg-transparent"
@@ -42,7 +42,7 @@
                         <div class="flex-auto">
 
                             <mat-form-field
-                                class="fuse-mat-dense fuse-mat-rounded w-64"
+                                class="fuse-mat-dense fuse-mat-rounded w-full md:w-64"
                                 subscriptSizing="dynamic">
                                 <mat-icon
                                     class="icon-size-5"
@@ -57,7 +57,7 @@
                         </div>
 
                         <mat-form-field
-                        class="fuse-mat-dense fuse-mat-rounded w-full sm:w-44 ml-4"
+                        class="fuse-mat-dense fuse-mat-rounded w-full md:w-44 md:ml-4"
                         [subscriptSizing]="'dynamic'">
                         <mat-select
                             class="rounded-md"
@@ -72,7 +72,7 @@
                         </mat-form-field>
                         <!-- Add lugar button -->
                         <button
-                            class="ml-4"
+                            class="w-full md:ml-4 md:w-44"
                             mat-flat-button
                             [color]="'primary'"
                             (click)="createLugar()">
@@ -89,24 +89,20 @@
                                     <!-- Header -->
                                     <div
                                         class="lugar-grid z-10 sticky top-0 grid gap-4 py-4 px-6 md:px-8 shadow text-md font-semibold text-secondary bg-gray-50 dark:bg-black dark:bg-opacity-5"
-                                        matSort
-                                        matSortDisableClear>
-                                        <div [mat-sort-header]="'name'">Titulo</div>
+                                        >
+                                        <div>Titulo</div>
 
                                         <div
-                                            class="md:block"
-                                            [mat-sort-header]="'status'">
+                                            class="md:block">
                                             Estado
                                         </div>
 
                                         <div
-                                            class="md:block"
-                                            [mat-sort-header]="'poblacion'">
+                                            class="md:block">
                                             Población
                                         </div>
                                         <div
-                                            class="md:block"
-                                            [mat-sort-header]="'cp'">
+                                            class="md:block">
                                             Código postal
                                         </div>
                                     </div>
@@ -142,7 +138,7 @@
                                 </div>
 
                                 <mat-paginator
-                                    class="absolute inset-x-0 sm:bottom-0 border-b border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
+                                class="sm:absolute sm:inset-x-0 sm:bottom-0 border-b sm:border-t sm:border-b-0 z-10 bg-gray-50 dark:bg-transparent"
                                     [pageSize]="10"
                                     [pageSizeOptions]="[5, 10, 25, 100]"
                                     [showFirstLastButtons]="true">

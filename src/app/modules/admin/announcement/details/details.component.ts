@@ -233,7 +233,8 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
         const content = this.announcementForm.get('content').value;
         const a  = '<div style="background-color: #11ffee00;width: 100%; font-family: "Arial", sans-serif; font-style: normal;" class="ql-editor">' + content + '</div>'
         const blobs = [];
-        const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: blobs, comuneros: comuneros.length}});
+        const docs = [];
+        const loader = this._matDialog.open(LoaderModalComponent, {data: {blobs: docs, comuneros: comuneros.length}});
         const context = this;
         let cuentasDocument = null;
         if(this.announcement.meeting){
@@ -244,7 +245,6 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 });
             }
         }
-        debugger
         async function printPDF(comunero) {
             return new Promise((resolve) => {
                 comunero.user.name = context.titleCasePipe.transform(comunero.user.name);
@@ -252,6 +252,7 @@ export class AnnouncementDetailsComponent implements OnInit, OnDestroy
                 comunero.lugar.poblacion = context.titleCasePipe.transform(comunero.lugar.poblacion);
                 context._pdfService.print(comunero, a, context.announcement.meeting != undefined).then((result) => {
                     blobs.push(result);
+                    docs.push(result);
                     if(cuentasDocument){
                         blobs.push(cuentasDocument);
                     }

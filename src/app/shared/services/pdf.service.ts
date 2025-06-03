@@ -172,12 +172,13 @@ export class PdfService {
               };
             });
           });
-        if(comunero.user.name.length > 28) {
-            doc.setFontSize(6);
+        if(comunero.user.name.trim().length > 28) {
+            doc.setFontSize(8);
         }
-        if(comunero.user.name.length > 35) {
-            doc.setFontSize(5);
+        if(comunero.user.name.trim().length > 36) {
+            doc.setFontSize(5.5);
         }
+
         doc.text(comunero.user.name, 5, 24);
         doc.setFontSize(8);
         doc.text(comunero.lugar.address+ ', ' + comunero.lugar.cp + ' ' + comunero.lugar.poblacion, 5, 38);

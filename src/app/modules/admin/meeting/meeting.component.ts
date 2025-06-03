@@ -53,7 +53,8 @@ export class MeetingComponent
         this.scanning$ = this._meetingService.scanning$.pipe(takeUntil(this._unsubscribeAll))
 
         this._meetingService.meeting$.pipe(takeUntil(this._unsubscribeAll)).subscribe((meeting) => {
-            this.presentCount = meeting.attendance.filter((a) => a.status === 'PRESENT').length;
+            if(meeting)
+                this.presentCount = meeting.attendance.filter((a) => a.status === 'PRESENT').length;
         });
         // this._manualSearch.openPanel();
 

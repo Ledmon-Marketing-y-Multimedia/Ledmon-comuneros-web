@@ -57,7 +57,7 @@
                             </mat-form-field>
                         </div>
                         <mat-form-field
-                        class="w-full sm:w-44 ml-4 fuse-mat-dense fuse-mat-rounded"
+                        class="w-full sm:w-44 md:ml-4 fuse-mat-dense fuse-mat-rounded"
                         [subscriptSizing]="'dynamic'">
                         <mat-select
                             class="rounded-md"
@@ -71,7 +71,7 @@
                             </mat-select>
                         </mat-form-field>
                         <button
-                            class="ml-4"
+                            class="w-full md:w-fit md:ml-4"
                             mat-flat-button
                             [color]="'primary'"
                             (click)="export()"
@@ -81,7 +81,7 @@
                         </button>
                         <!-- Add comunero button -->
                         <button
-                            class="ml-4"
+                            class="w-full md:w-fit md:ml-4"
                             mat-flat-button
                             [color]="'primary'"
                             [routerLink]="'new'">
@@ -104,8 +104,8 @@
                                             <div class="col-span-3">
                                                 <span>{{comunero.user.name.charAt(0)}}</span>
                                             </div>
-                                            <span class="col-span-1 ml-4">DNI</span>
-                                            <span class="col-span-1 ml-4">Código de comunero</span>
+                                            <span class="col-span-1 ml-4 hidden md:flex">DNI</span>
+                                            <span class="col-span-1 ml-4 truncate">Código de comunero</span>
                                             <span class="col-span-1 ml-4">Estado</span>
                                         </div>
 
@@ -137,7 +137,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="flex min-w-0 ml-4 items-center">
+                                    <div class="min-w-0 ml-4 items-center hidden md:flex">
                                         <div class="font-medium leading-5 truncate">{{comunero.user.dni}}</div>
                                     </div>
 
@@ -146,11 +146,12 @@
                                     </div>
 
                                     <div class="flex min-w-0 ml-4 items-center">
-                                        <span *ngIf="comunero.status"
+                                        <span *ngIf="comunero.status || comunero.lugar.status"
                                             class="inline-flex items-center font-bold text-xs px-2.5 py-0.5 rounded-full tracking-wide uppercase"
                                             [ngClass]="{'bg-red-200 text-red-800 dark:bg-red-600 dark:text-red-50': comunero.status == comuneroStatus.UNSUBSCRIBED,
                                                         'bg-green-200 text-green-800 dark:bg-green-600 dark:text-green-50': comunero.status == comuneroStatus.ACTIVE}">
-                                            <span *ngIf="comunero.status" class="leading-relaxed whitespace-nowrap">{{'STATUS.' + comunero.status | transloco}}</span>
+                                            <span *ngIf="comunero.status && comunero.lugar.status !== 'SUSPENDED'" class="leading-relaxed whitespace-nowrap">{{'STATUS.' + comunero.status | transloco}}</span>
+                                            <span class="leading-relaxed whitespace-nowrap" *ngIf="comunero.lugar?.status === 'SUSPENDED'">{{'STATUS.' + comunero.lugar.status | transloco}}</span>
                                         </span>
                                     </div>
                                 </a>

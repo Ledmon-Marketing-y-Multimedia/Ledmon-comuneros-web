@@ -14,6 +14,8 @@ import { ActivatedRoute, Router, RouterLink, RouterOutlet } from '@angular/route
 import { MeetingService } from 'app/modules/admin/meeting/meeting.service';
 import { Meeting } from 'app/modules/admin/meeting/meeting.types';
 import { Subject, map, merge, switchMap, takeUntil } from 'rxjs';
+import { SuspendComponent } from '../suspend/suspend.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
     selector       : 'meeting-list',
@@ -66,6 +68,7 @@ export class MeetingListComponent implements OnInit, AfterViewInit, OnDestroy
         @Inject(DOCUMENT) private _document: any,
         private _router: Router,
         private _meetingService: MeetingService,
+        private _matDialog: MatDialog,
     )
     {
     }
@@ -122,6 +125,8 @@ export class MeetingListComponent implements OnInit, AfterViewInit, OnDestroy
 
             // Mark for check
             this._changeDetectorRef.markForCheck();
+
+            this._paginator.length = this.meetings.length;
 
             // If the user changes the sort order...
             this._sort.sortChange
@@ -182,5 +187,20 @@ export class MeetingListComponent implements OnInit, AfterViewInit, OnDestroy
     trackByFn(index: number, item: any): any
     {
         return item.id || index;
+    }
+
+    /**
+     * Open the suspend dialog
+     */
+    openSuspendDialog(): void
+    {
+        this._meetingService.getSuspendedComuneros("a09b25f2-897b-4e33-bac5-d5e34f7245ce").subscribe(
+            (response) => {
+                this._matDialog.open(SuspendComponent, {
+                    autoFocus: false,
+                    data     : response
+                });
+            }
+        );
     }
 }

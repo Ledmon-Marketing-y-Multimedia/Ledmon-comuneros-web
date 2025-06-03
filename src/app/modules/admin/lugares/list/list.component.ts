@@ -49,7 +49,6 @@ export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
 {
     @ViewChild('matDrawer', {static: true}) matDrawer: MatDrawer;
     @ViewChild(MatPaginator) private _paginator: MatPaginator;
-    @ViewChild(MatSort) private _sort: MatSort;
 
     lugares$: Observable<Lugar[]>;
 
@@ -207,30 +206,15 @@ export class LugaresListComponent implements OnInit, AfterViewInit, OnDestroy
      */
      ngAfterViewInit(): void
      {
-         if ( this._sort && this._paginator )
+         if (this._paginator )
          {
-             // Set the initial sort
-             this._sort.sort({
-                 id          : 'name',
-                 start       : 'asc',
-                 disableClear: true
-             });
 
              // Mark for check
              this._changeDetectorRef.markForCheck();
-
              this._paginator.length = this.lugaresCount;
-             // If the user changes the sort order...
-             this._sort.sortChange
-                 .pipe(takeUntil(this._unsubscribeAll))
-                 .subscribe(() => {
-                     // Reset back to the first page
-                     this._paginator.pageIndex = 0;
-
-                 });
 
              // Get categories if sort or page changes
-             merge(this._sort.sortChange, this._paginator.page).pipe(
+             this._paginator.page.pipe(
                  switchMap(() => {
                      return this._lugaresService.lugares$;
                  }),
