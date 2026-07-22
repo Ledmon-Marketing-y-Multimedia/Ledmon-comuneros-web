@@ -52,12 +52,11 @@ export class AuthSignInComponent implements OnInit
      */
     ngOnInit(): void
     {
-        // Create the form
-        this.signInForm = this._formBuilder.group({
-            email     : ['hughes.brian@company.com', [Validators.required, Validators.email]],
-            password  : ['admin', Validators.required],
-            rememberMe: [''],
-        });
+        this._activatedRoute.queryParams.subscribe(
+            (data) => {
+                const redirect = data.redirectURL ? data.redirectURL : "/";
+                this._authService.login(redirect);
+        })
     }
 
     // -----------------------------------------------------------------------------------------------------

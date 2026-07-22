@@ -1,24 +1,26 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, Routes } from '@angular/router';
+import { ComunerosComponent } from 'app/modules/admin/comuneros/comuneros.component';
+import { ComunerosService } from 'app/modules/admin/comuneros/comuneros.service';
+import { ComunerosDetailsComponent } from 'app/modules/admin/comuneros/details/details.component';
+import { ComunerosListComponent } from 'app/modules/admin/comuneros/list/list.component';
 import { catchError, throwError } from 'rxjs';
-import { ContactsService } from './comuneros.service';
-import { ContactsDetailsComponent } from './details/details.component';
-import { ContactsListComponent } from './list/list.component';
+import { LugaresService } from '../lugares/lugares.service';
 
 /**
- * Contact resolver
+ * Comunero resolver
  *
  * @param route
  * @param state
  */
-const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+export const comuneroResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
 {
-    const contactsService = inject(ContactsService);
+    const comunerosService = inject(ComunerosService);
     const router = inject(Router);
 
-    return contactsService.getContactById(route.paramMap.get('id'))
+    return comunerosService.getComuneroById(route.paramMap.get('id'))
         .pipe(
-            // Error here means the requested contact is not available
+            // Error here means the requested comunero is not available
             catchError((error) =>
             {
                 // Log the error
@@ -36,16 +38,29 @@ const contactResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapsh
         );
 };
 
+
 /**
- * Can deactivate contacts details
+ * New Comunero resolver
+ *
+ * @param route
+ * @param state
+ */
+const newComuneroResolver = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) =>
+{
+    const comunerosService = inject(ComunerosService);
+    return comunerosService.newComunero();
+};
+
+/**
+ * Can deactivate comuneros details
  *
  * @param component
  * @param currentRoute
  * @param currentState
  * @param nextState
  */
-const canDeactivateContactsDetails = (
-    component: ContactsDetailsComponent,
+const canDeactivateComunerosDetails = (
+    component: ComunerosDetailsComponent,
     currentRoute: ActivatedRouteSnapshot,
     currentState: RouterStateSnapshot,
     nextState: RouterStateSnapshot) =>
@@ -57,16 +72,16 @@ const canDeactivateContactsDetails = (
         nextRoute = nextRoute.firstChild;
     }
 
-    // If the next state doesn't contain '/contacts'
+    // If the next state doesn't contain '/comuneros'
     // it means we are navigating away from the
-    // contacts app
+    // comuneros app
     if ( !nextState.url.includes('/comuneros') )
     {
         // Let it navigate
         return true;
     }
 
-    // If we are navigating to another contact...
+    // If we are navigating to another comunero...
     if ( nextRoute.paramMap.get('id') )
     {
         // Just navigate
@@ -80,27 +95,32 @@ const canDeactivateContactsDetails = (
 export default [
     {
         path     : '',
-        component: ContactsListComponent,
-        resolve  : {
-            tags: () => inject(ContactsService).getTags(),
-        },
+        component: ComunerosComponent,
         children : [
             {
                 path     : '',
-                component: ContactsListComponent,
+                component: ComunerosListComponent,
                 resolve  : {
-                    contacts : () => inject(ContactsService).getContacts(),
-                    countries: () => inject(ContactsService).getCountries(),
+                    comuneros : () => inject(ComunerosService).getComuneros(),
                 },
                 children : [
                     {
-                        path         : ':id',
-                        component    : ContactsDetailsComponent,
+                        path         : 'new',
+                        component    : ComunerosDetailsComponent,
                         resolve      : {
-                            contact  : contactResolver,
-                            countries: () => inject(ContactsService).getCountries(),
+                            comunero  : newComuneroResolver,
+                            lugares   : () => inject(LugaresService).getLugares()
                         },
-                        canDeactivate: [canDeactivateContactsDetails],
+                        canDeactivate: [canDeactivateComunerosDetails],
+                    },
+                    {
+                        path         : ':id',
+                        component    : ComunerosDetailsComponent,
+                        resolve      : {
+                            comunero  : comuneroResolver,
+                            lugares   : () => inject(LugaresService).getLugares()
+                        },
+                        canDeactivate: [canDeactivateComunerosDetails],
                     },
                 ],
             },

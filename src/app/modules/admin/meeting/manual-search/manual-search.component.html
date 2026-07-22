@@ -1,0 +1,144 @@
+<button
+    class="absolute inset-x-10 p-6 m-8 bottom-2 z-50"
+    #searchOrigin
+    mat-flat-button
+    (click)="openPanel()"
+    [color]="'primary'"
+    >
+    <mat-icon [svgIcon]="'heroicons_outline:plus'"></mat-icon>
+    <span class="ml-2 mr-1">Añadir manualmente</span>
+</button>
+<!-- Notifications panel -->
+<ng-template #searchPanel>
+
+    <div class="fixed inset-0 flex flex-col h-screen overflow-hidden shadow-lg">
+
+        <!-- Header -->
+        <div class="flex shrink-0 items-center py-4 pr-4 pl-6 bg-primary text-on-primary">
+            <div class="-ml-1 mr-3">
+                <button
+                    mat-icon-button
+                    (click)="closePanel()">
+                    <mat-icon
+                        class="icon-size-5 text-current"
+                        [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
+                </button>
+            </div>
+            <div class="text-lg font-medium leading-10">Añadir manualmente</div>
+        </div>
+
+        <!-- Content -->
+        <div class="relative flex flex-col flex-auto divide-y overflow-y-auto bg-card">
+            <form [formGroup]="searchControl" class="flex flex-col mt-4 px-8 rounded overflow-hidden">
+                <p class="text-lg font-medium">Comunero</p>
+                <p class="text-secondary mb-6">
+                    Busca al comunero que asiste a la reunión
+                </p>
+                <div class="flex">
+                    <mat-form-field class="flex-auto">
+                        <input
+                            matInput
+                            class="w-full"
+                            [formControlName]="'search'"
+                            [matAutocomplete]="matAutocomplete"
+                            [placeholder]="'Buscar comunero...'"
+                            (keydown)="onKeydown($event)"
+                            #barSearchInput>
+                        <mat-autocomplete
+                            class="sm:px-2 border-t rounded-b shadow-md"
+                            [autoSelectActiveOption]="true"
+                            [disableRipple]="true"
+                            #matAutocomplete="matAutocomplete">
+                            <mat-option
+                                class="py-0 px-6 text-md pointer-events-none text-secondary bg-transparent"
+                                *ngIf="resultSets && !resultSets.length">
+                                No results found!
+                            </mat-option>
+                                <mat-optgroup class="flex items-center mt-2 px-2">
+                                    <span class="text-sm font-semibold tracking-wider text-secondary">Comuneros</span>
+                                </mat-optgroup>
+                                <ng-container *ngFor="let attendance of attendances; trackBy: trackByFn">
+                                    <mat-option
+                                        class="group relative mb-1 py-0 px-6 text-md rounded-md hover:bg-gray-100 dark:hover:bg-hover"
+                                        (click)="selectAttendance(attendance)"
+                                        [value]="attendance.comunero.user.name">
+                                        <ng-container *ngTemplateOutlet="contactResult; context: {$implicit: attendance.comunero.user}"></ng-container>
+                                    </mat-option>
+                                </ng-container>
+                        </mat-autocomplete>
+                        <mat-icon
+                            class="icon-size-5"
+                            matPrefix
+                            [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <mat-divider class="mt-2 mb-2"></mat-divider>
+
+                <p class="text-lg font-medium">Representante</p>
+                <p class="text-secondary mb-2">
+                    Viene otra persona en nombre del comunero
+                </p>
+                <div class="flex flex-col gt-sm:flex-row">
+                    <div class="flex flex-col">
+                        <div class="flex flex-col">
+                            <mat-checkbox
+                                #representationCheckbox
+                                class="mb-2"
+                                [checked]="false"
+                                [color]="'primary'">
+                                Viene en representación
+                            </mat-checkbox>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex" *ngIf="representationCheckbox.checked">
+                    <mat-form-field class="flex-auto">
+                        <input
+                            matInput
+                            [formControlName]="'representation'"
+                            [placeholder]="'Nombre y apellidos del representante'">
+                        <mat-icon
+                            class="icon-size-5"
+                            matPrefix
+                            [svgIcon]="'heroicons_solid:envelope'"></mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <div class="flex items-center justify-end border-t -mx-8 mt-8 px-8 py-5 bg-gray-50 dark:bg-gray-700">
+                    <button mat-button>
+                        Atrás
+                    </button>
+                    <button
+                        [disabled]="searchControl.invalid || !selectedAttendance"
+                        (click)="registerAttendance()"
+                        class="px-6 ml-3"
+                        mat-flat-button
+                        [color]="'primary'">
+                        Registrar
+                    </button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+
+</ng-template>
+
+<!-- Contact result template -->
+<ng-template
+    #contactResult
+    let-result>
+    <div class="flex items-center">
+        <div class="flex shrink-0 items-center justify-center w-8 h-8 rounded-full overflow-hidden bg-primary-100 dark:bg-primary-800">
+            <mat-icon
+                class="m-0 icon-size-5 text-primary dark:text-primary-400"
+                [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+        </div>
+        <div class="ml-3 truncate">
+            <span [innerHTML]="result.name"></span>
+        </div>
+    </div>
+</ng-template>

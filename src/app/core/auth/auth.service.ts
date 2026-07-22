@@ -17,7 +17,7 @@ export const authConfig : AuthConfig = {
     responseType: 'code',
     requireHttps: environment.production,
     redirectUri: window.location.origin + '/',
-    logoutUrl: window.location.origin + '/',
+    logoutUrl: window.location.origin + '?client_id=comuneros-app',
     silentRefreshRedirectUri: window.location.origin + '/silent-refresh.html',
     scope: 'openid profile email', // Ask offline_access to support refresh token refreshes
     useSilentRefresh: true, // Needed for Code Flow to suggest using iframe-based refreshes
@@ -240,15 +240,12 @@ export class AuthService
         return this.userCheck();
     }
 
-    login() {
-        this._oauthService.initCodeFlow();
+    public login(targetUrl?: string) {
+        this._oauthService.initLoginFlow(targetUrl || this._router.url);
     }
 
     public runInitialLoginSequence(): Promise<void> {
-        debugger
         if (location.hash) {
-          console.log('Encountered hash fragment, plotting as table...');
-          console.table(location.hash.substr(1).split('&').map(kvp => kvp.split('=')));
         }
 
         // 0. LOAD CONFIG:
@@ -315,11 +312,10 @@ export class AuthService
               if (stateUrl.startsWith('/') === false) {
                 stateUrl = decodeURIComponent(stateUrl);
               }
-              console.log(`There was state of ${this._oauthService.state}, so we are sending you to: ${stateUrl}`);
               this._router.navigateByUrl(stateUrl);
             }
           })
-          .catch((result) => {debugger ;this.isDoneLoadingSubject$.next(true); return Promise.reject(result)});
+          .catch((result) => {this.isDoneLoadingSubject$.next(true); return Promise.reject(result)});
     }
 
     userCheck() : Observable<boolean>{

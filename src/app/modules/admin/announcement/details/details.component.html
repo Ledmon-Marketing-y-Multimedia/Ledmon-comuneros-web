@@ -1,0 +1,179 @@
+<div class="flex flex-col flex-auto min-w-0 ">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row flex-0 sm:items-center sm:justify-between p-6 sm:py-8 sm:px-10 border-b bg-card dark:bg-transparent">
+        <div class="flex-1 min-w-0">
+            <!-- Title -->
+            <div class="mt-2">
+                <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight leading-7 sm:leading-10 truncate">
+                    Comunicación
+                </h2>
+            </div>
+        </div>
+    </div>
+    <div class="p-6 sm:p-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8" >
+            <div class="max-w-3xl" [formGroup]="announcementForm">
+                <div class="flex flex-col mt-4 p-8 pb-5 bg-card shadow rounded overflow-hidden">
+                    <div class="flex flex-col gt-xs:flex-row">
+                        <mat-form-field class="flex-auto gt-xs:pr-3">
+                            <mat-label>Título</mat-label>
+                            <input
+                                matInput
+                                formControlName="title"
+                                [placeholder]="'title'">
+                            <mat-icon
+                                class="icon-size-5"
+                                matPrefix
+                                [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                        </mat-form-field>
+                    </div>
+                    <div class="flex flex-col gap-y-2">
+                        <mat-label class="font-medium ">Contenido</mat-label>
+                        <quill-editor
+                            class="flex-auto pb-8"
+                            [formControlName]="'content'"
+                            [bounds]="'self'"
+                            [preserveWhitespace]="true"
+                            [modules]="quillModules">
+                        </quill-editor>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-3xl " >
+                <div class="flex flex-col mt-4 p-8 pb-5 bg-card shadow rounded overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between">
+                        <div class="text-lg font-medium tracking-tight leading-6 truncate">Envio a comuneros por carta</div>
+                        <button
+                            (click)="printComunications()"
+                            mat-flat-button
+                            [color]="'primary'">
+                            Imprimir comunicaciones
+                        </button>
+                    </div>
+                    <div class="flex flex-col mt-4 gt-xs:flex-row">
+                        <div class="flex flex-wrap justify-between">
+                            <mat-button-toggle-group
+                            class="-m-2"
+                            [(ngModel)]="selectedFilter"
+                            (change)="onFilterChange($event)">
+                            <ng-container *ngFor="let filter of filters">
+                                <mat-button-toggle
+                                    class="m-2"
+                                    [value]="filter">
+                                    <span class="text-secondary">{{filter | titlecase}}</span>
+                                    <span class="ml-1.5 font-medium text-secondary">({{numberOfComunerosCarta[filter]}})</span>
+                                </mat-button-toggle>
+                            </ng-container>
+                        </mat-button-toggle-group>
+                        <mat-form-field
+                        class="fuse-mat-dense fuse-mat-rounded w-full sm:w-44 ml-4"
+                        [subscriptSizing]="'dynamic'">
+                            <mat-select
+                            class="rounded-md"
+                            [(ngModel)]="selectedZona"
+                            [value]="selectedZona"
+                            (selectionChange)="onChange()"
+                            >
+                                <mat-option [value]="'all'">Todos los lugares</mat-option>
+                                <ng-container *ngFor="let zona of zonas; trackBy: trackByFn">
+                                    <mat-option [value]="zona">{{zona}}</mat-option>
+                                </ng-container>
+                            </mat-select>
+                        </mat-form-field>
+                        </div>
+                        <mat-form-field  [formGroup]="announcementForm"
+                            class="w-full mt-4"
+                            [subscriptSizing]="'dynamic'">
+                            <mat-label>Comuneros</mat-label>
+                            <mat-select
+                                formControlName="comunerosCarta"
+                                multiple>
+                                <ng-container *ngFor="let comunero of comunerosCarta; trackBy: trackByFn">
+                                    <mat-option [value]="comunero">{{comunero.user.name}}</mat-option>
+                                </ng-container>
+                            </mat-select>
+                        </mat-form-field>
+                        <!-- checkbox for including email users -->
+                        <mat-checkbox
+                            class="mt-4"
+                            color="primary"
+                            (change)="onChange()"
+                            [(ngModel)]="includeEmailUsers"
+                        >
+                            Incluir comuneros con email
+                        </mat-checkbox>
+                    </div>
+                </div>
+
+                <div class="flex flex-col mt-4 p-8 pb-5 bg-card shadow rounded overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="text-lg font-medium tracking-tight leading-6 truncate">Envio a comuneros por email</div>
+                        <button
+                            (click)="sendEmail()"
+                            class=""
+                            mat-flat-button
+                            [color]="'primary'">
+                            Enviar por email
+                        </button>
+                    </div>
+                    <div class="flex flex-col mt-4 gt-xs:flex-row">
+                        <div class="flex flex-wrap justify-between">
+                            <mat-button-toggle-group
+                            class="-m-2"
+                            [(ngModel)]="selectedFilter"
+                            (change)="onFilterChange($event)">
+                            <ng-container *ngFor="let filter of filters">
+                                <mat-button-toggle
+                                    class="m-2"
+                                    [value]="filter">
+                                    <span class="text-secondary">{{filter | titlecase}}</span>
+                                    <span class="ml-1.5 font-medium text-secondary">({{numberOfComunerosEmail[filter]}})</span>
+                                </mat-button-toggle>
+                            </ng-container>
+                        </mat-button-toggle-group>
+                        <mat-form-field
+                        class="fuse-mat-dense fuse-mat-rounded w-full sm:w-44 ml-4"
+                        [subscriptSizing]="'dynamic'">
+                            <mat-select
+                            class="rounded-md"
+                            [(ngModel)]="selectedZona"
+                            [value]="selectedZona"
+                            (selectionChange)="onChange()"
+                            >
+                                <mat-option [value]="'all'">Todos los lugares</mat-option>
+                                <ng-container *ngFor="let zona of zonas; trackBy: trackByFn">
+                                    <mat-option [value]="zona">{{zona}}</mat-option>
+                                </ng-container>
+                            </mat-select>
+                        </mat-form-field>
+                        </div>
+                        <mat-form-field  [formGroup]="announcementForm"
+                            class="w-full mt-4"
+                            [subscriptSizing]="'dynamic'">
+                            <mat-label>Comuneros</mat-label>
+                            <mat-select
+                                formControlName="comunerosEmail"
+                                multiple>
+                                <ng-container *ngFor="let comunero of comunerosEmail; trackBy: trackByFn">
+                                    <mat-option [value]="comunero">{{comunero.user.name}}</mat-option>
+                                </ng-container>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center justify-end mt-10">
+            <button routerLink="../" mat-button>
+                Cancelar
+            </button>
+            <button
+                (click)="saveAnnouncement()"
+                class="px-6 ml-3"
+                mat-flat-button
+                [color]="'primary'">
+                Guardar
+            </button>
+        </div>
+    </div>
+</div>
