@@ -151,10 +151,11 @@ Orden por dependencias (comuneros y lugares son base de los demás):
 ---
 
 ## 3. Estrategia de registro en GitHub
-- **Rama base:** `core/rebuild-to-nextjs` (ya activa).
-- Un **PR por hito/fase** (feature branches `feat/next-<módulo>` opcionales para revisión).
+- **Rama raíz de facto:** `core/rebuild-to-nextjs`. Se trata como la base del proyecto; **`master` y `develop` se ignoran** en esta migración.
+- Todas las **feature branches se sacan de `core/rebuild-to-nextjs`** (p. ej. `feat/next-scaffold`, `feat/next-comuneros`) y se integran de vuelta a ella por **PR**.
+- Un **PR por hito/fase** con checklist de paridad.
 - Commits pequeños y descriptivos con convención `tipo(scope): mensaje`.
-- Cada hito importante = commit + push; los grandes = PR con checklist de paridad.
+- Cada hito importante = commit + push.
 
 ## 4. Riesgos y puntos de atención
 - **`pdf.service.ts` (860 KB):** casi seguro fuentes/plantillas embebidas; evaluar mover generación a Laravel o extraer assets.
