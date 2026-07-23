@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Port verbatim del pdf.service.ts de Angular (jsPDF v2), no se lintea.
+    "src/lib/pdf/pdf-service.ts",
   ]),
 ]);
 

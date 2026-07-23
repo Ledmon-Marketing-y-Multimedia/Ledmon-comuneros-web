@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { UserManager, User } from "oidc-client-ts";
 import { getUserManager } from "@/lib/auth/oidc";
 import { SplashScreen } from "@/components/splash-screen";
+import { ConfirmationProvider } from "@/components/ui/confirmation";
 
 /**
  * Tras procesar el callback OIDC: limpia code/state de la URL y, si se guardó
@@ -28,7 +29,9 @@ function OidcGate({ children }: { children: React.ReactNode }) {
   const [manager, setManager] = useState<UserManager>();
 
   useEffect(() => {
+    // El UserManager es un sistema externo que solo existe en cliente.
     const um = getUserManager();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (um) setManager(um);
   }, []);
 
@@ -59,7 +62,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <OidcGate>{children}</OidcGate>
+      <OidcGate>
+        <ConfirmationProvider>{children}</ConfirmationProvider>
+      </OidcGate>
     </QueryClientProvider>
   );
 }
