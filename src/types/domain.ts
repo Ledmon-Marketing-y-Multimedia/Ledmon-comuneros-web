@@ -146,6 +146,7 @@ export interface Announcement {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   comunidad?: any;
   comuneros?: Comunero[];
+  user?: User;
 }
 
 // ------------------------------------------------------------------
