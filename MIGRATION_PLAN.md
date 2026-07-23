@@ -1,5 +1,26 @@
 # Plan de migración — Frontend Angular → Next.js 16
 
+> ## 📌 Estado actual (2026-07-23)
+> Migración de módulos **completada** en `core/rebuild-to-nextjs`. El Angular
+> original se conserva íntegro en `Ledmon-comuneros-web-copy` como referencia.
+>
+> **Decisiones tomadas con el cliente:** OIDC en cliente 1:1 (oidc-client-ts +
+> react-oidc-context), TanStack Query, Tailwind puro + Radix mínimo.
+>
+> **Hecho** (build/typecheck/lint en verde, dev server arranca):
+> - Scaffold Next.js 16 (App Router, Turbopack, TS, Tailwind v4) + tema Fuse portado.
+> - Núcleo: tipos de dominio, cliente API con Bearer + manejo de 401, TanStack Query.
+> - Auth Keycloak 1:1 en cliente (Code+PKCE, silent refresh, AuthGuard, /login/check).
+> - Layout classic (sidebar + header + menú usuario + footer) y Home.
+> - Módulos: **Comuneros**, **Lugares**, **Comunicaciones**, **Reuniones** (QR con
+>   @zxing, asistencia, documentos, PDF con jsPDF/pdf-lib, convocatorias, suspensión).
+> - `pdf.service.ts` portado verbatim; editor rich-text con react-quill-new.
+>
+> **Ramas:** una `feat/next-*` por hito, integradas por merge a `core/rebuild-to-nextjs`.
+>
+> **Pendiente:** verificación de paridad funcional contra el backend real (requiere
+> API Laravel/Java + Keycloak levantados), tests (Fase 7), CI/CD (Fase 8) y cutover.
+
 > **Proyecto:** `comuneros-marcon` (gestión de comunidad de montes de Marcón)
 > **Origen:** Angular 17 + plantilla Fuse + Angular Material + Tailwind 3
 > **Destino:** Next.js 16 (App Router) + Tailwind + Radix (shadcn/ui)
