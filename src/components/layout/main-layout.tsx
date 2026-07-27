@@ -13,12 +13,27 @@ import { cn } from "@/lib/utils";
  */
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true);
   const currentYear = new Date().getFullYear();
+
+  /** El mismo botón abre el overlay en móvil y pliega el sidebar en escritorio. */
+  const toggleNav = () => {
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      setDesktopOpen((open) => !open);
+    } else {
+      setMobileOpen(true);
+    }
+  };
 
   return (
     <div className="flex h-full min-h-full w-full">
       {/* Sidebar fijo (escritorio) */}
-      <aside className="hidden w-64 shrink-0 md:block print:hidden">
+      <aside
+        className={cn(
+          "hidden w-64 shrink-0 print:hidden",
+          desktopOpen && "md:block",
+        )}
+      >
         <SidebarNav />
       </aside>
 
@@ -41,9 +56,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <header className="relative z-49 flex h-16 flex-0 items-center bg-card px-4 shadow md:px-6 print:hidden">
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 md:hidden"
-            aria-label="Abrir navegación"
+            onClick={toggleNav}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100"
+            aria-label={desktopOpen ? "Plegar navegación" : "Desplegar navegación"}
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
@@ -65,7 +80,9 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Contenido */}
-        <main className={cn("flex flex-auto flex-col")}>{children}</main>
+        <main className={cn("relative flex flex-auto flex-col")}>
+          {children}
+        </main>
 
         {/* Footer */}
         <footer className="relative z-49 flex h-14 flex-0 items-center justify-start border-t bg-card px-4 md:px-6 print:hidden">
