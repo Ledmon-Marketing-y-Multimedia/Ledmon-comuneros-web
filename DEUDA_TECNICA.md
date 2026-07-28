@@ -61,6 +61,20 @@
   botón, `mock-api`, layouts alternativos, quick-chat, etc. → **descartados** por
   "migrar solo lo que se usa". Documentado por si algo se necesitara.
 
+## Tests
+
+- [x] Red de tests de componentes con Vitest + Testing Library (34 casos): los dos
+  listados con paginador, el listado agrupado de comuneros y los paneles de
+  detalle de dirección y comunero. Se escribieron **antes** del refactor DRY,
+  para poder extraer componentes compartidos con red.
+- [ ] Sin cubrir todavía: paneles de **reuniones** y **comunicaciones** (arrastran
+  `react-quill-new` y `@zxing/browser`, que necesitan doble en jsdom), el overlay
+  de escaneo QR y `pdf-service` (port verbatim).
+- [ ] `domain.ts` declara `Meeting.date` y `Announcement.createdAt` como `Date`,
+  pero la API manda cadenas ISO; el código compensa con `new Date(...)`. Los
+  dobles de test imitan a la API y necesitan un cast doble. Conviene alinear el
+  tipo con la realidad.
+
 ## Observabilidad / seguridad
 
 - [ ] 🔒 **Sentry** no portado (el Angular usaba `@sentry/angular-ivy` sin DSN en

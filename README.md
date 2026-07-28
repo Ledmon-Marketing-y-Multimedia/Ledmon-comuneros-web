@@ -16,6 +16,20 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Tests
+
+```bash
+npm test          # vitest run (una pasada)
+npm run test:watch
+```
+
+Son tests de componentes con jsdom (Vitest + Testing Library). No hay servidor de
+Next: los componentes de cliente se montan directamente y la API se simula con el
+doble de `@/lib/api` (`src/test/api-double.ts`), así que la capa de datos real
+—los hooks de cada `features/<recurso>/api.ts`— sí se ejercita. `next/navigation`
+también tiene su doble (`src/test/navigation-double.ts`) para controlar la ruta y
+espiar las navegaciones. Helper de montaje: `src/test/harness.tsx`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
