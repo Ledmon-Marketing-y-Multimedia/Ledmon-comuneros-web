@@ -2,31 +2,22 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "react-oidc-context";
-import { AuthGuard } from "@/components/auth/auth-guard";
 import { SplashScreen } from "@/components/splash-screen";
+import { useAuth } from "@/lib/auth/use-auth";
 
 /**
- * Raíz. Es también el redirect_uri del callback OIDC; una vez autenticado
- * redirige a /home (equivalente al redirect '' -> 'home' del Angular).
+ * Raíz: reparte según haya sesión o no (equivalente al redirect '' -> 'home' del
+ * Angular). Ya no es el `redirect_uri` de ningún callback OIDC.
  */
-function HomeRedirect() {
+export default function RootPage() {
   const router = useRouter();
-  const auth = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      router.replace("/home");
-    }
-  }, [auth.isAuthenticated, router]);
+    if (isLoading) return;
+
+    router.replace(isAuthenticated ? "/home" : "/login");
+  }, [isAuthenticated, isLoading, router]);
 
   return <SplashScreen />;
-}
-
-export default function RootPage() {
-  return (
-    <AuthGuard>
-      <HomeRedirect />
-    </AuthGuard>
-  );
 }

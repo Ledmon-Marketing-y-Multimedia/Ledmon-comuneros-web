@@ -11,10 +11,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Variables NEXT_PUBLIC_* necesarias en build (se inyectan en el bundle cliente).
 ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_AUTH_ISSUER
-ARG NEXT_PUBLIC_AUTH_CLIENT_ID
-ARG NEXT_PUBLIC_REALM
-ARG NEXT_PUBLIC_WEB_ENDPOINT
 RUN npm run build
 
 # ---- Runtime ----

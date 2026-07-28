@@ -2,7 +2,7 @@
 
 Catálogo funcional del front **`Ledmon-comuneros-web`** (Next.js 16 / React 19):
 **qué puede hacer el usuario desde cada pantalla y cómo responde el backend**, más
-la **autenticación y gestión de usuarios con Keycloak**.
+la **autenticación y la gestión de usuarios**.
 
 Es la aplicación de administración de una **comunidad de montes** ("comuneros"). Es
 **monocomunidad**: trabaja siempre con la comunidad **Marcón** (`COMUNIDAD_ID` y el
@@ -10,8 +10,8 @@ sufijo `/search/marcon` están fijados en código — `src/features/*/api.ts`).
 
 ## Arquitectura relevante
 - **Stack:** Next.js 16 (App Router, `output: standalone`), React 19, TanStack Query,
-  react-hook-form + zod, Tailwind v4, Radix UI. Auth con `react-oidc-context` /
-  `oidc-client-ts`.
+  react-hook-form + zod, Tailwind v4, Radix UI. Auth propia contra la API (token
+  Bearer de Laravel Sanctum) — sin librerías de OIDC.
 - **Proxy a la API:** `next.config.ts` reescribe `/api/:path*` →
   `${API_PROXY_TARGET}/:path*`, con `API_PROXY_TARGET = http://<backend>/comuneros/api/v1`.
   Es decir, un `api.get("/comunero")` del front golpea `…/comuneros/api/v1/comunero`.
@@ -25,56 +25,66 @@ sufijo `/search/marcon` están fijados en código — `src/features/*/api.ts`).
 
 ---
 
-## 1. Autenticación con Keycloak (OIDC)
+## 1. Autenticación
 
-El login es **100% en el cliente** con **OpenID Connect / Authorization Code + PKCE**.
-No hay backend de sesión en el front: el token lo emite Keycloak y viaja como Bearer a
-la API.
+Login con **email + contraseña contra la propia API**. No hay IdP: `POST /login`
+devuelve un token de Sanctum que viaja como `Authorization: Bearer` en cada
+petición.
 
-- **Configuración** (`src/lib/auth/oidc.ts`, variables `NEXT_PUBLIC_*` en `.env`):
-  - `authority` = issuer del realm (`NEXT_PUBLIC_AUTH_ISSUER`, ej.
-    `http://localhost:9090/realms/comuneros`).
-  - `client_id` = `comuneros-app` (`NEXT_PUBLIC_AUTH_CLIENT_ID`).
-  - `response_type: "code"` → **Code + PKCE**; `scope: "openid profile email"`.
-  - `redirect_uri` = origen + `/` (por eso la ruta `/` actúa de **callback** OIDC).
-  - `automaticSilentRenew: true`, `monitorSession: true`; tokens en `localStorage`.
-- **Provider y callback:** `src/components/providers.tsx` monta `AuthProvider` con el
-  `UserManager` (solo cliente). Tras el login limpia `code/state` de la URL y navega al
-  destino guardado.
-- **Guard de rutas:** `src/components/auth/auth-guard.tsx`. Si no hay sesión →
-  `signinRedirect({ state: ruta })` (conserva a dónde iba). Protege la **raíz** y
-  **todo el grupo `(admin)`**, es decir, toda la app de administración. Mientras
-  resuelve, muestra un *splash*.
-- **Bearer en cada request:** `src/lib/api.ts` toma `user.access_token` del UserManager
-  (si no está expirado) y lo añade como `Authorization: Bearer …`.
-- **Sesión caducada / 401:** ante un `401` de la API, el front hace `removeUser()` +
-  `signoutRedirect()` (cierre en Keycloak) — la API responde `401` cuando el token falta,
-  está expirado o su firma/issuer no cuadran.
-- **Logout:** ruta `/sign-out` (`signoutRedirect()` + cuenta atrás) y opción "Cerrar
-  sesión" en el menú de usuario (`src/components/layout/user-menu.tsx`).
-- **Datos del usuario en pantalla:** el menú superior muestra el email obtenido de
-  `GET /login/check` (`src/features/.../use-current-user.ts`).
+> Antes esto era OIDC (Authorization Code + PKCE) contra Keycloak. Se retiró el
+> IdP por sobredimensionado para el proyecto; ver
+> `docs/PLAN-RETIRADA-KEYCLOAK.md` en el repo de la API.
 
-> ⚠️ **Los roles de Keycloak NO se comprueban en el front.** El único control es "estar
-> autenticado": cualquier usuario con sesión válida en el realm tiene acceso total a la
-> administración. (El `role` que aparece en el código es el de dominio del comunero
-> —HOLDER/AUTHORIZED—, no un rol de Keycloak.) Si se quisiera limitar por rol, habría
-> que añadirlo aquí y/o activar el middleware `role:` del backend.
+- **Estado de sesión** (`src/lib/auth/use-auth.ts`): el token se guarda en
+  `localStorage` (`src/lib/auth/token-storage.ts`) y se lee con
+  `useSyncExternalStore`, así que un login o un logout en **otra pestaña**
+  re-renderiza la app sin recargar. No hace falta provider.
+- **Pantalla de login** (`src/app/login/page.tsx` + `login-form.tsx`): formulario
+  con react-hook-form + zod. Mensajes según la respuesta: `401` credenciales
+  incorrectas, `429` demasiados intentos (la API limita a 5/minuto por IP), `422`
+  datos inválidos. Tras entrar, va a `?next=…` si el guard lo puso, o a `/home`.
+- **Guard de rutas** (`src/components/auth/auth-guard.tsx`): sin token →
+  `/login?next=<ruta>`. Protege la **raíz** y **todo el grupo `(admin)`**. Mientras
+  resuelve (hidratación), muestra el *splash*.
+- **Bearer en cada request** (`src/lib/api.ts`): añade el token del storage.
+- **Sesión caducada / 401:** el cliente API descarta el token y redirige a
+  `/login?next=<ruta actual>`. Si el 401 viene de un login fallido (no había
+  token), no redirige: el error lo muestra el formulario.
+- **Logout:** ruta `/sign-out` → `POST /logout` (revoca el token en la API) +
+  cuenta atrás y vuelta a `/login`. También en el menú de usuario
+  (`src/components/layout/user-menu.tsx`).
+- **Caducidad:** el token vive lo que diga `SANCTUM_EXPIRATION` en la API (12 h por
+  defecto). **No hay refresh silencioso** (antes lo daba el refresh token de
+  Keycloak): al caducar se vuelve a pedir el login.
+- **Datos del usuario en pantalla:** el menú superior muestra el email de
+  `GET /login/check` (`src/lib/auth/use-current-user.ts`).
+
+> ⚠️ **No hay roles.** El único control es "estar autenticado": cualquier usuario
+> con sesión tiene acceso total a la administración. (El `role` que aparece en el
+> código es el de dominio del comunero —HOLDER/AUTHORIZED—, no un rol de acceso.)
+> La API tampoco los usa: expone `superAdmin` en `/me` por si algún día se
+> restringe algo.
 
 ---
 
 ## 2. Gestión de usuarios
 
-**El front no tiene pantalla de gestión de cuentas de Keycloak** (no hay alta/baja de
-usuarios de acceso, ni asignación de roles, ni reset de contraseña). Ese ciclo de vida
-de las **identidades** se hace en la **consola de administración de Keycloak**.
+**El front no tiene pantalla de gestión de cuentas** (no hay alta/baja de usuarios
+de acceso ni asignación de contraseñas). Las contraseñas las asigna un
+administrador desde la API (`php artisan user:password <email>`); no hay
+autoservicio de recuperación por email —tampoco lo había con Keycloak, que lo
+tenía desactivado— y la pantalla de login lo indica.
+
+> Pendiente (opcional): el endpoint `PATCH /password` ya existe en la API para que
+> el usuario cambie su propia contraseña; falta la pantalla en el front.
 
 Lo más parecido es la gestión de **comuneros**, que es una **entidad de dominio** (no una
 cuenta de login): al crear/editar un comunero, el front envía sus datos de usuario
 (nombre, email, username, DNI, teléfonos) a la **API del backend** (`POST/PATCH
 /comunero`), que mantiene el registro `_user` en Postgres. Un comunero **no es
 necesariamente** alguien que inicia sesión — el login es, en la práctica, para el
-administrador de la comunidad.
+administrador de la comunidad. Los comuneros creados así **no tienen contraseña**,
+así que no pueden entrar hasta que se les asigne una.
 
 ---
 
@@ -85,7 +95,8 @@ Menú lateral (`src/lib/navigation.ts`): **Inicio**, **Direcciones** (`/lugares`
 
 | Ruta | Qué muestra |
 |---|---|
-| `/` | Raíz + callback OIDC. Si hay sesión → `/home`; si no, splash/login. |
+| `/` | Raíz. Si hay sesión → `/home`; si no → `/login`. |
+| `/login` | Acceso con email y contraseña (ruta pública). |
 | `/home` | Dashboard con accesos a Reuniones, Comuneros, Direcciones, Comunicaciones. |
 | `/comuneros` · `/comuneros/new` · `/comuneros/[id]` | Listado maestro + ficha/alta en panel lateral. |
 | `/lugares` · `/lugares/[id]` | Listado de direcciones + ficha (el alta se crea in-place). |

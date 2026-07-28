@@ -1,41 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAuth } from "react-oidc-context";
+import { usePathname, useRouter } from "next/navigation";
 import { SplashScreen } from "@/components/splash-screen";
+import { useAuth } from "@/lib/auth/use-auth";
 
 /**
- * Equivalente al AuthGuard de Angular: si no hay sesión, redirige al login de
- * Keycloak conservando la URL de destino (state). Mientras carga o redirige,
- * muestra el splash.
+ * Equivalente al AuthGuard de Angular: si no hay sesión, lleva a /login
+ * conservando la URL de destino en `next`. Mientras se resuelve, muestra el
+ * splash (antes esperaba la redirección a Keycloak).
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (
-      !auth.isLoading &&
-      !auth.isAuthenticated &&
-      !auth.activeNavigator &&
-      !auth.error
-    ) {
-      void auth.signinRedirect({
-        state: window.location.pathname + window.location.search,
-      });
-    }
-  }, [auth, auth.isLoading, auth.isAuthenticated, auth.activeNavigator, auth.error]);
+    if (isLoading || isAuthenticated) return;
 
-  if (auth.error) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        <p className="text-warn-600 font-medium">
-          Error de autenticación: {auth.error.message}
-        </p>
-      </div>
-    );
-  }
+    // La query se lee de window (no con useSearchParams) para no obligar a un
+    // límite de Suspense en cada layout que use el guard.
+    const next = pathname + window.location.search;
 
-  if (!auth.isAuthenticated) {
+    router.replace(`/login?next=${encodeURIComponent(next)}`);
+  }, [isAuthenticated, isLoading, pathname, router]);
+
+  if (!isAuthenticated) {
     return <SplashScreen />;
   }
 

@@ -1,29 +1,25 @@
 # Despliegue — Front (comuneros-marcon, Next.js 16)
 
-> Este documento cubre **solo el front**. El despliegue de la **API** (Spring
-> Boot) y de **Keycloak** está documentado en el repositorio de la API
-> (`Ledmon-comuneros-api`). El front necesita ambos servicios accesibles.
+> Este documento cubre **solo el front**. El despliegue de la **API** está
+> documentado en el repositorio `Ledmon-comuneros-api`. El front solo necesita la
+> API accesible: **ya no hay IdP** (Keycloak se retiró; la sesión es un token de
+> la propia API).
 
 ## Requisitos
 
 - **Node.js ≥ 20.9** (Next.js 16 / Turbopack).
-- Una instancia de **Keycloak** con el realm `comuneros` y el cliente público
-  `comuneros-app` (Auth Code + PKCE).
 - La **API** accesible desde el navegador del usuario (CORS incluido).
+- Un usuario con contraseña en la API (`php artisan user:password <email>` allí).
 
 ## Variables de entorno
 
-Todas son `NEXT_PUBLIC_*` porque el flujo OIDC es 100% en cliente. Se inyectan
-**en tiempo de build** (quedan embebidas en el bundle), así que hay que definirlas
-antes de `next build`.
+Queda **una** variable pública (las de Keycloak desaparecieron con el IdP). Se
+inyecta **en tiempo de build** (queda embebida en el bundle), así que hay que
+definirla antes de `next build`.
 
 | Variable | Descripción | Ejemplo (prod) |
 |---|---|---|
 | `NEXT_PUBLIC_API_URL` | Base de la API | `https://api-comuneros.montesmarcon.com/comuneros/api/v1` |
-| `NEXT_PUBLIC_AUTH_ISSUER` | Issuer del realm Keycloak | `https://auth.montesmarcon.com/realms/comuneros` |
-| `NEXT_PUBLIC_AUTH_CLIENT_ID` | Client ID | `comuneros-app` |
-| `NEXT_PUBLIC_REALM` | Realm | `comuneros` |
-| `NEXT_PUBLIC_WEB_ENDPOINT` | URL pública del front | `https://comuneros.montesmarcon.com` |
 | `API_PROXY_TARGET` | (solo dev) destino del rewrite `/api` | `http://localhost:8080/comuneros/api/v1` |
 
 > **Dev vs prod — el proxy `/api`:** en desarrollo `NEXT_PUBLIC_API_URL=/api` y
@@ -31,15 +27,6 @@ antes de `next build`.
 > `proxy.conf.json` de Angular). En **producción** se pone la **URL absoluta** de
 > la API en `NEXT_PUBLIC_API_URL`; el navegador llama directamente a la API, por
 > lo que **la API debe permitir el origen del front por CORS**.
-
-## Configuración necesaria en Keycloak (cliente `comuneros-app`)
-
-Añadir el dominio de producción a:
-
-- **Valid redirect URIs**: `https://comuneros.montesmarcon.com/*`
-- **Web origins**: `https://comuneros.montesmarcon.com`
-
-(En local ya vienen como `*` en el realm importado.)
 
 ## Opción A — Node self-host
 
@@ -59,10 +46,6 @@ Hay un `Dockerfile` multi-stage que usa la salida `output: "standalone"`
 ```bash
 docker build \
   --build-arg NEXT_PUBLIC_API_URL=https://api-comuneros.montesmarcon.com/comuneros/api/v1 \
-  --build-arg NEXT_PUBLIC_AUTH_ISSUER=https://auth.montesmarcon.com/realms/comuneros \
-  --build-arg NEXT_PUBLIC_AUTH_CLIENT_ID=comuneros-app \
-  --build-arg NEXT_PUBLIC_REALM=comuneros \
-  --build-arg NEXT_PUBLIC_WEB_ENDPOINT=https://comuneros.montesmarcon.com \
   -t comuneros-marcon-web .
 
 docker run -p 3000:3000 comuneros-marcon-web
@@ -78,11 +61,12 @@ de Environment Variables del proyecto. Build command `next build` por defecto.
 
 - **No** se puede usar `output: export` (estático puro): hay rutas dinámicas
   (`[id]`) que se sirven bajo demanda. Requiere runtime Node (opciones A/B/C).
-- Node self-host y Docker sirven con `next start` / `server.js`; asegúrate de que
-  el proxy pase el `Host` correcto para que las URLs OIDC (que usan
-  `window.location.origin`) coincidan con lo registrado en Keycloak.
-- El `silent-refresh` de OIDC usa el **refresh token** que emite Keycloak (sin
-  iframe), por lo que no hace falta desplegar página adicional.
+- **Sesión:** el token de la API se guarda en `localStorage` y caduca según
+  `SANCTUM_EXPIRATION` de la API (12 h por defecto). No hay refresh silencioso:
+  al caducar, la API responde 401 y el front lleva a `/login`.
+- **Recuperar contraseña:** no hay autoservicio. Un administrador la asigna con
+  `php artisan user:password <email>` en la API; el usuario puede cambiarla luego
+  desde el propio front (`PATCH /password`).
 
 ## Assets
 

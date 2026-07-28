@@ -65,5 +65,10 @@
 
 - [ ] 🔒 **Sentry** no portado (el Angular usaba `@sentry/angular-ivy` sin DSN en
   el env). Si se quiere en producción, añadir `@sentry/nextjs`.
-- [ ] 🔒 Revisar política de **refresh/expiración** de token OIDC en cliente y el
-  manejo de 401 (hoy replica el interceptor: logout + redirect).
+- [ ] 🔒 Revisar política de **expiración** del token de sesión (Sanctum,
+  `SANCTUM_EXPIRATION` en la API, 12 h por defecto): no hay refresh silencioso, al
+  caducar la API responde 401 y el front lleva a `/login`.
+- [ ] 🔒 Token en `localStorage` (igual que antes con OIDC): expuesto a XSS. Si
+  algún día front y API comparten dominio, valorar el modo cookie de Sanctum.
+- [ ] Falta pantalla de **cambio de contraseña** (`PATCH /password` ya existe en la
+  API).
