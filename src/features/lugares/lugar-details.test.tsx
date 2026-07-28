@@ -6,7 +6,7 @@ vi.mock("@/lib/api", () => import("@/test/api-double"));
 vi.mock("next/navigation", () => import("@/test/navigation-double"));
 
 import { lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
-import { resetNavigation, setLocation } from "@/test/navigation-double";
+import { resetNavigation, router, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
 import { LugarDetails } from "@/features/lugares/lugar-details";
 import { LugarStatus, type Lugar } from "@/types/domain";
@@ -73,6 +73,51 @@ describe("LugarDetails", () => {
       "href",
       "/lugares",
     );
+  });
+
+  it("el alta no guarda sin dirección y lo dice", async () => {
+    setLocation("/lugares/new");
+    mockRoute("GET", "/lugar/search/marcon", () => [completo]);
+
+    renderWithProviders(<LugarDetails isNew />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: /guardar/i }),
+    );
+
+    expect(
+      await screen.findByText("La dirección es obligatoria."),
+    ).toBeInTheDocument();
+    expect(lastCall("POST", "/lugar")).toBeUndefined();
+  });
+
+  it("el alta crea el lugar con sus datos y abre su detalle", async () => {
+    setLocation("/lugares/new");
+    mockRoute("GET", "/lugar/search/marcon", () => [completo]);
+    mockRoute("POST", "/lugar", ({ body }) => ({
+      ...(body as object),
+      id: "nuevo",
+    }));
+
+    renderWithProviders(<LugarDetails isNew />);
+
+    await userEvent.type(
+      await screen.findByPlaceholderText("Dirección"),
+      "Rúa do Muíño 3",
+    );
+    await userEvent.type(screen.getByPlaceholderText("Población"), "Marcón");
+    await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
+
+    await waitFor(() => {
+      expect(lastCall("POST", "/lugar")?.ctx.body).toMatchObject({
+        address: "Rúa do Muíño 3",
+        poblacion: "Marcón",
+        comunidadId: "a09b25f2-897b-4e33-bac5-d5e34f7245ce",
+      });
+    });
+    // Sin autorizados ni cambio de estado basta el POST: no hay PATCH.
+    expect(lastCall("PATCH", "/lugar/nuevo")).toBeUndefined();
+    expect(router.replace).toHaveBeenCalledWith("/lugares/nuevo");
   });
 
   it("guardar envía PATCH con los campos del formulario", async () => {

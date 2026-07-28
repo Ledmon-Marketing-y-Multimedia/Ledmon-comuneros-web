@@ -35,6 +35,21 @@
 
 ## Front — endurecimientos ya aplicados (verificar que no cambian negocio)
 
+- [x] 🐞 **Alta de dirección creaba una fila vacía.** "Nueva dirección" hacía
+  `POST /lugar` al pulsarla (herencia del Angular) y abría el detalle en edición:
+  si nadie completaba el formulario quedaba un lugar sin dirección. Ahora hay
+  `/lugares/new` y el lugar se crea al guardar, con `address` obligatoria.
+  - Pendiente en BD: **limpiar los lugares sin `address`** que dejó el flujo
+    anterior. El panel sigue abriendo en edición los que tengan `address` a NULL
+    para poder completarlos, y `comunero-details` los excluye del selector de
+    dirección.
+  - `POST /lugar` ignora `comuneros` y fuerza estado Alta, así que el alta manda
+    un PATCH extra **solo** si se rellenaron autorizados o se cambió el estado.
+    Si algún día el alta acepta esos campos, quitar ese segundo viaje.
+  - El comentario del `COALESCE` en `LugarService::findByComunidadUrl` (API) dice
+    que el front crea el lugar sin dirección: ya no es así, pero el `COALESCE`
+    sigue haciendo falta mientras existan filas con `address` a NULL.
+
 - [x] 🐞 **`comuneros/list`**: acceso a `comunero.lugar.address/status` sin guard
   → añadido optional chaining (`?.`) para evitar crash con comuneros sin lugar.
 

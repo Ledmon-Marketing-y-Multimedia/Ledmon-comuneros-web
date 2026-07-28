@@ -6,7 +6,7 @@ vi.mock("@/lib/api", () => import("@/test/api-double"));
 vi.mock("next/navigation", () => import("@/test/navigation-double"));
 
 import { lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
-import { resetNavigation, router, setLocation } from "@/test/navigation-double";
+import { resetNavigation, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
 import { LugaresList } from "@/features/lugares/lugares-list";
 import type { Lugar } from "@/types/domain";
@@ -135,25 +135,17 @@ describe("LugaresList", () => {
     );
   });
 
-  it("«Nueva dirección» crea el lugar y abre su detalle", async () => {
+  it("«Nueva dirección» abre el alta sin crear nada", async () => {
     withLugares([lugar(1)]);
-    mockRoute("POST", "/lugar", () => ({
-      id: "nuevo",
-      status: LugarStatus.ACTIVE,
-    }));
 
     renderWithProviders(<LugaresList />);
     await screen.findByText("Rúa 01");
 
-    await userEvent.click(
-      screen.getByRole("button", { name: /nueva dirección/i }),
+    // Es un enlace, no un botón: el lugar no se crea hasta guardar el formulario.
+    expect(screen.getByRole("link", { name: /nueva dirección/i })).toHaveAttribute(
+      "href",
+      "/lugares/new",
     );
-
-    await waitFor(() => {
-      expect(lastCall("POST", "/lugar")?.ctx.body).toEqual({
-        comunidadId: "a09b25f2-897b-4e33-bac5-d5e34f7245ce",
-      });
-    });
-    expect(router.push).toHaveBeenCalledWith("/lugares/nuevo");
+    expect(lastCall("POST", "/lugar")).toBeUndefined();
   });
 });

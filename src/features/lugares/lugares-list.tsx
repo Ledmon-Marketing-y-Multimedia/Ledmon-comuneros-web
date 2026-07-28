@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import { useLugares, useCreateLugar } from "@/features/lugares/api";
-import { Button } from "@/components/ui/button";
+import { useLugares } from "@/features/lugares/api";
+import { ButtonLink } from "@/components/ui/button";
 import { FilterSelect } from "@/components/ui/filter-select";
 import { ListTable } from "@/components/ui/list-table";
 import { SearchInput } from "@/components/ui/search-input";
@@ -19,14 +19,13 @@ export function LugaresList() {
   const pathname = usePathname();
   const selectedId = useMemo(() => {
     const m = pathname.match(/\/lugares\/([^/]+)/);
-    return m ? m[1] : null;
+    return m && m[1] !== "new" ? m[1] : null;
   }, [pathname]);
 
   const [search, setSearch] = useState("");
   const [zona, setZona] = useState("all");
 
   const { data: lugares = [] } = useLugares(search);
-  const createMut = useCreateLugar();
 
   const zonas = useMemo(
     () => Array.from(new Set(lugares.map((l) => l.zona).filter(Boolean))),
@@ -42,18 +41,12 @@ export function LugaresList() {
   const count = lugares.length;
   const pagination = usePagination(filtered);
 
-  const createLugar = () => {
-    createMut.mutate(undefined, {
-      onSuccess: (newLugar) => router.push(`/lugares/${newLugar.id}`),
-    });
-  };
-
   // Atajo Ctrl/Cmd + / para crear dirección (como el fromEvent del Angular).
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "/") {
         e.preventDefault();
-        createLugar();
+        router.push("/lugares/new");
       }
     };
     document.addEventListener("keydown", handler);
@@ -104,10 +97,10 @@ export function LugaresList() {
             ))}
           </FilterSelect>
 
-          <Button onClick={createLugar} className="w-full md:ml-4 md:w-44">
+          <ButtonLink href="/lugares/new" className="w-full md:ml-4 md:w-44">
             <PlusIcon className="h-5 w-5" />
             <span className="mr-1">Nueva dirección</span>
-          </Button>
+          </ButtonLink>
         </div>
       </div>
 

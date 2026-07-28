@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import {
   CheckCircleIcon,
@@ -19,7 +20,11 @@ import {
   TrashIcon,
   PlusCircleIcon,
 } from "@heroicons/react/24/solid";
-import { useLugar, useUpdateLugar } from "@/features/lugares/api";
+import {
+  useCreateLugar,
+  useLugar,
+  useUpdateLugar,
+} from "@/features/lugares/api";
 import { Button } from "@/components/ui/button";
 import {
   DetailAvatar,
@@ -49,12 +54,27 @@ interface FormValues {
   autorizados: { id?: string; name: string; dni: string }[];
 }
 
-export function LugarDetails({ lugarId }: { lugarId: string }) {
-  const { lugar: found, isLoading, data: lugares = [] } = useLugar(lugarId);
+/** Alta: no hay lugar en la API todavía, solo el formulario en blanco. */
+const EMPTY_LUGAR: Lugar = { id: "" } as Lugar;
+
+export function LugarDetails({
+  lugarId,
+  isNew,
+}: {
+  lugarId?: string;
+  isNew?: boolean;
+}) {
+  const router = useRouter();
+  const {
+    lugar: found,
+    isLoading,
+    data: lugares = [],
+  } = useLugar(isNew ? "" : (lugarId ?? ""));
+  const createMut = useCreateLugar();
   const updateMut = useUpdateLugar();
 
-  const lugar: Lugar | null = found;
-  const [editMode, setEditMode] = useState(false);
+  const lugar: Lugar | null = isNew ? EMPTY_LUGAR : found;
+  const [editMode, setEditMode] = useState(!!isNew);
 
   const zonas = useMemo(
     () => Array.from(new Set(lugares.map((l) => l.zona).filter(Boolean))),
@@ -102,12 +122,15 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
       poblacion: lugar.poblacion ?? "",
       zona: lugar.zona ?? "",
       cp: lugar.cp ?? "",
-      status: (lugar.status as string) ?? "",
+      // En un alta el estado lo fija la API (Alta); en el resto, el del lugar.
+      status: (lugar.status as string) ?? LugarStatus.ACTIVE,
       autorizados: autorizadosForm,
     });
 
+    // Un lugar sin dirección es un borrador de los que creaba el flujo anterior:
+    // se sigue abriendo en edición para poder completarlo.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEditMode(lugar.address == null);
+    setEditMode(isNew || lugar.address == null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lugar?.id, found]);
 
@@ -127,13 +150,35 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
       autorizados: undefined,
     } as unknown as Lugar;
 
+    if (values.id === "") {
+      createMut.mutate(payload, {
+        onSuccess: (created) => {
+          // `POST /lugar` ignora los comuneros y fuerza el estado Alta: si el
+          // formulario traía autorizados u otro estado, se completa con el PATCH.
+          const pendiente =
+            comuneros.length > 0 || values.status !== LugarStatus.ACTIVE;
+
+          if (!pendiente) {
+            router.replace(`/lugares/${created.id}`);
+            return;
+          }
+
+          updateMut.mutate(
+            { id: created.id, lugar: payload },
+            { onSuccess: () => router.replace(`/lugares/${created.id}`) },
+          );
+        },
+      });
+      return;
+    }
+
     updateMut.mutate(
       { id: values.id, lugar: payload },
       { onSuccess: () => setEditMode(false) },
     );
   };
 
-  if (isLoading && !lugar) {
+  if (!isNew && isLoading && !lugar) {
     return <DetailPlaceholder title="Cargando…" />;
   }
 
@@ -221,9 +266,15 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
           <div className="relative flex flex-auto flex-col items-center px-6 sm:px-12">
             <div className="w-full max-w-3xl">
               <form onSubmit={handleSubmit(onSubmit)}>
-                <FieldRow icon={<BriefcaseSolid className="h-5 w-5" />} label="Dirección">
+                <FieldRow
+                  icon={<BriefcaseSolid className="h-5 w-5" />}
+                  label="Dirección"
+                  error={formState.errors.address?.message}
+                >
                   <input
-                    {...register("address", { required: true })}
+                    {...register("address", {
+                      required: "La dirección es obligatoria.",
+                    })}
                     placeholder="Dirección"
                     className={fieldClass}
                   />
@@ -339,7 +390,10 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                 </div>
 
                 <FormActions
-                  onCancel={() => setEditMode(false)}
+                  // En un alta no hay ficha a la que volver: se cierra el panel.
+                  onCancel={() =>
+                    isNew ? router.push("/lugares") : setEditMode(false)
+                  }
                   saveDisabled={!formState.isValid && formState.isSubmitted}
                 />
               </form>
