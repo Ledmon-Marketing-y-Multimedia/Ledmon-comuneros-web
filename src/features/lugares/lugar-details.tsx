@@ -1,11 +1,8 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useForm, useFieldArray } from "react-hook-form";
 import {
-  XMarkIcon,
   CheckCircleIcon,
   BriefcaseIcon,
   BuildingOffice2Icon,
@@ -23,6 +20,15 @@ import {
   PlusCircleIcon,
 } from "@heroicons/react/24/solid";
 import { useLugar, useUpdateLugar } from "@/features/lugares/api";
+import { Button } from "@/components/ui/button";
+import {
+  DetailAvatar,
+  DetailCover,
+  FormActions,
+  InfoRow,
+} from "@/components/ui/detail-panel";
+import { DetailPlaceholder } from "@/components/ui/empty-state";
+import { FieldRow, fieldClass } from "@/components/ui/field-row";
 import {
   ComuneroRole,
   LugarStatus,
@@ -42,9 +48,6 @@ interface FormValues {
   status: string;
   autorizados: { id?: string; name: string; dni: string }[];
 }
-
-const inputCls =
-  "w-full border-b border-gray-300 bg-transparent py-2 focus:border-primary focus:outline-none";
 
 export function LugarDetails({ lugarId }: { lugarId: string }) {
   const { lugar: found, isLoading, data: lugares = [] } = useLugar(lugarId);
@@ -131,29 +134,18 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
   };
 
   if (isLoading && !lugar) {
-    return (
-      <div className="flex h-full items-center justify-center p-16 text-secondary">
-        Cargando…
-      </div>
-    );
+    return <DetailPlaceholder title="Cargando…" />;
   }
 
   // Sin lugar no se deja el panel en blanco: se dice qué ha pasado y se ofrece
   // la salida (antes esto devolvía null y el drawer aparecía vacío).
   if (!lugar) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 p-16 text-center">
-        <p className="text-xl font-semibold">No se encuentra la dirección</p>
-        <p className="text-secondary">
-          Puede que se haya eliminado o que ya no esté en el listado.
-        </p>
-        <Link
-          href="/lugares"
-          className="rounded border px-4 py-2 font-medium hover:bg-gray-100"
-        >
-          Volver al listado
-        </Link>
-      </div>
+      <DetailPlaceholder
+        title="No se encuentra la dirección"
+        description="Puede que se haya eliminado o que ya no esté en el listado."
+        backHref="/lugares"
+      />
     );
   }
 
@@ -163,42 +155,19 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
     <div className="flex w-full flex-col">
       {!editMode ? (
         <>
-          <div className="relative h-40 w-full bg-gray-200 px-8 sm:h-48 sm:px-12">
-            <img
-              className="absolute inset-0 h-full w-full object-cover opacity-60"
-              src="/assets/images/marcon_desde_salgueiral.jpg"
-              alt=""
-            />
-            <div className="mx-auto flex w-full max-w-3xl items-center justify-end pt-6">
-              <Link
-                href="/lugares"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
-                aria-label="Cerrar"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </Link>
-            </div>
-          </div>
+          <DetailCover closeHref="/lugares" />
 
           <div className="relative flex flex-auto flex-col items-center p-6 pt-0 sm:p-12 sm:pt-0">
             <div className="w-full max-w-3xl">
-              <div className="-mt-16 flex flex-auto items-end">
-                <div className="ring-bg-card flex h-32 w-32 items-center justify-center overflow-hidden rounded-full ring-4">
-                  <div className="flex h-full w-full items-center justify-center rounded bg-gray-200 text-8xl font-bold uppercase leading-none text-gray-600">
-                    {initial}
-                  </div>
-                </div>
-                <div className="mb-1 ml-auto flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setEditMode(true)}
-                    className="inline-flex items-center gap-2 rounded border px-4 py-2 font-medium hover:bg-gray-100"
-                  >
+              <DetailAvatar
+                initial={initial}
+                actions={
+                  <Button variant="secondary" onClick={() => setEditMode(true)}>
                     <PencilSquareIcon className="h-5 w-5" />
                     <span>Editar lugar</span>
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                }
+              />
 
               <div className="mt-3 truncate text-4xl font-bold">
                 {lugar.address}
@@ -206,49 +175,40 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
 
               <div className="mt-4 flex flex-col space-y-8 border-t pt-6">
                 {lugar.status && (
-                  <div className="flex sm:items-center">
-                    <CheckCircleIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">
-                      {statusLabel(lugar.status)}
-                    </div>
-                  </div>
+                  <InfoRow icon={<CheckCircleIcon className="h-6 w-6" />}>
+                    {statusLabel(lugar.status)}
+                  </InfoRow>
                 )}
                 {lugar.zona && (
-                  <div className="flex sm:items-center">
-                    <BriefcaseIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">{lugar.zona}</div>
-                  </div>
+                  <InfoRow icon={<BriefcaseIcon className="h-6 w-6" />}>
+                    {lugar.zona}
+                  </InfoRow>
                 )}
                 {lugar.poblacion && (
-                  <div className="flex sm:items-center">
-                    <BuildingOffice2Icon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">{lugar.poblacion}</div>
-                  </div>
+                  <InfoRow icon={<BuildingOffice2Icon className="h-6 w-6" />}>
+                    {lugar.poblacion}
+                  </InfoRow>
                 )}
                 {lugar.cp && (
-                  <div className="flex sm:items-center">
-                    <MapPinIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">{lugar.cp}</div>
-                  </div>
+                  <InfoRow icon={<MapPinIcon className="h-6 w-6" />}>
+                    {lugar.cp}
+                  </InfoRow>
                 )}
                 {holder && (
-                  <Link
+                  <InfoRow
+                    icon={<UserCircleIcon className="h-6 w-6" />}
                     href={`/comuneros/${holder.id}`}
-                    className="flex sm:items-center"
                   >
-                    <UserCircleIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">
-                      {holder.user?.name} (Comunero)
-                    </div>
-                  </Link>
+                    {holder.user?.name} (Comunero)
+                  </InfoRow>
                 )}
                 {autorizados.map((autorizado) => (
-                  <div key={autorizado.id} className="flex sm:items-center">
-                    <UserCircleIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">
-                      {autorizado.user?.name} (Autorizado)
-                    </div>
-                  </div>
+                  <InfoRow
+                    key={autorizado.id}
+                    icon={<UserCircleIcon className="h-6 w-6" />}
+                  >
+                    {autorizado.user?.name} (Autorizado)
+                  </InfoRow>
                 ))}
               </div>
             </div>
@@ -256,22 +216,7 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
         </>
       ) : (
         <>
-          <div className="relative h-40 w-full bg-gray-200 px-8 sm:h-48 sm:px-12">
-            <img
-              className="absolute inset-0 h-full w-full object-cover opacity-60"
-              src="/assets/images/marcon_desde_salgueiral.jpg"
-              alt=""
-            />
-            <div className="mx-auto flex w-full max-w-3xl items-center justify-end pt-6">
-              <Link
-                href="/lugares"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
-                aria-label="Cerrar"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </Link>
-            </div>
-          </div>
+          <DetailCover closeHref="/lugares" />
 
           <div className="relative flex flex-auto flex-col items-center px-6 sm:px-12">
             <div className="w-full max-w-3xl">
@@ -280,13 +225,13 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                   <input
                     {...register("address", { required: true })}
                     placeholder="Dirección"
-                    className={inputCls}
+                    className={fieldClass}
                   />
                 </FieldRow>
 
                 {zonas.length > 0 && (
                   <FieldRow icon={<BuildingSolid className="h-5 w-5" />} label="Lugar">
-                    <select {...register("zona")} className={inputCls}>
+                    <select {...register("zona")} className={fieldClass}>
                       <option value="" />
                       {zonas.map((z) => (
                         <option key={String(z)} value={String(z)}>
@@ -298,7 +243,7 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                 )}
 
                 <FieldRow icon={<CheckSolid className="h-5 w-5" />} label="Estado">
-                  <select {...register("status")} className={inputCls}>
+                  <select {...register("status")} className={fieldClass}>
                     {STATUSES.map((s) => (
                       <option key={s} value={s}>
                         {statusLabel(s)}
@@ -311,7 +256,7 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                   <input
                     {...register("poblacion")}
                     placeholder="Población"
-                    className={inputCls}
+                    className={fieldClass}
                   />
                 </FieldRow>
 
@@ -319,7 +264,7 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                   <input
                     {...register("cp")}
                     placeholder="Código postal"
-                    className={inputCls}
+                    className={fieldClass}
                   />
                 </FieldRow>
 
@@ -343,7 +288,7 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                             <input
                               {...register(`autorizados.${i}.name` as const)}
                               placeholder="Nombre"
-                              className={inputCls}
+                              className={fieldClass}
                             />
                           </div>
                           <div className="ml-2 w-full max-w-24 flex-auto sm:ml-4 sm:max-w-40">
@@ -357,7 +302,7 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                               <input
                                 {...register(`autorizados.${i}.dni` as const)}
                                 placeholder="DNI"
-                                className={inputCls}
+                                className={fieldClass}
                               />
                             </div>
                           </div>
@@ -393,22 +338,10 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
                   </div>
                 </div>
 
-                <div className="-mx-6 mt-10 flex items-center border-t bg-gray-50 py-4 pl-1 pr-4 sm:-mx-12 sm:pl-7 sm:pr-12">
-                  <button
-                    type="button"
-                    onClick={() => setEditMode(false)}
-                    className="ml-auto rounded px-4 py-2 font-medium hover:bg-gray-100"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!formState.isValid && formState.isSubmitted}
-                    className="ml-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
-                  >
-                    Guardar
-                  </button>
-                </div>
+                <FormActions
+                  onCancel={() => setEditMode(false)}
+                  saveDisabled={!formState.isValid && formState.isSubmitted}
+                />
               </form>
             </div>
           </div>
@@ -418,22 +351,3 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
   );
 }
 
-function FieldRow({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mt-4">
-      <label className="mb-1 block font-medium text-secondary">{label}</label>
-      <div className="flex items-center gap-2">
-        <span className="hidden text-gray-500 sm:block">{icon}</span>
-        {children}
-      </div>
-    </div>
-  );
-}

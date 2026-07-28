@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Modal } from "@/components/ui/dialog";
+import { Modal, ModalFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   getSuspendedComuneros,
   suspendComuneros,
@@ -62,13 +63,9 @@ export function SuspendModal({
 
         {comuneros.length > 0 ? (
           <>
-            <button
-              type="button"
-              onClick={markAll}
-              className="mx-auto rounded border px-4 py-2 font-medium hover:bg-gray-100"
-            >
+            <Button variant="secondary" onClick={markAll} className="mx-auto">
               Seleccionar todos
-            </button>
+            </Button>
             <div className="mx-2 mt-2 h-72 space-y-1.5 overflow-auto">
               {comuneros.map((comunero) => (
                 <div key={comunero.id} className="group flex items-center">
@@ -90,23 +87,14 @@ export function SuspendModal({
           </div>
         )}
 
-        <div className="mt-4 flex items-center justify-end gap-2 p-4">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="ml-auto rounded border px-4 py-2 font-medium hover:bg-gray-100 sm:ml-0"
-          >
+        <ModalFooter className="p-4">
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancelar
-          </button>
-          <button
-            type="button"
-            disabled={!hasActive}
-            onClick={suspend}
-            className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
-          >
+          </Button>
+          <Button disabled={!hasActive} onClick={suspend}>
             Suspender comuneros
-          </button>
-        </div>
+          </Button>
+        </ModalFooter>
       </div>
     </Modal>
   );

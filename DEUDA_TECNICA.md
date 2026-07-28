@@ -54,6 +54,21 @@
 - [ ] ⚙️ **Editor rich-text**: se usa `react-quill-new` (Quill 2). Revisar la
   whitelist de fuentes (el original registraba `Arial`) si el PDF lo requiere.
 
+## Front — refactor DRY (hecho, con las divergencias que se dejaron a propósito)
+
+- [x] 🧹 Marcado repetido movido a `src/components/ui` (ver README). El detalle de
+  comunero y el de dirección pierden ~40 % de líneas, y los tres listados se
+  quedan en cabecera + `ListTable`.
+- [ ] 🧹 El paginador de la **asistencia** de una reunión sigue siendo distinto
+  (`compact`: sin rango, sin ir al principio/fin y con tamaños 5/10/20). Es lo que
+  había; igualarlo a los listados es un cambio de interfaz, no un refactor →
+  decidir con cliente.
+- [ ] 🧹 El listado de **comuneros** no usa `ListTable`: agrupa por inicial y su
+  fila lleva avatar y dos líneas. Si alguna vez se le pone paginador, revisar si
+  merece un `GroupedListTable` o si se convierte en tabla normal.
+- [ ] 🧹 El botón de `/login` mantiene su propio estilo (`rounded-md`, `py-2.5`) en
+  vez de `Button`; la pantalla de acceso es la única con ese aspecto.
+
 ## Front — no migrado (restos de la plantilla Fuse / dead code)
 
 - Métodos mock de `auth.service` (`signIn/signUp/signInUsingToken` contra
@@ -63,7 +78,7 @@
 
 ## Tests
 
-- [x] Red de tests de componentes con Vitest + Testing Library (34 casos): los dos
+- [x] Red de tests de componentes con Vitest + Testing Library (39 casos): los dos
   listados con paginador, el listado agrupado de comuneros y los paneles de
   detalle de dirección y comunero. Se escribieron **antes** del refactor DRY,
   para poder extraer componentes compartidos con red.

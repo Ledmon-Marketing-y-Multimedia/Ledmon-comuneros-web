@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Modal } from "@/components/ui/dialog";
+import { Modal, ModalFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type ExportType = "SIMPLE" | "COMPLETE";
@@ -68,16 +69,11 @@ export function ExportModal({
           </label>
         </div>
 
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="ml-auto rounded-md border px-4 py-2 font-medium hover:bg-gray-100 sm:ml-0"
-          >
+        <ModalFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
             disabled={!type}
             onClick={() => {
               if (type) {
@@ -85,11 +81,10 @@ export function ExportModal({
                 onOpenChange(false);
               }
             }}
-            className="rounded-md bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
           >
             Exportar
-          </button>
-        </div>
+          </Button>
+        </ModalFooter>
       </fieldset>
     </Modal>
   );

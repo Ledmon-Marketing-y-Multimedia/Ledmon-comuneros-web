@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Modal } from "@/components/ui/dialog";
+import { Modal, ModalFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { fieldClass } from "@/components/ui/field-row";
 
 /** Modal de subida de documento (portado de upload-document). Devuelve {type,file}. */
 export function UploadDocumentModal({
@@ -42,7 +44,7 @@ export function UploadDocumentModal({
           <input
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="border-b border-gray-300 bg-transparent py-2 focus:border-primary focus:outline-none"
+            className={fieldClass}
           />
         </label>
 
@@ -83,22 +85,14 @@ export function UploadDocumentModal({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="ml-auto rounded border px-4 py-2 font-medium hover:bg-gray-100 sm:ml-0"
-          >
+        <ModalFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={!valid}
-            className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
-          >
+          </Button>
+          <Button type="submit" disabled={!valid}>
             Subir archivo
-          </button>
-        </div>
+          </Button>
+        </ModalFooter>
       </form>
     </Modal>
   );

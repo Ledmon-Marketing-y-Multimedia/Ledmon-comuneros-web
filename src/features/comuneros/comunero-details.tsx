@@ -1,6 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,7 +11,6 @@ import {
   HomeIcon,
   InformationCircleIcon,
   PhoneIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
   XMarkIcon as XSolid,
@@ -37,6 +35,15 @@ import {
 import { useLugares } from "@/features/lugares/api";
 import { StatusModal } from "@/features/comuneros/status-modal";
 import { useConfirmation } from "@/components/ui/confirmation";
+import { Button } from "@/components/ui/button";
+import {
+  DetailAvatar,
+  DetailCover,
+  FormActions,
+  InfoRow,
+} from "@/components/ui/detail-panel";
+import { DetailPlaceholder } from "@/components/ui/empty-state";
+import { FieldRow, fieldClass } from "@/components/ui/field-row";
 import { pdfService } from "@/lib/pdf/pdf-service";
 import {
   ComuneroStatus,
@@ -63,9 +70,6 @@ const EMPTY_COMUNERO: Comunero = {
   user: { name: "", id: "", username: "", phones: [], email: "" },
   id: "",
 };
-
-const inputCls =
-  "w-full border-b border-gray-300 bg-transparent py-2 focus:border-primary focus:outline-none";
 
 export function ComuneroDetails({
   comuneroId,
@@ -195,29 +199,18 @@ export function ComuneroDetails({
   };
 
   if (!isNew && isLoading && !found) {
-    return (
-      <div className="flex h-full items-center justify-center p-16 text-secondary">
-        Cargando…
-      </div>
-    );
+    return <DetailPlaceholder title="Cargando…" />;
   }
 
   // Sin comunero no se cae al formulario vacío de alta: eso hacía parecer que el
   // guardado no había funcionado (y un segundo envío creaba otro comunero).
   if (!isNew && !found) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 p-16 text-center">
-        <p className="text-xl font-semibold">No se encuentra el comunero</p>
-        <p className="text-secondary">
-          Puede que se haya borrado desde otra sesión.
-        </p>
-        <Link
-          href="/comuneros"
-          className="rounded border px-4 py-2 font-medium hover:bg-gray-100"
-        >
-          Volver al listado
-        </Link>
-      </div>
+      <DetailPlaceholder
+        title="No se encuentra el comunero"
+        description="Puede que se haya borrado desde otra sesión."
+        backHref="/comuneros"
+      />
     );
   }
 
@@ -228,60 +221,37 @@ export function ComuneroDetails({
       {!editMode ? (
         <>
           {/* Header vista */}
-          <div className="relative h-40 w-full bg-gray-200 px-8 sm:h-48 sm:px-12">
-            <img
-              className="absolute inset-0 h-full w-full object-cover opacity-60"
-              src="/assets/images/marcon_desde_salgueiral.jpg"
-              alt=""
-            />
-            <div className="mx-auto flex w-full max-w-3xl items-center justify-end pt-6">
-              <Link
-                href="/comuneros"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
-                aria-label="Cerrar"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </Link>
-            </div>
-          </div>
+          <DetailCover closeHref="/comuneros" />
 
           <div className="relative flex flex-auto flex-col items-center p-6 pt-0 sm:p-12 sm:pt-0">
             <div className="w-full max-w-3xl">
-              <div className="-mt-16 flex flex-auto items-end">
-                <div className="ring-bg-card flex h-32 w-32 items-center justify-center overflow-hidden rounded-full ring-4">
-                  <div className="flex h-full w-full items-center justify-center rounded bg-gray-200 text-8xl font-bold uppercase leading-none text-gray-600">
-                    {initial}
-                  </div>
-                </div>
-                <div className="mb-1 ml-auto flex items-center gap-2">
-                  {comunero.status === "ACTIVE" && (
-                    <button
-                      type="button"
-                      onClick={() => setStatusOpen(true)}
-                      className="inline-flex items-center gap-2 rounded border px-4 py-2 font-medium hover:bg-gray-100"
+              <DetailAvatar
+                initial={initial}
+                actions={
+                  <>
+                    {comunero.status === "ACTIVE" && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setStatusOpen(true)}
+                      >
+                        <XSolid className="h-5 w-5" />
+                        <span>Dar de baja</span>
+                      </Button>
+                    )}
+                    <Button
+                      variant="secondary"
+                      onClick={() => pdfService.comuneroCard(comunero)}
                     >
-                      <XSolid className="h-5 w-5" />
-                      <span>Dar de baja</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => pdfService.comuneroCard(comunero)}
-                    className="inline-flex items-center gap-2 rounded border px-4 py-2 font-medium hover:bg-gray-100"
-                  >
-                    <QrCodeIcon className="h-5 w-5" />
-                    <span>Tarjeta</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditMode(true)}
-                    className="inline-flex items-center gap-2 rounded border px-4 py-2 font-medium hover:bg-gray-100"
-                  >
-                    <PencilSquareIcon className="h-5 w-5" />
-                    <span>Editar</span>
-                  </button>
-                </div>
-              </div>
+                      <QrCodeIcon className="h-5 w-5" />
+                      <span>Tarjeta</span>
+                    </Button>
+                    <Button variant="secondary" onClick={() => setEditMode(true)}>
+                      <PencilSquareIcon className="h-5 w-5" />
+                      <span>Editar</span>
+                    </Button>
+                  </>
+                }
+              />
 
               <div className="mt-3 truncate text-4xl font-bold">
                 {comunero.user?.name}
@@ -289,63 +259,53 @@ export function ComuneroDetails({
 
               <div className="mt-4 flex flex-col space-y-8 border-t pt-6">
                 {comunero.user?.username && (
-                  <div className="flex sm:items-center">
-                    <UserCircleIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">
-                      {comunero.user.username}
-                    </div>
-                  </div>
+                  <InfoRow icon={<UserCircleIcon className="h-6 w-6" />}>
+                    {comunero.user.username}
+                  </InfoRow>
                 )}
                 {comunero.user?.email && (
-                  <div className="flex sm:items-center">
-                    <AtSymbolIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">{comunero.user.email}</div>
-                  </div>
+                  <InfoRow icon={<AtSymbolIcon className="h-6 w-6" />}>
+                    {comunero.user.email}
+                  </InfoRow>
                 )}
                 {comunero.user?.dni && (
-                  <div className="flex sm:items-center">
-                    <CreditCardIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">{comunero.user.dni}</div>
-                  </div>
+                  <InfoRow icon={<CreditCardIcon className="h-6 w-6" />}>
+                    {comunero.user.dni}
+                  </InfoRow>
                 )}
                 {comunero.lugar?.address && (
-                  <Link
+                  <InfoRow
+                    icon={<HomeIcon className="h-6 w-6" />}
                     href={`/lugares/${comunero.lugar.id}`}
-                    className="flex sm:items-center"
                   >
-                    <HomeIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">
-                      {comunero.lugar.address}
-                    </div>
-                  </Link>
+                    {comunero.lugar.address}
+                  </InfoRow>
                 )}
                 {comunero.status && (
-                  <div className="flex sm:items-center">
-                    <InformationCircleIcon className="h-6 w-6" />
-                    <div className="ml-6 leading-6">
-                      {statusLabel(comunero.status)}
-                    </div>
-                  </div>
+                  <InfoRow icon={<InformationCircleIcon className="h-6 w-6" />}>
+                    {statusLabel(comunero.status)}
+                  </InfoRow>
                 )}
                 {!!comunero.user?.phones?.length && (
-                  <div className="flex">
-                    <PhoneIcon className="h-6 w-6" />
-                    <div className="ml-6 min-w-0 space-y-1">
-                      {comunero.user.phones.map((phone, i) => (
-                        <div key={i} className="flex items-center leading-6">
-                          <div className="ml-2.5 font-mono">
-                            {phone.phoneNumber}
-                          </div>
-                          {phone.label && (
-                            <div className="text-md truncate text-secondary">
-                              <span className="mx-2">&bull;</span>
-                              <span className="font-medium">{phone.label}</span>
-                            </div>
-                          )}
+                  <InfoRow
+                    icon={<PhoneIcon className="h-6 w-6" />}
+                    align="top"
+                    bodyClassName="min-w-0 space-y-1"
+                  >
+                    {comunero.user.phones.map((phone, i) => (
+                      <div key={i} className="flex items-center leading-6">
+                        <div className="ml-2.5 font-mono">
+                          {phone.phoneNumber}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        {phone.label && (
+                          <div className="text-md truncate text-secondary">
+                            <span className="mx-2">&bull;</span>
+                            <span className="font-medium">{phone.label}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </InfoRow>
                 )}
               </div>
 
@@ -381,33 +341,12 @@ export function ComuneroDetails({
       ) : (
         <>
           {/* Header edición */}
-          <div className="relative h-40 w-full bg-gray-200 px-8 sm:h-48 sm:px-12">
-            <img
-              className="absolute inset-0 h-full w-full object-cover opacity-60"
-              src="/assets/images/marcon_desde_salgueiral.jpg"
-              alt=""
-            />
-            <div className="mx-auto flex w-full max-w-3xl items-center justify-end pt-6">
-              <Link
-                href="/comuneros"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10"
-                aria-label="Cerrar"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </Link>
-            </div>
-          </div>
+          <DetailCover closeHref="/comuneros" />
 
           <div className="relative flex flex-auto flex-col items-center px-6 sm:px-12">
             <div className="w-full max-w-3xl">
               <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="-mt-16 flex flex-auto items-end">
-                  <div className="ring-bg-card flex h-32 w-32 items-center justify-center overflow-hidden rounded-full ring-4">
-                    <div className="flex h-full w-full items-center justify-center rounded bg-gray-200 text-8xl font-bold uppercase leading-none text-gray-600">
-                      {initial}
-                    </div>
-                  </div>
-                </div>
+                <DetailAvatar initial={initial} />
 
                 {/* Nombre */}
                 <FieldRow
@@ -421,18 +360,18 @@ export function ComuneroDetails({
                     })}
                     placeholder="Nombre y apellidos"
                     spellCheck={false}
-                    className={inputCls}
+                    className={fieldClass}
                   />
                 </FieldRow>
 
                 {/* DNI */}
                 <FieldRow icon={<CreditSolid className="h-5 w-5" />} label="DNI">
-                  <input {...register("dni")} placeholder="DNI" className={inputCls} />
+                  <input {...register("dni")} placeholder="DNI" className={fieldClass} />
                 </FieldRow>
 
                 {/* Email */}
                 <FieldRow icon={<AtSolid className="h-5 w-5" />} label="Email">
-                  <input {...register("email")} placeholder="Email" className={inputCls} />
+                  <input {...register("email")} placeholder="Email" className={fieldClass} />
                 </FieldRow>
 
                 {/* Username */}
@@ -440,13 +379,13 @@ export function ComuneroDetails({
                   <input
                     {...register("username")}
                     placeholder="Nombre de usuario"
-                    className={inputCls}
+                    className={fieldClass}
                   />
                 </FieldRow>
 
                 {/* Código */}
                 <FieldRow icon={<MapPinIcon className="h-5 w-5" />} label="Nº de comunero">
-                  <input {...register("code")} placeholder="Nº comunero" className={inputCls} />
+                  <input {...register("code")} placeholder="Nº comunero" className={fieldClass} />
                 </FieldRow>
 
                 {/* Lugar. Obligatorio: el comunero pertenece a la comunidad
@@ -462,7 +401,7 @@ export function ComuneroDetails({
                       {...register("lugarId", {
                         required: "Elige la dirección del comunero.",
                       })}
-                      className={inputCls}
+                      className={fieldClass}
                     >
                       <option value="">Elige una dirección…</option>
                       {direcciones.map((lugar) => (
@@ -507,7 +446,7 @@ export function ComuneroDetails({
                             <input
                               {...register(`phones.${i}.phoneNumber` as const)}
                               placeholder="Phone"
-                              className={inputCls}
+                              className={fieldClass}
                             />
                           </div>
                           <div className="ml-2 w-full max-w-24 flex-auto sm:ml-4 sm:max-w-40">
@@ -521,7 +460,7 @@ export function ComuneroDetails({
                               <input
                                 {...register(`phones.${i}.label` as const)}
                                 placeholder="Label"
-                                className={inputCls}
+                                className={fieldClass}
                               />
                             </div>
                           </div>
@@ -558,31 +497,20 @@ export function ComuneroDetails({
                 </div>
 
                 {/* Acciones */}
-                <div className="-mx-6 mt-10 flex items-center border-t bg-gray-50 py-4 pl-1 pr-4 sm:-mx-12 sm:pl-7 sm:pr-12">
+                <FormActions
+                  onCancel={() => setEditMode(false)}
+                  saveDisabled={!formState.isValid && formState.isSubmitted}
+                >
                   {comunero.id && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="danger"
                       onClick={deleteComunero}
-                      className="font-medium text-warn-600 hover:underline"
+                      className="px-0"
                     >
                       Borrar comunero
-                    </button>
+                    </Button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setEditMode(false)}
-                    className="ml-auto rounded px-4 py-2 font-medium hover:bg-gray-100"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!formState.isValid && formState.isSubmitted}
-                    className="ml-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
-                  >
-                    Guardar
-                  </button>
-                </div>
+                </FormActions>
               </form>
             </div>
           </div>
@@ -598,30 +526,3 @@ export function ComuneroDetails({
   );
 }
 
-function FieldRow({
-  icon,
-  label,
-  error,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  /** Mensaje de validación. Antes un campo inválido solo deshabilitaba Guardar. */
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mt-8">
-      <label className="mb-1 block font-medium text-secondary">{label}</label>
-      <div className="flex items-center gap-2">
-        <span className="hidden text-gray-500 sm:block">{icon}</span>
-        <div className="flex-auto">{children}</div>
-      </div>
-      {error && (
-        <p role="alert" className="mt-1 text-sm font-medium text-warn-600">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}

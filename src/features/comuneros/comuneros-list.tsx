@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  MagnifyingGlassIcon,
-  ArrowDownTrayIcon,
-  PlusIcon,
-} from "@heroicons/react/24/solid";
+import { ArrowDownTrayIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useComuneros } from "@/features/comuneros/api";
 import { ExportModal, type ExportType } from "@/features/comuneros/export-modal";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FilterSelect } from "@/components/ui/filter-select";
+import { SearchInput } from "@/components/ui/search-input";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { pdfService } from "@/lib/pdf/pdf-service";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { ComuneroStatus, statusLabel } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
@@ -24,15 +26,12 @@ export function ComunerosList() {
   }, [pathname]);
 
   const [inputValue, setInputValue] = useState("");
-  const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
 
-  // Debounce de 500ms sobre la búsqueda (como el debounceTime del Angular).
-  useEffect(() => {
-    const t = setTimeout(() => setSearch(inputValue), 500);
-    return () => clearTimeout(t);
-  }, [inputValue]);
+  // Búsqueda con retardo (el debounceTime del Angular). Es el único listado que
+  // lo tiene.
+  const search = useDebouncedValue(inputValue);
 
   const { data: comuneros = [] } = useComuneros(search, status);
   const count = comuneros.length;
@@ -69,23 +68,18 @@ export function ComunerosList() {
             <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-0 md:mt-4">
               {/* Búsqueda */}
               <div className="min-w-50 flex-auto">
-                <div className="flex items-center rounded-full border border-gray-300 bg-white px-3">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                  <input
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    autoComplete="off"
-                    placeholder="Búsqueda de comuneros"
-                    className="w-full bg-transparent px-2 py-2 focus:outline-none"
-                  />
-                </div>
+                <SearchInput
+                  value={inputValue}
+                  onValueChange={setInputValue}
+                  placeholder="Búsqueda de comuneros"
+                />
               </div>
 
               {/* Filtro de estado */}
-              <select
+              <FilterSelect
                 value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full rounded-full border border-gray-300 bg-white px-3 py-2 focus:outline-none sm:w-44 md:ml-4"
+                onValueChange={setStatus}
+                className="sm:w-44 md:ml-4"
               >
                 <option value="">Todos</option>
                 {STATUSES.map((s) => (
@@ -93,24 +87,20 @@ export function ComunerosList() {
                     {statusLabel(s)}
                   </option>
                 ))}
-              </select>
+              </FilterSelect>
 
-              <button
-                type="button"
+              <Button
                 onClick={() => setExportOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 md:ml-4 md:w-fit"
+                className="w-full md:ml-4 md:w-fit"
               >
                 <ArrowDownTrayIcon className="h-5 w-5" />
                 <span className="mr-1">Exportar</span>
-              </button>
+              </Button>
 
-              <Link
-                href="/comuneros/new"
-                className="flex w-full items-center justify-center gap-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600 md:ml-4 md:w-fit"
-              >
+              <ButtonLink href="/comuneros/new" className="w-full md:ml-4 md:w-fit">
                 <PlusIcon className="h-5 w-5" />
                 <span className="mr-1">Nuevo</span>
-              </Link>
+              </ButtonLink>
             </div>
           </div>
 
@@ -182,38 +172,19 @@ export function ComunerosList() {
                       </div>
 
                       <div className="ml-4 flex min-w-0 items-center">
-                        {(comunero.status || comunero.lugar?.status) && (
-                          <span
-                            className={cn(
-                              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide",
-                              comunero.status === ComuneroStatus.UNSUBSCRIBED
-                                ? "bg-red-200 text-red-800"
-                                : comunero.status === ComuneroStatus.ACTIVE
-                                  ? "bg-green-200 text-green-800"
-                                  : "",
-                            )}
-                          >
-                            {comunero.status && !suspended && (
-                              <span className="whitespace-nowrap leading-relaxed">
-                                {statusLabel(comunero.status)}
-                              </span>
-                            )}
-                            {suspended && (
-                              <span className="whitespace-nowrap leading-relaxed">
-                                {statusLabel(comunero.lugar?.status)}
-                              </span>
-                            )}
-                          </span>
-                        )}
+                        {/* Si el lugar está suspendido manda su estado. */}
+                        <StatusBadge
+                          status={
+                            suspended ? comunero.lugar?.status : comunero.status
+                          }
+                        />
                       </div>
                     </Link>
                   </div>
                 );
               })
             ) : (
-              <div className="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16">
-                No existen comuneros
-              </div>
+              <EmptyState message="No existen comuneros" />
             )}
           </div>
         </div>
