@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import {
-  MagnifyingGlassIcon,
   DocumentIcon,
   XMarkIcon,
   CalendarIcon,
@@ -33,6 +31,13 @@ import {
   type MeetingDocument,
 } from "@/types/domain";
 import { cn } from "@/lib/utils";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { fieldClass } from "@/components/ui/field-row";
+import { Paginator } from "@/components/ui/paginator";
+import { SearchInput } from "@/components/ui/search-input";
+import { badgeClass } from "@/components/ui/status-badge";
+import { usePagination } from "@/lib/use-pagination";
 
 interface FormValues {
   name: string;
@@ -41,6 +46,9 @@ interface FormValues {
 }
 
 const ATTENDANCE_PAGE_SIZES = [5, 10, 20];
+
+/** Acciones de la cabecera: a ancho completo en móvil, en fila en escritorio. */
+const ACTION_CLASS = "w-full px-6 md:ml-3 md:w-fit";
 
 function toDateInput(d?: Date | string | null): string {
   if (!d) return "";
@@ -81,10 +89,9 @@ export function MeetingDetails({
   const [documents, setDocuments] = useState<MeetingDocument[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  // Tabla de asistencia: filtro + paginación.
+  // Tabla de asistencia: filtro por nombre (la paginación va más abajo, ya
+  // sobre la lista filtrada).
   const [filter, setFilter] = useState("");
-  const [attPage, setAttPage] = useState(0);
-  const [attPageSize, setAttPageSize] = useState(5);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -111,12 +118,7 @@ export function MeetingDetails({
       ),
     [attendance, filter],
   );
-  const attStart = attPage * attPageSize;
-  const attItems = filteredAttendance.slice(attStart, attStart + attPageSize);
-  const attPageCount = Math.max(
-    1,
-    Math.ceil(filteredAttendance.length / attPageSize),
-  );
+  const attPagination = usePagination(filteredAttendance, 5);
 
   const onSubmit = (values: FormValues) => {
     const payload: Meeting = {
@@ -224,35 +226,23 @@ export function MeetingDetails({
       <div className="p-6 sm:p-10">
         {editMode && (
           <div className="flex flex-wrap items-center justify-end gap-y-2">
-            <button
-              type="button"
-              onClick={() => setScanning(meeting)}
-              className="w-full rounded bg-primary px-6 py-2 font-medium text-white hover:bg-primary-600 md:ml-3 md:w-fit"
-            >
+            <Button onClick={() => setScanning(meeting)} className={ACTION_CLASS}>
               Escanear QRs
-            </button>
-            <button
-              type="button"
-              onClick={() => setUploadOpen(true)}
-              className="w-full rounded bg-primary px-6 py-2 font-medium text-white hover:bg-primary-600 md:ml-3 md:w-fit"
-            >
+            </Button>
+            <Button onClick={() => setUploadOpen(true)} className={ACTION_CLASS}>
               Subir documento de reunion
-            </button>
+            </Button>
             {!meeting.announcementId ? (
-              <button
-                type="button"
-                onClick={createAnnouncement}
-                className="w-full rounded bg-primary px-6 py-2 font-medium text-white hover:bg-primary-600 md:ml-3 md:w-fit"
-              >
+              <Button onClick={createAnnouncement} className={ACTION_CLASS}>
                 Crear convocatoria
-              </button>
+              </Button>
             ) : (
-              <Link
+              <ButtonLink
                 href={`/announcements/${meeting.announcementId}`}
-                className="w-full rounded bg-primary px-6 py-2 text-center font-medium text-white hover:bg-primary-600 md:ml-3 md:w-fit"
+                className={ACTION_CLASS}
               >
                 Ir a convocatoria
-              </Link>
+              </ButtonLink>
             )}
           </div>
         )}
@@ -269,7 +259,7 @@ export function MeetingDetails({
                 <input
                   {...register("name", { required: true })}
                   placeholder="name"
-                  className="border-b border-gray-300 bg-transparent py-2 focus:border-primary focus:outline-none"
+                  className={fieldClass}
                 />
               </div>
               <div className="mt-4 flex flex-col">
@@ -277,7 +267,7 @@ export function MeetingDetails({
                 <textarea
                   {...register("description")}
                   placeholder="description"
-                  className="border-b border-gray-300 bg-transparent py-2 focus:border-primary focus:outline-none"
+                  className={fieldClass}
                 />
               </div>
               <div className="mt-4">
@@ -374,19 +364,15 @@ export function MeetingDetails({
                 <span>{presentCount} asistentes</span>
               </div>
               <div className="mt-2 flex-auto">
-                <div className="flex min-w-50 items-center rounded-full border border-gray-300 bg-white px-3">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                  <input
-                    value={filter}
-                    onChange={(e) => {
-                      setFilter(e.target.value);
-                      setAttPage(0);
-                    }}
-                    autoComplete="off"
-                    placeholder="Buscar asistencia"
-                    className="w-full bg-transparent px-2 py-2 focus:outline-none"
-                  />
-                </div>
+                <SearchInput
+                  value={filter}
+                  onValueChange={(value) => {
+                    setFilter(value);
+                    attPagination.reset();
+                  }}
+                  placeholder="Buscar asistencia"
+                  className="min-w-50"
+                />
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full bg-transparent">
@@ -398,7 +384,7 @@ export function MeetingDetails({
                     </tr>
                   </thead>
                   <tbody>
-                    {attItems.map((att, i) => (
+                    {attPagination.pageItems.map((att, i) => (
                       <tr key={att.id || i} className="h-16">
                         <td>
                           <span className="whitespace-nowrap pr-6 text-sm font-medium text-secondary">
@@ -410,11 +396,8 @@ export function MeetingDetails({
                             <button
                               type="button"
                               onClick={() => togglePresence(att)}
-                              className={cn(
-                                "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide",
-                                att.status === "ABSENT"
-                                  ? "bg-red-200 text-red-800"
-                                  : "bg-green-200 text-green-800",
+                              className={badgeClass(
+                                att.status === "ABSENT" ? "negative" : "positive",
                               )}
                             >
                               <span className="whitespace-nowrap leading-relaxed">
@@ -435,66 +418,29 @@ export function MeetingDetails({
                   </tbody>
                 </table>
                 {filteredAttendance.length === 0 && (
-                  <div className="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16">
-                    No hay asistencia
-                  </div>
+                  <EmptyState message="No hay asistencia" />
                 )}
-                <div className="flex items-center justify-end gap-4 border-t py-2">
-                  <select
-                    value={attPageSize}
-                    onChange={(e) => {
-                      setAttPageSize(Number(e.target.value));
-                      setAttPage(0);
-                    }}
-                    className="rounded border border-gray-300 px-2 py-1"
-                  >
-                    {ATTENDANCE_PAGE_SIZES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      disabled={attPage === 0}
-                      onClick={() => setAttPage((p) => Math.max(0, p - 1))}
-                      className="rounded px-2 py-1 disabled:opacity-40"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      disabled={attPage >= attPageCount - 1}
-                      onClick={() =>
-                        setAttPage((p) => Math.min(attPageCount - 1, p + 1))
-                      }
-                      className="rounded px-2 py-1 disabled:opacity-40"
-                    >
-                      ›
-                    </button>
-                  </div>
-                </div>
+                <Paginator
+                  pagination={attPagination}
+                  options={ATTENDANCE_PAGE_SIZES}
+                  compact
+                />
               </div>
             </div>
           )}
         </div>
 
         <div className="mt-10 flex items-center justify-end">
-          <Link
-            href="/reuniones"
-            className="rounded px-4 py-2 font-medium hover:bg-gray-100"
-          >
+          <ButtonLink href="/reuniones" variant="ghost">
             Cancelar
-          </Link>
-          <button
-            type="button"
+          </ButtonLink>
+          <Button
             disabled={!formState.isValid && formState.isSubmitted}
             onClick={handleSubmit(onSubmit)}
-            className="ml-3 rounded bg-primary px-6 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+            className="ml-3 px-6"
           >
             Guardar
-          </button>
+          </Button>
         </div>
       </div>
 

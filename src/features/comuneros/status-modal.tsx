@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Modal } from "@/components/ui/dialog";
+import { Modal, ModalFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 /** Modal "dar de baja comunero" (portado de status-modal). Devuelve {comments}. */
 export function StatusModal({
@@ -38,21 +39,12 @@ export function StatusModal({
           />
         </label>
 
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="ml-auto rounded-md border px-4 py-2 font-medium hover:bg-gray-100 sm:ml-0"
-          >
+        <ModalFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            className="rounded-md bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600"
-          >
-            Dar de baja
-          </button>
-        </div>
+          </Button>
+          <Button type="submit">Dar de baja</Button>
+        </ModalFooter>
       </form>
     </Modal>
   );

@@ -1,5 +1,13 @@
 # Plan de migración — Frontend Angular → Next.js 16
 
+> ## ⚠️ Nota posterior (2026-07-28): Keycloak retirado
+> Este documento describe la migración Angular → Next.js **tal como se hizo**, con
+> OIDC contra Keycloak. Después se retiró el IdP: el login es ahora una pantalla
+> propia (`/login`) contra `POST /login` de la API, con token de **Laravel
+> Sanctum** en `localStorage`. Todo lo que aquí se diga sobre `oidc-client-ts`,
+> `react-oidc-context`, Code+PKCE o silent refresh está **superado** — ver la
+> sección 1 de `docs/FUNCIONALIDADES.md`.
+
 > ## 📌 Estado actual (2026-07-23)
 > Migración de módulos **completada** en `core/rebuild-to-nextjs`. El Angular
 > original se conserva íntegro en `Ledmon-comuneros-web-copy` como referencia.

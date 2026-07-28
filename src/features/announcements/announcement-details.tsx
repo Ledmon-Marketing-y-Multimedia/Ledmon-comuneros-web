@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useComuneros } from "@/features/comuneros/api";
 import {
@@ -12,6 +11,8 @@ import {
 } from "@/features/announcements/api";
 import { getFileByPath } from "@/features/files/api";
 import { LoaderModal } from "@/features/announcements/loader-modal";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { pdfService } from "@/lib/pdf/pdf-service";
 import {
@@ -21,6 +22,7 @@ import {
   type Comunero,
 } from "@/types/domain";
 import { cn } from "@/lib/utils";
+import { fieldClass } from "@/components/ui/field-row";
 
 const COMUNIDAD_ID = "a09b25f2-897b-4e33-bac5-d5e34f7245ce";
 const FILTERS = ["todos", "altas", "suspensos"] as const;
@@ -295,7 +297,7 @@ export function AnnouncementDetails({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="title"
-                  className="border-b border-gray-300 bg-transparent py-2 focus:border-primary focus:outline-none"
+                  className={fieldClass}
                 />
               </div>
               <div className="mt-6 flex flex-col gap-y-2">
@@ -368,19 +370,12 @@ export function AnnouncementDetails({
         </div>
 
         <div className="mt-10 flex items-center justify-end">
-          <Link
-            href="/announcements"
-            className="rounded px-4 py-2 font-medium hover:bg-gray-100"
-          >
+          <ButtonLink variant="ghost" href="/announcements">
             Cancelar
-          </Link>
-          <button
-            type="button"
-            onClick={saveAnnouncement}
-            className="ml-3 rounded bg-primary px-6 py-2 font-medium text-white hover:bg-primary-600"
-          >
+          </ButtonLink>
+          <Button onClick={saveAnnouncement} className="ml-3 px-6">
             Guardar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -406,13 +401,7 @@ function Section({
         <div className="truncate text-lg font-medium leading-6 tracking-tight">
           {title}
         </div>
-        <button
-          type="button"
-          onClick={onAction}
-          className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-600"
-        >
-          {actionLabel}
-        </button>
+        <Button onClick={onAction}>{actionLabel}</Button>
       </div>
       <div className="mt-4 flex flex-col">{children}</div>
     </div>
@@ -464,18 +453,14 @@ function ZonaSelect({
   onChange: (v: string) => void;
 }) {
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="mt-4 w-full rounded-full border border-gray-300 bg-white px-3 py-2 focus:outline-none sm:w-44"
-    >
+    <FilterSelect value={value} onValueChange={onChange} className="mt-4 sm:w-44">
       <option value="all">Todos los lugares</option>
       {zonas.map((z) => (
         <option key={String(z)} value={String(z)}>
           {z}
         </option>
       ))}
-    </select>
+    </FilterSelect>
   );
 }
 

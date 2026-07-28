@@ -8,6 +8,8 @@ import {
 } from "@heroicons/react/24/solid";
 import { getAttendancesByName } from "@/features/meetings/api";
 import type { MeetingAttendance } from "@/types/domain";
+import { Button } from "@/components/ui/button";
+import { fieldClass } from "@/components/ui/field-row";
 
 /**
  * Búsqueda manual de asistencia (portado de manual-search). Busca comuneros por
@@ -172,26 +174,21 @@ export function ManualSearch({
                   value={representation}
                   onChange={(e) => setRepresentation(e.target.value)}
                   placeholder="Nombre y apellidos del representante"
-                  className="border-b border-gray-300 bg-transparent py-2 focus:outline-none"
+                  className={fieldClass}
                 />
               )}
 
               <div className="-mx-8 mt-8 flex items-center justify-end border-t bg-gray-50 px-8 py-5">
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded px-4 py-2 font-medium hover:bg-gray-100"
-                >
+                <Button variant="ghost" onClick={() => setOpen(false)}>
                   Atrás
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   disabled={!selected}
                   onClick={register}
-                  className="ml-3 rounded bg-primary px-6 py-2 font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                  className="ml-3 px-6"
                 >
                   Registrar
-                </button>
+                </Button>
               </div>
             </div>
           </div>

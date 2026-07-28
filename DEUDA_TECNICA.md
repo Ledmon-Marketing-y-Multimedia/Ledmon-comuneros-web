@@ -35,6 +35,21 @@
 
 ## Front — endurecimientos ya aplicados (verificar que no cambian negocio)
 
+- [x] 🐞 **Alta de dirección creaba una fila vacía.** "Nueva dirección" hacía
+  `POST /lugar` al pulsarla (herencia del Angular) y abría el detalle en edición:
+  si nadie completaba el formulario quedaba un lugar sin dirección. Ahora hay
+  `/lugares/new` y el lugar se crea al guardar, con `address` obligatoria.
+  - Pendiente en BD: **limpiar los lugares sin `address`** que dejó el flujo
+    anterior. El panel sigue abriendo en edición los que tengan `address` a NULL
+    para poder completarlos, y `comunero-details` los excluye del selector de
+    dirección.
+  - `POST /lugar` ignora `comuneros` y fuerza estado Alta, así que el alta manda
+    un PATCH extra **solo** si se rellenaron autorizados o se cambió el estado.
+    Si algún día el alta acepta esos campos, quitar ese segundo viaje.
+  - El comentario del `COALESCE` en `LugarService::findByComunidadUrl` (API) dice
+    que el front crea el lugar sin dirección: ya no es así, pero el `COALESCE`
+    sigue haciendo falta mientras existan filas con `address` a NULL.
+
 - [x] 🐞 **`comuneros/list`**: acceso a `comunero.lugar.address/status` sin guard
   → añadido optional chaining (`?.`) para evitar crash con comuneros sin lugar.
 
@@ -54,6 +69,21 @@
 - [ ] ⚙️ **Editor rich-text**: se usa `react-quill-new` (Quill 2). Revisar la
   whitelist de fuentes (el original registraba `Arial`) si el PDF lo requiere.
 
+## Front — refactor DRY (hecho, con las divergencias que se dejaron a propósito)
+
+- [x] 🧹 Marcado repetido movido a `src/components/ui` (ver README). El detalle de
+  comunero y el de dirección pierden ~40 % de líneas, y los tres listados se
+  quedan en cabecera + `ListTable`.
+- [ ] 🧹 El paginador de la **asistencia** de una reunión sigue siendo distinto
+  (`compact`: sin rango, sin ir al principio/fin y con tamaños 5/10/20). Es lo que
+  había; igualarlo a los listados es un cambio de interfaz, no un refactor →
+  decidir con cliente.
+- [ ] 🧹 El listado de **comuneros** no usa `ListTable`: agrupa por inicial y su
+  fila lleva avatar y dos líneas. Si alguna vez se le pone paginador, revisar si
+  merece un `GroupedListTable` o si se convierte en tabla normal.
+- [ ] 🧹 El botón de `/login` mantiene su propio estilo (`rounded-md`, `py-2.5`) en
+  vez de `Button`; la pantalla de acceso es la única con ese aspecto.
+
 ## Front — no migrado (restos de la plantilla Fuse / dead code)
 
 - Métodos mock de `auth.service` (`signIn/signUp/signInUsingToken` contra
@@ -61,9 +91,28 @@
   botón, `mock-api`, layouts alternativos, quick-chat, etc. → **descartados** por
   "migrar solo lo que se usa". Documentado por si algo se necesitara.
 
+## Tests
+
+- [x] Red de tests de componentes con Vitest + Testing Library (39 casos): los dos
+  listados con paginador, el listado agrupado de comuneros y los paneles de
+  detalle de dirección y comunero. Se escribieron **antes** del refactor DRY,
+  para poder extraer componentes compartidos con red.
+- [ ] Sin cubrir todavía: paneles de **reuniones** y **comunicaciones** (arrastran
+  `react-quill-new` y `@zxing/browser`, que necesitan doble en jsdom), el overlay
+  de escaneo QR y `pdf-service` (port verbatim).
+- [ ] `domain.ts` declara `Meeting.date` y `Announcement.createdAt` como `Date`,
+  pero la API manda cadenas ISO; el código compensa con `new Date(...)`. Los
+  dobles de test imitan a la API y necesitan un cast doble. Conviene alinear el
+  tipo con la realidad.
+
 ## Observabilidad / seguridad
 
 - [ ] 🔒 **Sentry** no portado (el Angular usaba `@sentry/angular-ivy` sin DSN en
   el env). Si se quiere en producción, añadir `@sentry/nextjs`.
-- [ ] 🔒 Revisar política de **refresh/expiración** de token OIDC en cliente y el
-  manejo de 401 (hoy replica el interceptor: logout + redirect).
+- [ ] 🔒 Revisar política de **expiración** del token de sesión (Sanctum,
+  `SANCTUM_EXPIRATION` en la API, 12 h por defecto): no hay refresh silencioso, al
+  caducar la API responde 401 y el front lleva a `/login`.
+- [ ] 🔒 Token en `localStorage` (igual que antes con OIDC): expuesto a XSS. Si
+  algún día front y API comparten dominio, valorar el modo cookie de Sanctum.
+- [ ] Falta pantalla de **cambio de contraseña** (`PATCH /password` ya existe en la
+  API).

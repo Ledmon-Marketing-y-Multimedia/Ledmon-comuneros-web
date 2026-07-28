@@ -8,6 +8,25 @@ import { cn } from "@/lib/utils";
  * Diálogo modal (equivalente a MatDialog). Cabecera con título estilo Fuse
  * (barra primary) y botón de cierre.
  */
+/**
+ * Pie de acciones de un diálogo (Cancelar + acción principal, a la derecha).
+ * Estaba repetido en los cuatro modales, con `rounded` en dos y `rounded-md` en
+ * los otros dos.
+ */
+export function ModalFooter({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mt-4 flex items-center justify-end gap-2", className)}>
+      {children}
+    </div>
+  );
+}
+
 export function Modal({
   open,
   onOpenChange,

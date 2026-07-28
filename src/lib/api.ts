@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import { getUserManager } from "@/lib/auth/oidc";
+import { clearToken, getToken } from "@/lib/auth/token-storage";
 
 /** Error HTTP con estado y cuerpo, para que las capas superiores puedan reaccionar. */
 export class ApiError extends Error {
@@ -25,37 +25,33 @@ export interface ApiRequestOptions {
   signal?: AbortSignal;
 }
 
-/** Devuelve el access token vigente (no expirado), o null. */
-async function getAccessToken(): Promise<string | null> {
-  const um = getUserManager();
-  if (!um) return null;
-  const user = await um.getUser();
-  if (user && !user.expired && user.access_token) {
-    return user.access_token;
-  }
-  return null;
-}
-
 let handlingUnauthorized = false;
 
 /**
- * Manejo de 401 equivalente al authInterceptor:
- *   - si hay token → logout (redirige al end-session de Keycloak)
- *   - si no hay nada en el storage → recarga
+ * Manejo de 401 (equivalente al authInterceptor del Angular):
+ *   - si había token → la sesión ha caducado o se ha revocado: se descarta y se
+ *     lleva al login conservando la ruta actual como destino.
+ *   - si no había → es un login fallido: no se hace nada aquí, el error lo
+ *     gestiona quien llamó (la pantalla de login muestra el mensaje).
  */
-async function handleUnauthorized(): Promise<void> {
-  if (handlingUnauthorized) return;
+function handleUnauthorized(): void {
+  if (getToken() === null) return;
+
+  clearToken();
+
+  if (handlingUnauthorized || typeof window === "undefined") return;
   handlingUnauthorized = true;
-  const um = getUserManager();
-  if (!um) return;
-  const user = await um.getUser();
-  if (user) {
-    await um.removeUser().catch(() => undefined);
-    await um.signoutRedirect().catch(() => undefined);
-  } else if (typeof window !== "undefined") {
-    window.location.reload();
-  }
+
+  const { pathname, search } = window.location;
+  const target =
+    pathname === LOGIN_PATH
+      ? LOGIN_PATH
+      : `${LOGIN_PATH}?next=${encodeURIComponent(pathname + search)}`;
+
+  window.location.replace(target);
 }
+
+const LOGIN_PATH = "/login";
 
 function buildUrl(path: string, params?: Record<string, QueryValue>): string {
   const base = env.apiUrl.replace(/\/$/, "");
@@ -78,7 +74,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { method = "GET", params, body, responseType = "json", signal } = options;
 
-  const token = await getAccessToken();
+  const token = getToken();
   const headers = new Headers(options.headers);
   if (token) {
     headers.set("Authorization", "Bearer " + token);
@@ -102,7 +98,7 @@ export async function apiRequest<T>(
   });
 
   if (res.status === 401) {
-    await handleUnauthorized();
+    handleUnauthorized();
     throw new ApiError(401, "Unauthorized");
   }
 
