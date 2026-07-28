@@ -130,14 +130,32 @@ export function LugarDetails({ lugarId }: { lugarId: string }) {
     );
   };
 
-  if (isLoading && !found) {
+  if (isLoading && !lugar) {
     return (
       <div className="flex h-full items-center justify-center p-16 text-secondary">
         Cargando…
       </div>
     );
   }
-  if (!lugar) return null;
+
+  // Sin lugar no se deja el panel en blanco: se dice qué ha pasado y se ofrece
+  // la salida (antes esto devolvía null y el drawer aparecía vacío).
+  if (!lugar) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-16 text-center">
+        <p className="text-xl font-semibold">No se encuentra la dirección</p>
+        <p className="text-secondary">
+          Puede que se haya eliminado o que ya no esté en el listado.
+        </p>
+        <Link
+          href="/lugares"
+          className="rounded border px-4 py-2 font-medium hover:bg-gray-100"
+        >
+          Volver al listado
+        </Link>
+      </div>
+    );
+  }
 
   const initial = lugar.address?.charAt(0) ?? "";
 

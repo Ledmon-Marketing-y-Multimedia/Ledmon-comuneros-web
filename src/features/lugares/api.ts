@@ -34,10 +34,19 @@ export function useLugares(address = "") {
   });
 }
 
+/**
+ * Lugar por id. No hay endpoint GET /lugar/{id} (el contrato heredado no lo
+ * tiene): se resuelve contra la lista, y si aún no ha llegado —caso del lugar
+ * recién creado, mientras refresca— contra la copia que dejó la creación.
+ */
 export function useLugar(id: string) {
   const lugares = useLugares();
-  const lugar = lugares.data?.find((item) => item.id === id) ?? null;
-  return { ...lugares, lugar };
+  const qc = useQueryClient();
+
+  const fromList = lugares.data?.find((item) => item.id === id) ?? null;
+  const cached = qc.getQueryData<Lugar>(queryKeys.lugares.detail(id)) ?? null;
+
+  return { ...lugares, lugar: fromList ?? cached };
 }
 
 export function useCreateLugar() {
@@ -45,7 +54,16 @@ export function useCreateLugar() {
   return useMutation({
     mutationFn: () =>
       api.post<Lugar>(LUGAR_URL, { comunidadId: COMUNIDAD_ID }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lugares.all }),
+    onSuccess: (nuevo) => {
+      // El lugar se crea sin dirección y el detalle se abre inmediatamente, así
+      // que se deja a mano para que el panel pinte sin esperar al refetch
+      // (equivale al `_lugares.next([newLugar, ...lugares])` del Angular).
+      qc.setQueryData(queryKeys.lugares.detail(nuevo.id), nuevo);
+      qc.setQueryData<Lugar[]>(queryKeys.lugares.list(""), (prev) =>
+        prev ? [nuevo, ...prev] : [nuevo],
+      );
+      void qc.invalidateQueries({ queryKey: queryKeys.lugares.all });
+    },
   });
 }
 
@@ -54,7 +72,10 @@ export function useUpdateLugar() {
   return useMutation({
     mutationFn: ({ id, lugar }: { id: string; lugar: Lugar }) =>
       api.patch<Lugar>(LUGAR_URL + "/" + id, lugar),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lugares.all }),
+    onSuccess: (actualizado, { id }) => {
+      qc.setQueryData(queryKeys.lugares.detail(id), actualizado);
+      void qc.invalidateQueries({ queryKey: queryKeys.lugares.all });
+    },
   });
 }
 
