@@ -80,6 +80,9 @@ export function ComuneroDetails({
   const { comunero: found, isLoading } = useComunero(comuneroId ?? "");
   const { data: lugares = [] } = useLugares();
 
+  // Las direcciones a medio crear (sin `address`) no son elegibles.
+  const direcciones = lugares.filter((lugar) => lugar.address);
+
   const comunero: Comunero = isNew ? EMPTY_COMUNERO : (found ?? EMPTY_COMUNERO);
 
   const [editMode, setEditMode] = useState<boolean>(!!isNew);
@@ -195,6 +198,25 @@ export function ComuneroDetails({
     return (
       <div className="flex h-full items-center justify-center p-16 text-secondary">
         Cargando…
+      </div>
+    );
+  }
+
+  // Sin comunero no se cae al formulario vacío de alta: eso hacía parecer que el
+  // guardado no había funcionado (y un segundo envío creaba otro comunero).
+  if (!isNew && !found) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-16 text-center">
+        <p className="text-xl font-semibold">No se encuentra el comunero</p>
+        <p className="text-secondary">
+          Puede que se haya borrado desde otra sesión.
+        </p>
+        <Link
+          href="/comuneros"
+          className="rounded border px-4 py-2 font-medium hover:bg-gray-100"
+        >
+          Volver al listado
+        </Link>
       </div>
     );
   }
@@ -388,9 +410,15 @@ export function ComuneroDetails({
                 </div>
 
                 {/* Nombre */}
-                <FieldRow icon={<UserSolid className="h-5 w-5" />} label="Nombre y apellidos">
+                <FieldRow
+                  icon={<UserSolid className="h-5 w-5" />}
+                  label="Nombre y apellidos"
+                  error={formState.errors.name?.message}
+                >
                   <input
-                    {...register("name", { required: true })}
+                    {...register("name", {
+                      required: "El nombre es obligatorio.",
+                    })}
                     placeholder="Nombre y apellidos"
                     spellCheck={false}
                     className={inputCls}
@@ -421,19 +449,38 @@ export function ComuneroDetails({
                   <input {...register("code")} placeholder="Nº comunero" className={inputCls} />
                 </FieldRow>
 
-                {/* Lugar */}
-                {lugares.length > 0 && (
-                  <FieldRow icon={<HomeSolid className="h-5 w-5" />} label="Lugar">
-                    <select {...register("lugarId")} className={inputCls}>
-                      <option value="" />
-                      {lugares.map((lugar) => (
+                {/* Lugar. Obligatorio: el comunero pertenece a la comunidad
+                    *a través* de su dirección (así lo consulta el backend), y un
+                    comunero sin ella no aparece en ningún listado. */}
+                <FieldRow
+                  icon={<HomeSolid className="h-5 w-5" />}
+                  label="Lugar"
+                  error={formState.errors.lugarId?.message}
+                >
+                  {direcciones.length > 0 ? (
+                    <select
+                      {...register("lugarId", {
+                        required: "Elige la dirección del comunero.",
+                      })}
+                      className={inputCls}
+                    >
+                      <option value="">Elige una dirección…</option>
+                      {direcciones.map((lugar) => (
                         <option key={lugar.id} value={lugar.id}>
                           {lugar.address}
                         </option>
                       ))}
                     </select>
-                  </FieldRow>
-                )}
+                  ) : (
+                    <p className="py-2 text-secondary">
+                      No hay direcciones dadas de alta.{" "}
+                      <Link href="/lugares" className="text-primary underline">
+                        Crea una dirección
+                      </Link>{" "}
+                      antes de añadir comuneros.
+                    </p>
+                  )}
+                </FieldRow>
 
                 {/* Email communication */}
                 <div className="mt-4">
@@ -554,10 +601,13 @@ export function ComuneroDetails({
 function FieldRow({
   icon,
   label,
+  error,
   children,
 }: {
   icon: React.ReactNode;
   label: string;
+  /** Mensaje de validación. Antes un campo inválido solo deshabilitaba Guardar. */
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -565,8 +615,13 @@ function FieldRow({
       <label className="mb-1 block font-medium text-secondary">{label}</label>
       <div className="flex items-center gap-2">
         <span className="hidden text-gray-500 sm:block">{icon}</span>
-        {children}
+        <div className="flex-auto">{children}</div>
       </div>
+      {error && (
+        <p role="alert" className="mt-1 text-sm font-medium text-warn-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
