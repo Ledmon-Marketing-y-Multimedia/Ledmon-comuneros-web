@@ -98,13 +98,14 @@ export function AccountsList() {
               setFilter(value as FilterKey);
               pagination.reset();
             }}
+            options={[
+              { value: "all", label: "Todos" },
+              { value: "admin", label: "Administradores" },
+              { value: "inactive", label: "Sin acceso" },
+            ]}
             label="Filtrar usuarios"
             className="md:ml-4 md:w-44"
-          >
-            <option value="all">Todos los usuarios</option>
-            <option value="admin">Administradores</option>
-            <option value="inactive">Sin acceso</option>
-          </FilterSelect>
+          />
 
           <ButtonLink href="/usuarios/new" className="w-full md:ml-4 md:w-44">
             <PlusIcon className="h-5 w-5" />

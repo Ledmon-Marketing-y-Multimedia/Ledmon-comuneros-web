@@ -127,11 +127,12 @@ test.describe("Gestión de cuentas", () => {
     const fila = page.locator("a", { hasText: desactivada.name });
     await expect(fila).toContainText("Desactivada");
 
-    // Y el filtro «Sin acceso» la encuentra. Se localiza por su nombre accesible:
-    // en esta pantalla hay dos `select` (este y el del paginador).
-    await page
-      .getByRole("combobox", { name: "Filtrar usuarios" })
-      .selectOption("inactive");
+    // Y el filtro «Sin acceso» la encuentra. Ya no es un `<select>` nativo (la
+    // lista la pinta Radix), así que se abre y se pulsa la opción, como una
+    // persona. Se localiza por su nombre accesible: en esta pantalla hay dos
+    // desplegables (este y el del paginador).
+    await page.getByRole("combobox", { name: "Filtrar usuarios" }).click();
+    await page.getByRole("option", { name: "Sin acceso" }).click();
     await expect(page.getByText(desactivada.name)).toBeVisible();
   });
 

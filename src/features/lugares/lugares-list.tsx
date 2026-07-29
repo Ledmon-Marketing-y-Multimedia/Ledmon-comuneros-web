@@ -87,15 +87,13 @@ export function LugaresList() {
               setZona(value);
               pagination.reset();
             }}
+            options={[
+              { value: "all", label: "Todos los lugares" },
+              ...zonas.map((z) => ({ value: String(z), label: String(z) })),
+            ]}
+            label="Filtrar por lugar"
             className="md:ml-4 md:w-44"
-          >
-            <option value="all">Todos los lugares</option>
-            {zonas.map((z) => (
-              <option key={String(z)} value={String(z)}>
-                {z}
-              </option>
-            ))}
-          </FilterSelect>
+          />
 
           <ButtonLink href="/lugares/new" className="w-full md:ml-4 md:w-44">
             <PlusIcon className="h-5 w-5" />

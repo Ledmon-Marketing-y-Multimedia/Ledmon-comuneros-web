@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => import("@/test/navigation-double"));
 import { ApiError, lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
 import { resetNavigation, router, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
+import { chooseOption } from "@/test/select";
 import { ComuneroDetails } from "@/features/comuneros/comunero-details";
 import {
   ComuneroRole,
@@ -92,7 +93,7 @@ describe("ComuneroDetails", () => {
       await screen.findByPlaceholderText("Nombre y apellidos"),
       "Ana García",
     );
-    await userEvent.selectOptions(screen.getByRole("combobox"), "l1");
+    await chooseOption("Lugar", "Rúa Nova 5");
     await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
 
     await waitFor(() => {

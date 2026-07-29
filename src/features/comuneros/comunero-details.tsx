@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { Controller, useForm, useFieldArray } from "react-hook-form";
 import {
   UserCircleIcon,
   AtSymbolIcon,
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/detail-panel";
 import { DetailPlaceholder } from "@/components/ui/empty-state";
 import { FieldRow, fieldClass } from "@/components/ui/field-row";
+import { Select } from "@/components/ui/select";
 import { pdfService } from "@/lib/pdf/pdf-service";
 import {
   ComuneroStatus,
@@ -397,19 +398,24 @@ export function ComuneroDetails({
                   error={formState.errors.lugarId?.message}
                 >
                   {direcciones.length > 0 ? (
-                    <select
-                      {...register("lugarId", {
-                        required: "Elige la dirección del comunero.",
-                      })}
-                      className={fieldClass}
-                    >
-                      <option value="">Elige una dirección…</option>
-                      {direcciones.map((lugar) => (
-                        <option key={lugar.id} value={lugar.id}>
-                          {lugar.address}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      control={control}
+                      name="lugarId"
+                      rules={{ required: "Elige la dirección del comunero." }}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ?? ""}
+                          onValueChange={field.onChange}
+                          options={direcciones.map((lugar) => ({
+                            value: lugar.id,
+                            label: lugar.address ?? "",
+                          }))}
+                          placeholder="Elige una dirección…"
+                          label="Lugar"
+                          variant="field"
+                        />
+                      )}
+                    />
                   ) : (
                     <p className="py-2 text-secondary">
                       No hay direcciones dadas de alta.{" "}

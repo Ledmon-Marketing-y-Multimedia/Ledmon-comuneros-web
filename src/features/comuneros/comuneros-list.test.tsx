@@ -8,8 +8,14 @@ vi.mock("next/navigation", () => import("@/test/navigation-double"));
 import { calls, lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
 import { resetNavigation, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
+import { chooseOption } from "@/test/select";
 import { ComunerosList } from "@/features/comuneros/comuneros-list";
-import { ComuneroRole, ComuneroStatus, type Comunero } from "@/types/domain";
+import {
+  ComuneroRole,
+  ComuneroStatus,
+  statusLabel,
+  type Comunero,
+} from "@/types/domain";
 
 function comunero(name: string, extra: Partial<Comunero> = {}): Comunero {
   return {
@@ -102,10 +108,7 @@ describe("ComunerosList", () => {
     renderWithProviders(<ComunerosList />);
     await screen.findByText("No existen comuneros");
 
-    await userEvent.selectOptions(
-      screen.getByRole("combobox"),
-      ComuneroStatus.UNSUBSCRIBED,
-    );
+    await chooseOption("Filtrar por estado", statusLabel(ComuneroStatus.UNSUBSCRIBED));
 
     await waitFor(() => {
       expect(lastCall("GET", "/comunero/search/marcon")?.ctx.params).toEqual({

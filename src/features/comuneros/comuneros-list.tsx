@@ -79,15 +79,13 @@ export function ComunerosList() {
               <FilterSelect
                 value={status}
                 onValueChange={setStatus}
+                options={[
+                  { value: "", label: "Todos" },
+                  ...STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
+                ]}
+                label="Filtrar por estado"
                 className="sm:w-44 md:ml-4"
-              >
-                <option value="">Todos</option>
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {statusLabel(s)}
-                  </option>
-                ))}
-              </FilterSelect>
+              />
 
               <Button
                 onClick={() => setExportOpen(true)}
@@ -138,6 +136,10 @@ export function ComunerosList() {
                       href={`/comuneros/${comunero.id}`}
                       className={cn(
                         "z-20 grid cursor-pointer grid-cols-6 border-b px-6 py-4 md:px-8",
+                        // Cada fila va envuelta en su propio div (por la cabecera
+                        // de grupo), así que `last:` no sirve: la última se marca
+                        // a mano para no doblar la línea con el fin del listado.
+                        i === comuneros.length - 1 && "border-b-0",
                         isSelected
                           ? "bg-primary-50"
                           : "hover:bg-gray-100",

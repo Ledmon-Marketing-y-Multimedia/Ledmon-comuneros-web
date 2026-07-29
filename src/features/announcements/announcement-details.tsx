@@ -453,14 +453,16 @@ function ZonaSelect({
   onChange: (v: string) => void;
 }) {
   return (
-    <FilterSelect value={value} onValueChange={onChange} className="mt-4 sm:w-44">
-      <option value="all">Todos los lugares</option>
-      {zonas.map((z) => (
-        <option key={String(z)} value={String(z)}>
-          {z}
-        </option>
-      ))}
-    </FilterSelect>
+    <FilterSelect
+      value={value}
+      onValueChange={onChange}
+      options={[
+        { value: "all", label: "Todos los lugares" },
+        ...zonas.map((z) => ({ value: String(z), label: String(z) })),
+      ]}
+      label="Filtrar por lugar"
+      className="mt-4 sm:w-44"
+    />
   );
 }
 
