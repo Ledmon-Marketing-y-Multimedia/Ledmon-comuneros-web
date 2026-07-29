@@ -31,6 +31,12 @@ export interface Phone {
   label: string;
 }
 
+/**
+ * Persona del dominio: los datos de un comunero o de un autorizado. Llega bajo la
+ * clave `user` de Comunero (la API la sirve desde la tabla `person`).
+ *
+ * No confundir con Account: una persona **no** puede iniciar sesión.
+ */
 export interface User {
   id?: string;
   name?: string;
@@ -40,6 +46,34 @@ export interface User {
   fechaAlta?: Date;
   createdAt?: string;
   phones?: Phone[];
+}
+
+/**
+ * Cuenta de acceso al backoffice (contrato `Account`). Es lo que el panel de
+ * usuarios gestiona y lo que devuelve `/login/check` para la sesión actual.
+ *
+ * `isAdmin` solo gobierna el acceso a ese panel: no hay roles ni permisos, y una
+ * cuenta sin `isAdmin` usa el resto de la aplicación igual.
+ */
+export interface Account {
+  id: string;
+  name: string;
+  email?: string;
+  isAdmin: boolean;
+  active: boolean;
+  /** Si tiene contraseña; sin ella la cuenta existe pero no puede entrar. */
+  hasPassword?: boolean;
+  lastLogin?: string;
+  createdAt?: string;
+}
+
+/** Respuesta de `GET /login/check`: la cuenta de la sesión. */
+export interface CurrentAccount {
+  id?: string;
+  name?: string;
+  email?: string;
+  lastLogin?: string;
+  isAdmin?: boolean;
 }
 
 // ------------------------------------------------------------------
