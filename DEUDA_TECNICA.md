@@ -29,6 +29,13 @@
 - [ ] 🐞 **Subida de documento inconsistente** (reunión). En Angular convivían un
   `<input file>` oculto (pasaba un `FileList`) y el diálogo (pasa `{type,file}`).
   Se portó solo el flujo del diálogo. Confirmar que no hacía falta el otro.
+- [x] 🐞 **Los documentos no funcionaban, en tres capas**: los metadatos se perdían
+  (el `Blob` de JSON del multipart llega a PHP en `$_FILES`, no en los inputs, así
+  que el documento se guardaba sin nombre), un fallo del almacén no se notaba (los
+  discos tienen `throw => false`, la API respondía 200 y creaba la fila con el
+  fichero en ninguna parte) y la descarga firmaba URLs de objetos inexistentes. Ver
+  el commit en el repo de la API; en dev el disco de documentos es `local`
+  (`DOCUMENTS_DISK`) para no necesitar credenciales de Spaces.
 - [ ] 🐞 **`searchAnnouncement` busca con parámetro `address`** (copy-paste de
   lugares; las convocatorias no tienen dirección). Verificar con el backend cuál
   es el parámetro correcto de búsqueda de comunicaciones.
@@ -65,6 +72,30 @@
 
 - [x] 🐞 **`comuneros/list`**: acceso a `comunero.lugar.address/status` sin guard
   → añadido optional chaining (`?.`) para evitar crash con comuneros sin lugar.
+
+## Reuniones — mejoras acordadas, pendientes de hacer
+
+Salieron al revisar la pantalla el 2026-07-29, con la decisión ya tomada para cada
+una:
+
+- [ ] ⚙️ **Filtro de reuniones actuales / pasadas** en el listado, según el día de
+  hoy, con el mismo patrón que el filtro de estado de comuneros (`FilterSelect` en
+  la cabecera). Se puede resolver en cliente: `GET /meeting/search/marcon` ya
+  devuelve la colección completa con su fecha.
+- [ ] ⚙️ **Datepicker propio** en la ficha de reunión: hoy es un `<input type="date">`
+  nativo y el aspecto lo pone el sistema operativo. **Acordado:**
+  `react-day-picker` dentro de un Popover de Radix, estilado con Tailwind. Ojo:
+  `@radix-ui/react-popover` se quitó al limpiar dependencias sin usar, hay que
+  volver a añadirlo.
+- [ ] ⚙️ **Aviso al poner una fecha pasada** al crear o editar una reunión.
+  **Acordado:** avisar junto al campo pero **permitir** guardar — puede haber
+  motivos legítimos para registrar una reunión ya celebrada. Hoy no hay ninguna
+  validación, ni en el front ni en la API (`POST /meeting` acepta cualquier fecha).
+- [ ] ⚙️ **Las asistencias solo se siembran al crear la reunión**
+  (`MeetingService::create` recorre los comuneros titulares activos). Una reunión
+  creada antes de dar de alta a un comunero **no tiene fila suya**, así que su QR no
+  se reconoce: las tres reuniones de dev están así. Decidir si el alta de comunero
+  debe añadirse a las reuniones futuras ya creadas.
 
 ## Reuniones — el QR identifica la dirección, no a la persona (decisión pendiente)
 
