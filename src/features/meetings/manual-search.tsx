@@ -78,14 +78,22 @@ export function ManualSearch({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="absolute inset-x-10 bottom-2 z-50 m-8 flex items-center justify-center gap-2 rounded bg-primary p-6 font-medium text-white"
-      >
-        <PlusIcon className="h-5 w-5" />
-        <span className="mr-1">Añadir manualmente</span>
-      </button>
+      {/*
+        El botón va dentro de un contenedor centrado en vez de estirado con
+        `inset-x`: en el móvil sigue ocupando el ancho (es el gesto natural con el
+        pulgar), pero en pantalla grande queda centrado y con su propio tamaño, no
+        de borde a borde.
+      */}
+      <div className="absolute inset-x-18 bottom-10 z-50 flex justify-center">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded bg-primary p-6 font-medium text-white sm:w-auto sm:min-w-100 sm:px-16 sm:text-lg"
+        >
+          <PlusIcon className="h-6 w-6" />
+          <span className="mr-1">Añadir manualmente</span>
+        </button>
+      </div>
 
       {open && (
         <div className="fixed inset-0 z-[300] flex h-screen flex-col overflow-hidden bg-card shadow-lg">
