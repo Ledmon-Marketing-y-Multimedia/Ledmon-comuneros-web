@@ -12,10 +12,9 @@
 
 ## Backend (repositorio de la API — corregir allí)
 
-- [ ] 🐞 **Seeder no idempotente.** Al arrancar reinserta `admin@example.com`;
-  si el registro ya existe → `duplicate key value violates unique constraint`
-  y la app **no arranca**. Hoy hubo que recrear los volúmenes de Postgres.
-  → Sembrar solo si no existe (`INSERT ... ON CONFLICT DO NOTHING` o comprobar antes).
+- [x] 🐞 **Seeder no idempotente.** Reinsertaba `admin@example.com` y la app no
+  arrancaba (`duplicate key value violates unique constraint`). Corregido con
+  `firstOrCreate` por email.
 
 ---
 
@@ -68,6 +67,17 @@
   paridad exacta con Luxon/`transloco-locale`, unificar en un helper de fechas.
 - [ ] ⚙️ **Editor rich-text**: se usa `react-quill-new` (Quill 2). Revisar la
   whitelist de fuentes (el original registraba `Arial`) si el PDF lo requiere.
+- [ ] 🧹 **Icono del subidor de documentos** (`features/meetings/upload-document-modal.tsx`):
+  es `PhotoIcon`, heredado de un ejemplo de Tailwind UI, en un diálogo que sube
+  documentos. `DocumentArrowUpIcon` diría mejor lo que es; se dejó el glifo original
+  para no cambiar el aspecto sin acordarlo.
+- [ ] ⚙️ **Cabecera de comuneros a ~1000 px**: con cuatro controles (buscador,
+  filtro, Exportar y Nuevo) las acciones parten en dos líneas. Es inherente al ancho;
+  si molesta, la salida es un menú «⋯» para las acciones secundarias.
+- [ ] ⚙️ **Listado de usuarios en móvil**: solo se ve el nombre (las demás columnas
+  se ocultan bajo `md`, como en el resto de listados), así que no se distingue a los
+  administradores sin abrir la ficha. Valorar mostrar el chip `Admin` junto al nombre
+  en pantalla pequeña.
 
 ## Front — refactor DRY (hecho, con las divergencias que se dejaron a propósito)
 
@@ -83,6 +93,13 @@
   merece un `GroupedListTable` o si se convierte en tabla normal.
 - [ ] 🧹 El botón de `/login` mantiene su propio estilo (`rounded-md`, `py-2.5`) en
   vez de `Button`; la pantalla de acceso es la única con ese aspecto.
+- [x] 🧹 Cabeceras de listado unificadas en `ListPageHeader` (las cinco pantallas
+  habían divergido: buscador estirado en comuneros y encogido en las otras cuatro,
+  botones con `md:w-44` frente a `md:w-fit`). Los títulos pasan a ser `h1`, que no
+  lo eran en ninguna.
+- [x] 🧹 Desplegables propios sobre Radix (`components/ui/select.tsx`): la lista de
+  opciones de un `<select>` nativo la pinta el sistema operativo y no se puede
+  estilar.
 
 ## Front — no migrado (restos de la plantilla Fuse / dead code)
 
@@ -93,10 +110,16 @@
 
 ## Tests
 
-- [x] Red de tests de componentes con Vitest + Testing Library (39 casos): los dos
-  listados con paginador, el listado agrupado de comuneros y los paneles de
-  detalle de dirección y comunero. Se escribieron **antes** del refactor DRY,
-  para poder extraer componentes compartidos con red.
+- [x] Red de tests de componentes con Vitest + Testing Library (**59 casos**): los
+  listados con paginador, el agrupado de comuneros, los paneles de detalle de
+  dirección, comunero y usuario. Se escribieron **antes** del refactor DRY, para
+  poder extraer componentes compartidos con red — y funcionó: al cambiar los
+  desplegables a Radix cayeron exactamente los 6 que tocaban un `select`.
+- [x] Tests de extremo a extremo con Playwright (**6 casos**, `npm run e2e`):
+  navegador real contra la API real sobre el panel de usuarios. Cubren lo que jsdom
+  no alcanza: el menú según quién eres, el aviso al entrar por URL sin permiso, que
+  una cuenta recién creada inicie sesión y que un reseteo de contraseña cierre la
+  sesión abierta. Ver `e2e/README.md`.
 - [ ] Sin cubrir todavía: paneles de **reuniones** y **comunicaciones** (arrastran
   `react-quill-new` y `@zxing/browser`, que necesitan doble en jsdom), el overlay
   de escaneo QR y `pdf-service` (port verbatim).

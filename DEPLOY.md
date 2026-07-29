@@ -9,7 +9,8 @@
 
 - **Node.js ≥ 20.9** (Next.js 16 / Turbopack).
 - La **API** accesible desde el navegador del usuario (CORS incluido).
-- Un usuario con contraseña en la API (`php artisan user:password <email>` allí).
+- Una **cuenta** con contraseña en la API (`php artisan account:password <email>`
+  allí, o desde el panel `/usuarios` si ya hay un administrador dentro).
 
 ## Variables de entorno
 
@@ -64,11 +65,19 @@ de Environment Variables del proyecto. Build command `next build` por defecto.
 - **Sesión:** el token de la API se guarda en `localStorage` y caduca según
   `SANCTUM_EXPIRATION` de la API (12 h por defecto). No hay refresh silencioso:
   al caducar, la API responde 401 y el front lleva a `/login`.
-- **Recuperar contraseña:** no hay autoservicio. Un administrador la asigna con
-  `php artisan user:password <email>` en la API; el usuario puede cambiarla luego
-  desde el propio front (`PATCH /password`).
+- **Recuperar contraseña:** no hay autoservicio. Un administrador la resetea desde
+  el panel `/usuarios` del propio front, o por consola en la API con
+  `php artisan account:password <email>`. Resetearla **cierra las sesiones** de esa
+  cuenta. Que cada uno cambie la suya (`PATCH /password`) existe en la API pero
+  todavía no tiene pantalla (ver `DEUDA_TECNICA.md`).
 
 ## Assets
 
-Los estáticos (logos, imágenes de tarjeta/fondo, sonido del escáner, fuentes)
-están en `public/assets/`. Si se actualizan en diseño, reemplazarlos ahí.
+Los estáticos están en `public/assets/`: logos (`logo.png`, `logo_corto.png`), la
+portada de los paneles de detalle (`marcon_desde_salgueiral.jpg`), las imágenes que
+usa el generador de PDF (`background_1.jpg`, `tarjeta-1.png`, `tarjeta-2.png`) y el
+sonido del escáner QR (`sounds/ping.mp3`). Si se actualizan en diseño, reemplazarlos
+ahí.
+
+La **tipografía no está aquí**: Inter la carga `next/font` en `src/app/layout.tsx`
+(por eso se borraron los `.woff2` que traía la plantilla).
