@@ -104,6 +104,12 @@ Detalles que se ven en pantalla:
 > Hasta el 2026-07-29 compartían tabla en la API, con la contraseña conviviendo con
 > el DNI y los teléfonos; ver `docs/PLAN-SEPARAR-CUENTAS.md` en el repo de la API.
 
+Además de los tests de componentes (Vitest), este módulo tiene **tests de extremo a
+extremo** con Playwright (`npm run e2e`): navegador real contra la API real, para lo
+que jsdom no alcanza — que el menú se pinte según quién eres, que el aviso salte al
+entrar por URL, que una cuenta recién creada pueda iniciar sesión y que un reseteo de
+contraseña cierre la sesión abierta. Ver `e2e/README.md`.
+
 > Pendiente (opcional): `PATCH /password` (que cada uno cambie **su** contraseña)
 > sigue sin pantalla en el front; el reseteo por consola es
 > `php artisan account:password <email>`.

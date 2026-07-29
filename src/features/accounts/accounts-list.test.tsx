@@ -110,7 +110,7 @@ describe("AccountsList", () => {
     renderWithProviders(<AccountsList />);
     await screen.findByText("Ana");
 
-    const filtro = screen.getByRole("combobox", { name: "" });
+    const filtro = screen.getByRole("combobox", { name: "Filtrar usuarios" });
 
     await userEvent.selectOptions(filtro, "admin");
     expect(screen.getByText("Ana")).toBeInTheDocument();

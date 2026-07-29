@@ -98,6 +98,7 @@ export function AccountsList() {
               setFilter(value as FilterKey);
               pagination.reset();
             }}
+            label="Filtrar usuarios"
             className="md:ml-4 md:w-44"
           >
             <option value="all">Todos los usuarios</option>
@@ -117,7 +118,9 @@ export function AccountsList() {
           { label: "Nombre" },
           { label: "Email", className: "hidden md:block" },
           { label: "Permisos", className: "hidden md:block" },
-          { label: "Último acceso", className: "hidden md:block" },
+          // "Acceso" y no "Último acceso": la columna alterna la fecha con el
+          // motivo por el que esa cuenta no puede entrar (Desactivada / Sin clave).
+          { label: "Acceso", className: "hidden md:block" },
         ]}
         gridCols={GRID_COLS}
         items={pagination.pageItems}
