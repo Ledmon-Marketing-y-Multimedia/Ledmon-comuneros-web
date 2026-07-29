@@ -30,6 +30,7 @@ import {
   type MeetingAttendance,
   type MeetingDocument,
 } from "@/types/domain";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -46,6 +47,25 @@ interface FormValues {
 }
 
 const ATTENDANCE_PAGE_SIZES = [5, 10, 20];
+
+/**
+ * Motivo legible de un fallo con los documentos. El 500 del almacén (credenciales
+ * ausentes, bucket caído) es el caso más probable y el que hay que poder distinguir
+ * de un problema de red: antes estos fallos no se veían en pantalla.
+ */
+function motivo(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 422) return "Faltan datos del documento.";
+    if (error.status === 404) return "Ya no existe.";
+    if (error.status >= 500) {
+      return "El almacén de documentos no está disponible; avisa a administración.";
+    }
+
+    return `El servidor ha respondido ${error.status}.`;
+  }
+
+  return "Revisa la conexión.";
+}
 
 /** Acciones de la cabecera: a ancho completo en móvil, en fila en escritorio. */
 const ACTION_CLASS = "w-full px-6 md:ml-3 md:w-fit";
@@ -87,6 +107,7 @@ export function MeetingDetails({
   const [date, setDate] = useState("");
   const [attendance, setAttendance] = useState<MeetingAttendance[]>([]);
   const [documents, setDocuments] = useState<MeetingDocument[]>([]);
+  const [errorDocumento, setErrorDocumento] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   // Tabla de asistencia: filtro por nombre (la paginación va más abajo, ya
@@ -155,22 +176,28 @@ export function MeetingDetails({
 
   const uploadActa = (doc: { type: string; file: File }) => {
     if (!meeting.id) return;
+
+    setErrorDocumento(null);
+
     const formData = new FormData();
     formData.append("file", doc.file);
-    const document = {
-      name: doc.file.name,
-      type: doc.type,
-      comunidad: { id: COMUNIDAD_ID },
-    };
-    formData.append(
-      "document",
-      new Blob([JSON.stringify(document)], { type: "application/json" }),
-    );
+    // Los metadatos van como campos sueltos y no como un `Blob` de JSON: PHP
+    // entrega las partes con contenido binario en $_FILES, no en los inputs, así
+    // que el JSON no llegaba y el documento se guardaba sin nombre ni tipo. La API
+    // acepta las dos formas, pero esta es la que no depende de ese detalle.
+    formData.append("name", doc.file.name);
+    formData.append("type", doc.type);
+    formData.append("comunidad[id]", COMUNIDAD_ID);
+
     uploadMut.mutate(
       { meetingId: meeting.id, formData },
       {
         onSuccess: (response) =>
           setDocuments((prev) => [...prev, response as MeetingDocument]),
+        onError: (error) =>
+          setErrorDocumento(
+            `No se ha podido subir «${doc.file.name}». ` + motivo(error),
+          ),
       },
     );
   };
@@ -183,19 +210,29 @@ export function MeetingDetails({
       actions: { confirm: { label: "Borrar" } },
     });
     if (ok && meeting.id && doc.id) {
+      setErrorDocumento(null);
       deleteDocMut.mutate(
         { meetingId: meeting.id, documentId: doc.id },
         {
           onSuccess: () =>
             setDocuments((prev) => prev.filter((d) => d.id !== doc.id)),
+          onError: (error) =>
+            setErrorDocumento("No se ha podido borrar el documento. " + motivo(error)),
         },
       );
     }
   };
 
   const getDocument = (doc: MeetingDocument) => {
-    getFileUrlByPath(`${COMUNIDAD_ID}/${meeting.id}/${doc.name}`).then((url) =>
-      window.open(url, "_blank"),
+    setErrorDocumento(null);
+
+    getFileUrlByPath(`${COMUNIDAD_ID}/${meeting.id}/${doc.name}`).then(
+      (url) => window.open(url, "_blank"),
+      (error) =>
+        setErrorDocumento(
+          `No se ha podido abrir «${doc.name || "documento sin nombre"}». ` +
+            motivo(error),
+        ),
     );
   };
 
@@ -290,6 +327,15 @@ export function MeetingDetails({
                 </div>
               </div>
             </div>
+
+            {errorDocumento && (
+              <div
+                role="alert"
+                className="mt-4 rounded border border-warn-600 bg-red-50 p-4 font-medium text-warn-600"
+              >
+                {errorDocumento}
+              </div>
+            )}
 
             {documents.length > 0 && (
               <div className="mt-4 flex flex-col overflow-hidden rounded bg-card p-8 pb-5 shadow">
