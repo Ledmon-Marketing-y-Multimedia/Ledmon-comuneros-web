@@ -8,8 +8,14 @@ vi.mock("next/navigation", () => import("@/test/navigation-double"));
 import { calls, lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
 import { resetNavigation, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
+import { chooseOption } from "@/test/select";
 import { ComunerosList } from "@/features/comuneros/comuneros-list";
-import { ComuneroRole, ComuneroStatus, type Comunero } from "@/types/domain";
+import {
+  ComuneroRole,
+  ComuneroStatus,
+  statusLabel,
+  type Comunero,
+} from "@/types/domain";
 
 function comunero(name: string, extra: Partial<Comunero> = {}): Comunero {
   return {
@@ -49,8 +55,7 @@ describe("ComunerosList", () => {
     // inicial, y cada fila muestra su avatar con la misma letra.
     expect(screen.getAllByText("A").length).toBe(3);
     expect(screen.getAllByText("L").length).toBe(2);
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("comuneros")).toBeInTheDocument();
+    expect(screen.getByText("3 comuneros")).toBeInTheDocument();
   });
 
   it("muestra el estado del comunero y, si el lugar está suspendido, el del lugar", async () => {
@@ -102,10 +107,7 @@ describe("ComunerosList", () => {
     renderWithProviders(<ComunerosList />);
     await screen.findByText("No existen comuneros");
 
-    await userEvent.selectOptions(
-      screen.getByRole("combobox"),
-      ComuneroStatus.UNSUBSCRIBED,
-    );
+    await chooseOption("Filtrar por estado", statusLabel(ComuneroStatus.UNSUBSCRIBED));
 
     await waitFor(() => {
       expect(lastCall("GET", "/comunero/search/marcon")?.ctx.params).toEqual({

@@ -87,6 +87,29 @@
   --fuse-border: #e2e8f0;
 }
 
+/*
+ * Color por defecto de los bordes.
+ *
+ * En Tailwind v3 era `gray-200`; **en v4 pasó a ser `currentColor`**, así que al
+ * migrar, cada `border`/`border-b`/`border-t` de la app se quedó pintando del
+ * color del texto (slate-800): las filas de las tablas, las cabeceras y los pies
+ * de formulario salían con una línea casi negra en vez del gris del tema. Esta
+ * regla lo devuelve al gris de Fuse, que ya estaba definido arriba y no se usaba
+ * en ningún sitio.
+ *
+ * Va en `base` a propósito: cualquier utilidad explícita (`border-gray-300`,
+ * `border-primary`…) pertenece a una capa posterior y sigue ganando.
+ */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--fuse-border);
+  }
+}
+
 @layer utilities {
   .bg-card {
     background-color: var(--fuse-bg-card);

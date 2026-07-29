@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => import("@/test/navigation-double"));
 import { lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
 import { resetNavigation, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
+import { chooseOption } from "@/test/select";
 import { LugaresList } from "@/features/lugares/lugares-list";
 import type { Lugar } from "@/types/domain";
 import { LugarStatus } from "@/types/domain";
@@ -46,8 +47,7 @@ describe("LugaresList", () => {
 
     expect(await screen.findByText("Rúa 01")).toBeInTheDocument();
     expect(screen.getByText("Rúa 03")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("lugares")).toBeInTheDocument();
+    expect(screen.getByText("3 lugares")).toBeInTheDocument();
   });
 
   it("pagina de 10 en 10 y el contador refleja el tramo", async () => {
@@ -73,10 +73,7 @@ describe("LugaresList", () => {
     await userEvent.click(await screen.findByRole("button", { name: "»" }));
     expect(await screen.findByText("11 - 12 de 12")).toBeInTheDocument();
 
-    await userEvent.selectOptions(
-      screen.getByRole("combobox", { name: /items por página/i }),
-      "5",
-    );
+    await chooseOption("Items por página", "5");
 
     expect(await screen.findByText("1 - 5 de 12")).toBeInTheDocument();
   });
@@ -105,10 +102,7 @@ describe("LugaresList", () => {
     renderWithProviders(<LugaresList />);
     await screen.findByText("Rúa 01");
 
-    await userEvent.selectOptions(
-      screen.getByRole("combobox", { name: "" }),
-      "Norte",
-    );
+    await chooseOption("Filtrar por lugar", "Norte");
 
     expect(screen.queryByText("Rúa 01")).not.toBeInTheDocument();
     expect(screen.getByText("Rúa 02")).toBeInTheDocument();

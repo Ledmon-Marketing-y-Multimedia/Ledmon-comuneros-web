@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { Controller, useForm, useFieldArray } from "react-hook-form";
 import {
   CheckCircleIcon,
   BriefcaseIcon,
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/detail-panel";
 import { DetailPlaceholder } from "@/components/ui/empty-state";
 import { FieldRow, fieldClass } from "@/components/ui/field-row";
+import { Select } from "@/components/ui/select";
 import {
   ComuneroRole,
   LugarStatus,
@@ -282,25 +283,45 @@ export function LugarDetails({
 
                 {zonas.length > 0 && (
                   <FieldRow icon={<BuildingSolid className="h-5 w-5" />} label="Lugar">
-                    <select {...register("zona")} className={fieldClass}>
-                      <option value="" />
-                      {zonas.map((z) => (
-                        <option key={String(z)} value={String(z)}>
-                          {z}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      control={control}
+                      name="zona"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ?? ""}
+                          onValueChange={field.onChange}
+                          options={[
+                            { value: "", label: "Sin lugar" },
+                            ...zonas.map((z) => ({
+                              value: String(z),
+                              label: String(z),
+                            })),
+                          ]}
+                          label="Lugar"
+                          variant="field"
+                        />
+                      )}
+                    />
                   </FieldRow>
                 )}
 
                 <FieldRow icon={<CheckSolid className="h-5 w-5" />} label="Estado">
-                  <select {...register("status")} className={fieldClass}>
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {statusLabel(s)}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    control={control}
+                    name="status"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ?? ""}
+                        onValueChange={field.onChange}
+                        options={STATUSES.map((s) => ({
+                          value: s,
+                          label: statusLabel(s),
+                        }))}
+                        label="Estado"
+                        variant="field"
+                      />
+                    )}
+                  />
                 </FieldRow>
 
                 <FieldRow icon={<MapPinSolid className="h-5 w-5" />} label="Población">

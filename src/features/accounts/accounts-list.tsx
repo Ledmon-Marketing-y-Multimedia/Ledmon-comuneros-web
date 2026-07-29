@@ -6,6 +6,7 @@ import { PlusIcon } from "@heroicons/react/24/solid";
 import { useAccounts } from "@/features/accounts/api";
 import { ButtonLink } from "@/components/ui/button";
 import { FilterSelect } from "@/components/ui/filter-select";
+import { countLabel, ListPageHeader } from "@/components/ui/list-page-header";
 import { ListTable } from "@/components/ui/list-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { badgeClass } from "@/components/ui/status-badge";
@@ -68,50 +69,44 @@ export function AccountsList() {
 
   return (
     <div className="flex min-w-0 flex-auto flex-col overflow-hidden bg-card sm:absolute sm:inset-0">
-      <div className="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <div>
-          <div className="text-4xl font-extrabold leading-none tracking-tight">
-            Usuarios
-          </div>
-          <div className="ml-0.5 font-medium text-secondary">
-            {count > 0 && <span>{count} </span>}
-            {count === 0 ? "Sin usuarios" : count === 1 ? "usuario" : "usuarios"}
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center justify-end gap-y-2 sm:mt-0 md:mt-4">
-          <div className="flex-auto">
-            <SearchInput
-              value={search}
-              onValueChange={(value) => {
-                setSearch(value);
-                pagination.reset();
-              }}
-              placeholder="Buscar usuarios"
-              className="md:w-64"
-            />
-          </div>
-
-          <FilterSelect
-            value={filter}
+      <ListPageHeader
+        title="Usuarios"
+        subtitle={countLabel(count, {
+          none: "Sin usuarios",
+          one: "usuario",
+          many: "usuarios",
+        })}
+        search={
+          <SearchInput
+            value={search}
             onValueChange={(value) => {
-              setFilter(value as FilterKey);
+              setSearch(value);
               pagination.reset();
             }}
-            label="Filtrar usuarios"
-            className="md:ml-4 md:w-44"
-          >
-            <option value="all">Todos los usuarios</option>
-            <option value="admin">Administradores</option>
-            <option value="inactive">Sin acceso</option>
-          </FilterSelect>
+            placeholder="Buscar usuarios"
+          />
+        }
+      >
+        <FilterSelect
+          value={filter}
+          onValueChange={(value) => {
+            setFilter(value as FilterKey);
+            pagination.reset();
+          }}
+          options={[
+            { value: "all", label: "Todos" },
+            { value: "admin", label: "Administradores" },
+            { value: "inactive", label: "Sin acceso" },
+          ]}
+          label="Filtrar usuarios"
+          className="sm:w-44"
+        />
 
-          <ButtonLink href="/usuarios/new" className="w-full md:ml-4 md:w-44">
-            <PlusIcon className="h-5 w-5" />
-            <span className="mr-1">Nuevo usuario</span>
-          </ButtonLink>
-        </div>
-      </div>
+        <ButtonLink href="/usuarios/new" className="w-full md:w-fit">
+          <PlusIcon className="h-5 w-5" />
+          <span className="mr-1">Nuevo usuario</span>
+        </ButtonLink>
+      </ListPageHeader>
 
       <ListTable
         columns={[

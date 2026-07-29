@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { PAGE_SIZE_OPTIONS, type Pagination } from "@/lib/use-pagination";
 import { cn } from "@/lib/utils";
 
@@ -54,17 +55,13 @@ export function Paginator<T>({
   const last = page >= pageCount - 1;
 
   const sizeSelect = (
-    <select
-      value={pageSize}
-      onChange={(event) => setPageSize(Number(event.target.value))}
-      className="rounded border border-gray-300 px-2 py-1"
-    >
-      {options.map((size) => (
-        <option key={size} value={size}>
-          {size}
-        </option>
-      ))}
-    </select>
+    <Select
+      value={String(pageSize)}
+      onValueChange={(value) => setPageSize(Number(value))}
+      options={options.map((size) => ({ value: String(size), label: String(size) }))}
+      label="Items por página"
+      variant="compact"
+    />
   );
 
   return (
@@ -78,10 +75,13 @@ export function Paginator<T>({
       {compact ? (
         sizeSelect
       ) : (
-        <label className="flex items-center gap-2 text-secondary">
-          Items por página:
+        // `div` y no `label`: el control ya no es un `<select>` nativo sino un
+        // botón (Radix), y un `<label>` no etiqueta a un botón. El nombre
+        // accesible lo pone el `label` que recibe el Select.
+        <div className="flex items-center gap-2 text-secondary">
+          <span aria-hidden="true">Items por página:</span>
           {sizeSelect}
-        </label>
+        </div>
       )}
 
       {!compact && (

@@ -1,41 +1,41 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { Select, type SelectOption } from "@/components/ui/select";
 
 /**
  * Desplegable redondeado de las cabeceras de listado, el que acompaña al
- * buscador (zona en direcciones, estado en comuneros, zona en el destinatario de
- * una comunicación). El ancho lo pone cada pantalla.
+ * buscador (zona en direcciones, estado en comuneros, permisos en usuarios).
+ *
+ * Es la variante `pill` de `Select`. Antes envolvía un `<select>` nativo y las
+ * opciones se pasaban como `<option>`; ahora van en `options`, porque la lista la
+ * pinta Radix y no el sistema operativo.
  */
 export function FilterSelect({
   value,
   onValueChange,
+  options,
   label,
   className,
-  children,
 }: {
   value: string;
   onValueChange: (value: string) => void;
+  options: SelectOption[];
   /**
    * Nombre accesible del desplegable. No hay etiqueta visible (el diseño es un
    * chip junto al buscador), así que sin esto un lector de pantalla solo anuncia
-   * "lista", y en una pantalla con paginador hay dos `select` indistinguibles.
+   * "lista", y en una pantalla con paginador hay dos controles indistinguibles.
    */
   label?: string;
   className?: string;
-  children: React.ReactNode;
 }) {
   return (
-    <select
+    <Select
       value={value}
-      onChange={(event) => onValueChange(event.target.value)}
-      aria-label={label}
-      className={cn(
-        "w-full rounded-full border border-gray-300 bg-white px-3 py-2 focus:outline-none",
-        className,
-      )}
-    >
-      {children}
-    </select>
+      onValueChange={onValueChange}
+      options={options}
+      label={label}
+      variant="pill"
+      className={className}
+    />
   );
 }

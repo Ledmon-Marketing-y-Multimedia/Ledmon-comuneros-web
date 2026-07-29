@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => import("@/test/navigation-double"));
 import { lastCall, mockRoute, resetApiDouble } from "@/test/api-double";
 import { resetNavigation, setLocation } from "@/test/navigation-double";
 import { renderWithProviders } from "@/test/harness";
+import { chooseOption } from "@/test/select";
 import { AccountsList } from "@/features/accounts/accounts-list";
 import type { Account } from "@/types/domain";
 
@@ -43,8 +44,7 @@ describe("AccountsList", () => {
 
     expect(await screen.findByText("Ana")).toBeInTheDocument();
     expect(screen.getByText("Bruno")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
-    expect(screen.getByText("usuarios")).toBeInTheDocument();
+    expect(screen.getByText("2 usuarios")).toBeInTheDocument();
   });
 
   it("distingue a los administradores", async () => {
@@ -110,13 +110,11 @@ describe("AccountsList", () => {
     renderWithProviders(<AccountsList />);
     await screen.findByText("Ana");
 
-    const filtro = screen.getByRole("combobox", { name: "Filtrar usuarios" });
-
-    await userEvent.selectOptions(filtro, "admin");
+    await chooseOption("Filtrar usuarios", "Administradores");
     expect(screen.getByText("Ana")).toBeInTheDocument();
     expect(screen.queryByText("Bruno")).not.toBeInTheDocument();
 
-    await userEvent.selectOptions(filtro, "inactive");
+    await chooseOption("Filtrar usuarios", "Sin acceso");
     expect(screen.getByText("Carla")).toBeInTheDocument();
     expect(screen.queryByText("Ana")).not.toBeInTheDocument();
   });

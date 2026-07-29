@@ -24,8 +24,13 @@ export interface ListColumn {
 const HEADER_ROW =
   "sticky top-0 z-10 grid gap-4 bg-gray-50 px-6 py-4 text-md font-semibold text-secondary shadow md:px-8";
 
+/**
+ * `last:border-b-0`: la última fila no lleva separador. Si lo lleva, se suma al
+ * borde superior del paginador (o al del contenedor cuando no hay paginador) y se
+ * ven dos líneas juntas.
+ */
 const ITEM_ROW =
-  "grid cursor-pointer select-none items-center gap-4 border-b px-6 py-3 md:px-8";
+  "grid cursor-pointer select-none items-center gap-4 border-b last:border-b-0 px-6 py-3 md:px-8";
 
 export function ListTable<T extends { id?: string }>({
   columns,

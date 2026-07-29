@@ -52,9 +52,7 @@ test.describe("Acceso al panel", () => {
     await usuarios.click();
 
     await expect(page).toHaveURL(/\/usuarios$/);
-    // Los títulos de listado son `div`, no headings (deuda de accesibilidad que
-    // viene de la plantilla original y comparten los cinco módulos).
-    await expect(page.getByText("Usuarios", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Usuarios");
     // La cuenta con la que hemos entrado tiene que estar en su propio listado.
     await expect(page.getByText(ADMIN.email)).toBeVisible();
   });
@@ -127,11 +125,12 @@ test.describe("Gestión de cuentas", () => {
     const fila = page.locator("a", { hasText: desactivada.name });
     await expect(fila).toContainText("Desactivada");
 
-    // Y el filtro «Sin acceso» la encuentra. Se localiza por su nombre accesible:
-    // en esta pantalla hay dos `select` (este y el del paginador).
-    await page
-      .getByRole("combobox", { name: "Filtrar usuarios" })
-      .selectOption("inactive");
+    // Y el filtro «Sin acceso» la encuentra. Ya no es un `<select>` nativo (la
+    // lista la pinta Radix), así que se abre y se pulsa la opción, como una
+    // persona. Se localiza por su nombre accesible: en esta pantalla hay dos
+    // desplegables (este y el del paginador).
+    await page.getByRole("combobox", { name: "Filtrar usuarios" }).click();
+    await page.getByRole("option", { name: "Sin acceso" }).click();
     await expect(page.getByText(desactivada.name)).toBeVisible();
   });
 
