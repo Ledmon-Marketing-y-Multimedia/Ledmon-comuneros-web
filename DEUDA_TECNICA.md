@@ -20,11 +20,12 @@
 
 ## Front — bugs replicados 1:1 (revisar lógica de negocio antes de tocar)
 
-- [ ] 🐞 **Escaneo QR sin coincidencias** (`features/meetings/meeting-shell.tsx`,
-  `scanSuccessHandler`). El original hace: si hay asistencias muestra selección,
-  **si no**, llama `registerAttendance(attendances[0])` con la lista vacía →
-  `undefined`. Rama rota heredada. Decidir el comportamiento correcto (¿ignorar?
-  ¿avisar "QR no reconocido"?).
+- [x] 🐞 **Escaneo QR sin coincidencias** (`features/meetings/meeting-shell.tsx`).
+  La rama estaba invertida —con la lista vacía llamaba a `registerAttendance(
+  attendances[0])`, es decir `undefined`— y, como el guardia `inProgress` solo se
+  liberaba en el camino feliz, **un QR desconocido dejaba el escáner mudo** hasta
+  cerrar y volver a abrir. Ahora hay tres avisos (registrado / ya registrado / QR no
+  reconocido) y el guardia se suelta siempre al retirarse el aviso.
 - [ ] 🐞 **Subida de documento inconsistente** (reunión). En Angular convivían un
   `<input file>` oculto (pasaba un `FileList`) y el diálogo (pasa `{type,file}`).
   Se portó solo el flujo del diálogo. Confirmar que no hacía falta el otro.
@@ -64,6 +65,23 @@
 
 - [x] 🐞 **`comuneros/list`**: acceso a `comunero.lugar.address/status` sin guard
   → añadido optional chaining (`?.`) para evitar crash con comuneros sin lugar.
+
+## Reuniones — el QR identifica la dirección, no a la persona (decisión pendiente)
+
+El QR que se imprime en la convocatoria contiene `comunero.lugar.address` —el texto
+de la dirección— y la API busca las asistencias por igualdad exacta de esa cadena
+(`GET /attendance/{meetingId}/lugar/{direccion}`). Consecuencias:
+
+- Si se **corrige la dirección** de un lugar, los QR ya impresos dejan de coincidir.
+- Dos lugares con la dirección escrita igual son indistinguibles.
+- Cuando una dirección tiene varios titulares hay que desambiguar a mano; el diálogo
+  «¿Quién asiste?» existe por eso, y **es el comportamiento deseado**: lo que importa
+  es que asista el representante de cada dirección.
+- [ ] Pendiente de decidir con el cliente el flujo completo (las bajas se dan según
+  la presencia en reuniones). Opciones sobre la mesa: dejarlo como está, o meter el
+  id en el QR aceptando también la dirección para no invalidar lo ya impreso.
+- [ ] 🐞 En el diálogo de selección, «Añadir representante» usa `selecting[0]` —el
+  primero de la lista— en vez del titular que se haya elegido.
 
 ## Front — limpieza / mejoras
 
