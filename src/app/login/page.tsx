@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/app/login/login-form";
-import { SplashScreen } from "@/components/splash-screen";
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 export const metadata = {
   title: "Iniciar sesión · Comunidad de Montes de Marcón",

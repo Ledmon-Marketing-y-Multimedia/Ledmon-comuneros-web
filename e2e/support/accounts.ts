@@ -189,8 +189,3 @@ export async function signIn(page: Page, email: string, password: string): Promi
     [TOKEN_KEY, accessToken] as const,
   );
 }
-
-/** Cierra la sesión del navegador borrando el token (sin revocarlo en la API). */
-export async function forgetSession(page: Page): Promise<void> {
-  await page.evaluate((key) => window.localStorage.removeItem(key), TOKEN_KEY);
-}

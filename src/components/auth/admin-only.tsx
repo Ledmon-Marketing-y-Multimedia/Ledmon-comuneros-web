@@ -1,6 +1,6 @@
 "use client";
 
-import { SplashScreen } from "@/components/splash-screen";
+import { SplashScreen } from "@/components/ui/splash-screen";
 import { DetailPlaceholder } from "@/components/ui/empty-state";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
 

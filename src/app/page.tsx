@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SplashScreen } from "@/components/splash-screen";
+import { SplashScreen } from "@/components/ui/splash-screen";
 import { useAuth } from "@/lib/auth/use-auth";
 
 /**
