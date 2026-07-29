@@ -47,8 +47,7 @@ describe("LugaresList", () => {
 
     expect(await screen.findByText("Rúa 01")).toBeInTheDocument();
     expect(screen.getByText("Rúa 03")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("lugares")).toBeInTheDocument();
+    expect(screen.getByText("3 lugares")).toBeInTheDocument();
   });
 
   it("pagina de 10 en 10 y el contador refleja el tramo", async () => {

@@ -5,6 +5,7 @@ import { XCircleIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useMeetings } from "@/features/meetings/api";
 import { SuspendModal } from "@/features/meetings/suspend-modal";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { ListPageHeader } from "@/components/ui/list-page-header";
 import { ListTable } from "@/components/ui/list-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { usePagination } from "@/lib/use-pagination";
@@ -22,9 +23,9 @@ export function MeetingsList() {
   return (
     <div className="absolute inset-0 flex min-w-0 flex-col overflow-hidden">
       <div className="h-full flex-auto bg-card">
-        <div className="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
-          <div className="text-4xl font-extrabold tracking-tight">Reuniones</div>
-          <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-0 md:mt-4">
+        <ListPageHeader
+          title="Reuniones"
+          search={
             <SearchInput
               value={search}
               onValueChange={(value) => {
@@ -32,21 +33,18 @@ export function MeetingsList() {
                 pagination.reset();
               }}
               placeholder="Buscar reuniones"
-              className="md:w-64"
             />
-            <Button
-              onClick={() => setSuspendOpen(true)}
-              className="w-full md:ml-4 md:w-fit"
-            >
-              <XCircleIcon className="h-5 w-5" />
-              <span className="mr-1">Suspender</span>
-            </Button>
-            <ButtonLink href="/reuniones/new" className="w-full md:ml-4 md:w-fit">
-              <PlusIcon className="h-5 w-5" />
-              <span className="mr-1">Nueva</span>
-            </ButtonLink>
-          </div>
-        </div>
+          }
+        >
+          <Button onClick={() => setSuspendOpen(true)} className="w-full md:w-fit">
+            <XCircleIcon className="h-5 w-5" />
+            <span className="mr-1">Suspender</span>
+          </Button>
+          <ButtonLink href="/reuniones/new" className="w-full md:w-fit">
+            <PlusIcon className="h-5 w-5" />
+            <span className="mr-1">Nueva</span>
+          </ButtonLink>
+        </ListPageHeader>
 
         <ListTable
           columns={[

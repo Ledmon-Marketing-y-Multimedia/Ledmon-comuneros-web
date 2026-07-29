@@ -52,9 +52,7 @@ test.describe("Acceso al panel", () => {
     await usuarios.click();
 
     await expect(page).toHaveURL(/\/usuarios$/);
-    // Los títulos de listado son `div`, no headings (deuda de accesibilidad que
-    // viene de la plantilla original y comparten los cinco módulos).
-    await expect(page.getByText("Usuarios", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Usuarios");
     // La cuenta con la que hemos entrado tiene que estar en su propio listado.
     await expect(page.getByText(ADMIN.email)).toBeVisible();
   });

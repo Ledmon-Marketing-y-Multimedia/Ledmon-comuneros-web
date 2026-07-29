@@ -44,8 +44,7 @@ describe("AccountsList", () => {
 
     expect(await screen.findByText("Ana")).toBeInTheDocument();
     expect(screen.getByText("Bruno")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
-    expect(screen.getByText("usuarios")).toBeInTheDocument();
+    expect(screen.getByText("2 usuarios")).toBeInTheDocument();
   });
 
   it("distingue a los administradores", async () => {

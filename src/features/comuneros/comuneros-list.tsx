@@ -9,6 +9,7 @@ import { ExportModal, type ExportType } from "@/features/comuneros/export-modal"
 import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FilterSelect } from "@/components/ui/filter-select";
+import { countLabel, ListPageHeader } from "@/components/ui/list-page-header";
 import { SearchInput } from "@/components/ui/search-input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { pdfService } from "@/lib/pdf/pdf-service";
@@ -48,59 +49,42 @@ export function ComunerosList() {
     <div className="absolute inset-0 flex min-w-0 flex-col overflow-hidden">
       <div className="flex h-full flex-auto flex-col bg-card">
         <div className="flex-auto overflow-y-auto">
-          {/* Header */}
-          <div className="flex flex-auto flex-col justify-between border-b px-6 py-8 sm:flex-row md:flex-col md:px-8">
-            <div>
-              <div className="text-4xl font-extrabold leading-none tracking-tight">
-                Comuneros
-              </div>
-              <div className="ml-0.5 font-medium text-secondary">
-                {count > 0 && <span>{count} </span>}
-                {count === 0
-                  ? "No comuneros"
-                  : count === 1
-                    ? "comunero"
-                    : "comuneros"}
-              </div>
-            </div>
-
-            {/* Acciones */}
-            <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-0 md:mt-4">
-              {/* Búsqueda */}
-              <div className="min-w-50 flex-auto">
-                <SearchInput
-                  value={inputValue}
-                  onValueChange={setInputValue}
-                  placeholder="Búsqueda de comuneros"
-                />
-              </div>
-
-              {/* Filtro de estado */}
-              <FilterSelect
-                value={status}
-                onValueChange={setStatus}
-                options={[
-                  { value: "", label: "Todos" },
-                  ...STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
-                ]}
-                label="Filtrar por estado"
-                className="sm:w-44 md:ml-4"
+          <ListPageHeader
+            title="Comuneros"
+            subtitle={countLabel(count, {
+              none: "No comuneros",
+              one: "comunero",
+              many: "comuneros",
+            })}
+            search={
+              <SearchInput
+                value={inputValue}
+                onValueChange={setInputValue}
+                placeholder="Búsqueda de comuneros"
               />
+            }
+          >
+            <FilterSelect
+              value={status}
+              onValueChange={setStatus}
+              options={[
+                { value: "", label: "Todos" },
+                ...STATUSES.map((s) => ({ value: s, label: statusLabel(s) })),
+              ]}
+              label="Filtrar por estado"
+              className="sm:w-44"
+            />
 
-              <Button
-                onClick={() => setExportOpen(true)}
-                className="w-full md:ml-4 md:w-fit"
-              >
-                <ArrowDownTrayIcon className="h-5 w-5" />
-                <span className="mr-1">Exportar</span>
-              </Button>
+            <Button onClick={() => setExportOpen(true)} className="w-full md:w-fit">
+              <ArrowDownTrayIcon className="h-5 w-5" />
+              <span className="mr-1">Exportar</span>
+            </Button>
 
-              <ButtonLink href="/comuneros/new" className="w-full md:ml-4 md:w-fit">
-                <PlusIcon className="h-5 w-5" />
-                <span className="mr-1">Nuevo</span>
-              </ButtonLink>
-            </div>
-          </div>
+            <ButtonLink href="/comuneros/new" className="w-full md:w-fit">
+              <PlusIcon className="h-5 w-5" />
+              <span className="mr-1">Nuevo</span>
+            </ButtonLink>
+          </ListPageHeader>
 
           {/* Lista */}
           <div className="relative">

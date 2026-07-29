@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { useAnnouncements } from "@/features/announcements/api";
 import { ButtonLink } from "@/components/ui/button";
+import { ListPageHeader } from "@/components/ui/list-page-header";
 import { ListTable } from "@/components/ui/list-table";
 import { SearchInput } from "@/components/ui/search-input";
 import { usePagination } from "@/lib/use-pagination";
@@ -20,11 +21,9 @@ export function AnnouncementsList() {
 
   return (
     <div className="flex min-w-0 flex-auto flex-col overflow-hidden bg-card sm:absolute sm:inset-0">
-      <div className="relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <div className="text-4xl font-extrabold tracking-tight">
-          Comunicaciones
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-0 md:mt-4">
+      <ListPageHeader
+        title="Comunicaciones"
+        search={
           <SearchInput
             value={search}
             onValueChange={(value) => {
@@ -32,17 +31,14 @@ export function AnnouncementsList() {
               pagination.reset();
             }}
             placeholder="Buscar comunicaciones"
-            className="md:w-64"
           />
-          <ButtonLink
-            href="/announcements/new"
-            className="w-full md:ml-4 md:w-fit"
-          >
-            <PlusIcon className="h-5 w-5" />
-            <span className="mr-1">Nueva comunicación</span>
-          </ButtonLink>
-        </div>
-      </div>
+        }
+      >
+        <ButtonLink href="/announcements/new" className="w-full md:w-fit">
+          <PlusIcon className="h-5 w-5" />
+          <span className="mr-1">Nueva comunicación</span>
+        </ButtonLink>
+      </ListPageHeader>
 
       <ListTable
         columns={[

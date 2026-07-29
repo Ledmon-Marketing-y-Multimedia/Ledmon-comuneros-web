@@ -55,8 +55,7 @@ describe("ComunerosList", () => {
     // inicial, y cada fila muestra su avatar con la misma letra.
     expect(screen.getAllByText("A").length).toBe(3);
     expect(screen.getAllByText("L").length).toBe(2);
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("comuneros")).toBeInTheDocument();
+    expect(screen.getByText("3 comuneros")).toBeInTheDocument();
   });
 
   it("muestra el estado del comunero y, si el lugar está suspendido, el del lugar", async () => {
