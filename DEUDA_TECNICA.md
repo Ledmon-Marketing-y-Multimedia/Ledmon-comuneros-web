@@ -32,6 +32,19 @@
   lugares; las convocatorias no tienen dirección). Verificar con el backend cuál
   es el parámetro correcto de búsqueda de comunicaciones.
 
+## Front — corregido
+
+- [x] 🐞 **El escáner QR no abría la cámara** (`NotFoundError: Requested device not
+  found`). `@zxing/browser` pide la cámara con `facingMode: 'environment'` **como
+  exigencia** cuando no se le pasa un `deviceId`, así que fallaba en cualquier
+  equipo cuya cámara no se declare trasera —todos los portátiles— y también sin
+  cámara. Ahora el componente abre el stream él mismo con `{ ideal: 'environment' }`
+  (preferencia, no exigencia) y se lo entrega al lector con `decodeFromStream`.
+  Además el fallo se explica **en pantalla** en vez de acabar en `console.error`
+  dejando un rectángulo negro: sin cámara, sin permiso, cámara ocupada o navegador
+  sin acceso (el caso de servir el front por http:// desde el móvil), con botón de
+  reintentar donde tiene sentido.
+
 ## Front — endurecimientos ya aplicados (verificar que no cambian negocio)
 
 - [x] 🐞 **Alta de dirección creaba una fila vacía.** "Nueva dirección" hacía
@@ -120,9 +133,11 @@
   no alcanza: el menú según quién eres, el aviso al entrar por URL sin permiso, que
   una cuenta recién creada inicie sesión y que un reseteo de contraseña cierre la
   sesión abierta. Ver `e2e/README.md`.
+- [x] **Escáner QR**: 9 casos de componente (doblando `getUserMedia` y el lector de
+  @zxing) más 2 e2e en navegador real, uno con la cámara simulada de Chromium y otro
+  sin cámara.
 - [ ] Sin cubrir todavía: paneles de **reuniones** y **comunicaciones** (arrastran
-  `react-quill-new` y `@zxing/browser`, que necesitan doble en jsdom), el overlay
-  de escaneo QR y `pdf-service` (port verbatim).
+  `react-quill-new`, que necesita doble en jsdom) y `pdf-service` (port verbatim).
 - [ ] `domain.ts` declara `Meeting.date` y `Announcement.createdAt` como `Date`,
   pero la API manda cadenas ISO; el código compensa con `new Date(...)`. Los
   dobles de test imitan a la API y necesitan un cast doble. Conviene alinear el
