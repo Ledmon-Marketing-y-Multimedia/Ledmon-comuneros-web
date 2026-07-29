@@ -5,6 +5,7 @@ import {
   UsersIcon,
   PresentationChartLineIcon,
   PrinterIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
 export interface NavItem {
@@ -13,6 +14,8 @@ export interface NavItem {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   link: string;
   exactMatch?: boolean;
+  /** Solo se muestra a las cuentas administradoras (gestión de usuarios). */
+  adminOnly?: boolean;
 }
 
 /** Menú lateral portado 1:1 de core/navigation/navigation.ts (adminNavigation). */
@@ -51,5 +54,13 @@ export const adminNavigation: NavItem[] = [
     icon: PrinterIcon,
     link: "/announcements",
     exactMatch: true,
+  },
+  {
+    id: "dashboard.usuarios",
+    title: "Usuarios",
+    icon: ShieldCheckIcon,
+    link: "/usuarios",
+    exactMatch: true,
+    adminOnly: true,
   },
 ];

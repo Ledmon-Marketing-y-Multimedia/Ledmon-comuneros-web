@@ -2,6 +2,12 @@
 export const queryKeys = {
   loginCheck: ["login-check"] as const,
 
+  accounts: {
+    all: ["accounts"] as const,
+    list: () => ["accounts", "list"] as const,
+    detail: (id: string) => ["accounts", "detail", id] as const,
+  },
+
   comuneros: {
     all: ["comuneros"] as const,
     list: (name?: string, status?: string) =>

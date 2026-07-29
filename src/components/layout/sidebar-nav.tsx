@@ -4,11 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { adminNavigation } from "@/lib/navigation";
+import { useIsAdmin } from "@/lib/auth/use-current-user";
 import { cn } from "@/lib/utils";
 
 /** Navegación lateral (equivalente a fuse-vertical-navigation con adminNavigation). */
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const isAdmin = useIsAdmin();
+
+  // La gestión de usuarios solo se ofrece a quien puede usarla; el que manda es
+  // el 403 de la API, esto solo evita enseñar una puerta cerrada.
+  const items = adminNavigation.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <nav className="flex h-full flex-col bg-gray-900 text-gray-300">
@@ -26,7 +32,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Items */}
       <ul className="mt-6 flex flex-col gap-1 px-3">
-        {adminNavigation.map((item) => {
+        {items.map((item) => {
           const active = item.exactMatch
             ? pathname === item.link
             : pathname.startsWith(item.link);

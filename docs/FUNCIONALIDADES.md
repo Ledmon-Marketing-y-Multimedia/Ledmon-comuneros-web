@@ -56,42 +56,71 @@ petición.
 - **Caducidad:** el token vive lo que diga `SANCTUM_EXPIRATION` en la API (12 h por
   defecto). **No hay refresh silencioso** (antes lo daba el refresh token de
   Keycloak): al caducar se vuelve a pedir el login.
-- **Datos del usuario en pantalla:** el menú superior muestra el email de
-  `GET /login/check` (`src/lib/auth/use-current-user.ts`).
+- **Datos de la cuenta en pantalla:** el menú superior muestra el email de
+  `GET /login/check` (`src/lib/auth/use-current-user.ts`), que devuelve también
+  `isAdmin`.
 
-> ⚠️ **No hay roles.** El único control es "estar autenticado": cualquier usuario
-> con sesión tiene acceso total a la administración. (El `role` que aparece en el
-> código es el de dominio del comunero —HOLDER/AUTHORIZED—, no un rol de acceso.)
-> La API tampoco los usa: expone `superAdmin` en `/me` por si algún día se
-> restringe algo.
+> ⚠️ **No hay roles ni permisos.** El control general sigue siendo "estar
+> autenticado": cualquier cuenta con sesión administra comuneros, direcciones,
+> reuniones y comunicaciones. (El `role` que aparece en el código es el de dominio
+> del comunero —HOLDER/AUTHORIZED—, no un rol de acceso.)
+>
+> La **única** excepción es `/usuarios`: requiere `isAdmin`. En el front se oculta
+> el menú (`adminOnly` en `src/lib/navigation.ts`) y la ruta enseña un aviso
+> (`src/components/auth/admin-only.tsx`), pero **quien decide es la API** (403 del
+> middleware `admin`); lo del front es comodidad, no seguridad.
 
 ---
 
-## 2. Gestión de usuarios
+## 2. Gestión de usuarios (`/usuarios`)
 
-**El front no tiene pantalla de gestión de cuentas** (no hay alta/baja de usuarios
-de acceso ni asignación de contraseñas). Las contraseñas las asigna un
-administrador desde la API (`php artisan user:password <email>`); no hay
-autoservicio de recuperación por email —tampoco lo había con Keycloak, que lo
-tenía desactivado— y la pantalla de login lo indica.
+Panel de administración de las **cuentas de acceso**, solo para cuentas con
+`isAdmin`. Mismo patrón que el resto: listado maestro + ficha en panel lateral
+(`src/features/accounts/`).
 
-> Pendiente (opcional): el endpoint `PATCH /password` ya existe en la API para que
-> el usuario cambie su propia contraseña; falta la pantalla en el front.
+| El administrador puede… | Desde | Llama a |
+|---|---|---|
+| Ver las cuentas, buscar por nombre o email, filtrar por administradores o por quien no puede entrar | `/usuarios` | `GET /account` |
+| Crear una cuenta (nombre, email, contraseña, admin, activa) | `/usuarios/new` | `POST /account` |
+| Editar nombre, email, permiso de administrador y si está activa | `/usuarios/[id]` | `PATCH /account/{id}` (solo los campos que cambian) |
+| Cambiar la contraseña de otra cuenta | botón **Contraseña** de la ficha | `PATCH /account/{id}/password` |
+| Eliminar una cuenta | botón **Eliminar** (con confirmación) | `DELETE /account/{id}` |
 
-Lo más parecido es la gestión de **comuneros**, que es una **entidad de dominio** (no una
-cuenta de login): al crear/editar un comunero, el front envía sus datos de usuario
-(nombre, email, username, DNI, teléfonos) a la **API del backend** (`POST/PATCH
-/comunero`), que mantiene el registro `_user` en Postgres. Un comunero **no es
-necesariamente** alguien que inicia sesión — el login es, en la práctica, para el
-administrador de la comunidad. Los comuneros creados así **no tienen contraseña**,
-así que no pueden entrar hasta que se les asigne una.
+Detalles que se ven en pantalla:
+
+- El listado avisa de quién **no puede entrar**: *Desactivada* o *Sin clave*. En la
+  ficha se explica por qué.
+- Sobre **tu propia cuenta**, los interruptores de administrador y activa salen
+  desactivados y no se ofrece Eliminar: la API lo rechazaría con `409` (nadie se
+  deja fuera a sí mismo). Renombrarte o cambiarte el email sí se puede.
+- Los `409` de la API (p. ej. "debe quedar al menos una cuenta administradora
+  activa") se muestran **con su mensaje**, no con un error genérico
+  (`src/features/accounts/account-error.ts`).
+- Cambiar una contraseña o desactivar una cuenta **cierra las sesiones** de esa
+  cuenta (la API revoca sus tokens); el modal lo advierte.
+
+> **Cuenta ≠ comunero.** Un comunero es una **entidad de dominio** (`person` en la
+> API) y nunca inicia sesión; una cuenta (`account`) es quien entra al backoffice.
+> Hasta el 2026-07-29 compartían tabla en la API, con la contraseña conviviendo con
+> el DNI y los teléfonos; ver `docs/PLAN-SEPARAR-CUENTAS.md` en el repo de la API.
+
+Además de los tests de componentes (Vitest), este módulo tiene **tests de extremo a
+extremo** con Playwright (`npm run e2e`): navegador real contra la API real, para lo
+que jsdom no alcanza — que el menú se pinte según quién eres, que el aviso salte al
+entrar por URL, que una cuenta recién creada pueda iniciar sesión y que un reseteo de
+contraseña cierre la sesión abierta. Ver `e2e/README.md`.
+
+> Pendiente (opcional): `PATCH /password` (que cada uno cambie **su** contraseña)
+> sigue sin pantalla en el front; el reseteo por consola es
+> `php artisan account:password <email>`.
 
 ---
 
 ## 3. Navegación y pantallas
 
 Menú lateral (`src/lib/navigation.ts`): **Inicio**, **Direcciones** (`/lugares`),
-**Comuneros**, **Reuniones**, **Comunicaciones**.
+**Comuneros**, **Reuniones**, **Comunicaciones** y, solo para administradores,
+**Usuarios**.
 
 | Ruta | Qué muestra |
 |---|---|
@@ -102,6 +131,7 @@ Menú lateral (`src/lib/navigation.ts`): **Inicio**, **Direcciones** (`/lugares`
 | `/lugares` · `/lugares/[id]` | Listado de direcciones + ficha (el alta se crea in-place). |
 | `/reuniones` · `/reuniones/new` · `/reuniones/[id]` | Listado + detalle de reunión (con overlay global de escaneo QR). |
 | `/announcements` · `/announcements/new` · `/announcements/[id]` | Listado + detalle de comunicaciones. |
+| `/usuarios` · `/usuarios/new` · `/usuarios/[id]` | Cuentas de acceso: listado + ficha/alta en panel lateral. **Solo administradores.** |
 | `/sign-out` | Cierre de sesión. |
 
 ---
@@ -115,7 +145,7 @@ Pantallas `/comuneros*`. Un comunero tiene rol **HOLDER** (titular) o **AUTHORIZ
 |---|---|---|---|
 | Listar / buscar titulares (por nombre + estado) | Lista de comuneros (buscador con *debounce* + filtro de estado) | `GET /comunero/search/marcon?name=&status=` | `200` lista de Comunero |
 | Ver la ficha de un comunero | Ficha | (se resuelve desde la lista ya cargada; no hay GET por id) | — |
-| **Dar de alta** un comunero | Formulario "nuevo" | `POST /comunero` | `200` Comunero (crea también su `_user`) |
+| **Dar de alta** un comunero | Formulario "nuevo" | `POST /comunero` | `200` Comunero (crea también su `person`) |
 | **Editar** un comunero | Ficha (formulario) | `PATCH /comunero/{id}` | `200` Comunero |
 | **Dar de baja** | Botón "Dar de baja" → modal con comentario | `PATCH /comunero/{id}/status` (`{status:"UNSUBSCRIBED", comments}`) | `200` Comunero (fija `unsubscribedDate`) |
 | **Borrar** | Botón "Borrar comunero" (confirmación) | `DELETE /comunero/{id}` | `200` |
