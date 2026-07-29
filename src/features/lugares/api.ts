@@ -87,11 +87,3 @@ export function useUpdateLugar() {
     },
   });
 }
-
-export function useDeleteLugar() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => api.delete<boolean>(LUGAR_URL + "/" + id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lugares.all }),
-  });
-}

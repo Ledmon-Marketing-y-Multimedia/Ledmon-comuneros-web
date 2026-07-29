@@ -60,14 +60,6 @@ export function useUpdateMeeting() {
   });
 }
 
-export function useDeleteMeeting() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => api.delete<boolean>(MEETING_URL + "/" + id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.meetings.all }),
-  });
-}
-
 export function useUploadDocument() {
   return useMutation({
     mutationFn: ({ meetingId, formData }: { meetingId: string; formData: FormData }) =>
