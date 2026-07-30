@@ -1,0 +1,40 @@
+# Front en Docker. Levanta SOLO el front: la API vive en su propio repositorio
+# (Ledmon-comuneros-api) y hay que arrancarla antes, porque este compose se
+# engancha a la red que crea aquel:
+#
+#   cd ../Ledmon-comuneros-api && docker compose up -d
+#   cd ../Ledmon-comuneros-web && docker compose up -d --build
+#
+# Front en http://localhost:3000 — la API sigue en http://localhost:8080.
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Ruta relativa: el navegador llama a /api y lo reescribe el servidor de
+        # Next, así que no hace falta CORS ni exponer la API al navegador.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+        # Destino del rewrite. "nginx" es el servicio web de la API dentro de
+        # app-network. Ojo: se hornea en el build (ver ARG en el Dockerfile),
+        # cambiarlo obliga a reconstruir la imagen.
+        API_PROXY_TARGET: ${API_PROXY_TARGET:-http://nginx/comuneros/api/v1}
+    container_name: ${STACK_NAME:-ledmon-comuneros}-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - api-network
+    healthcheck:
+      # /login es la única página pública; "/" redirige y exige sesión.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/login >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+networks:
+  # La crea el compose de Ledmon-comuneros-api; aquí solo nos unimos a ella.
+  api-network:
+    external: true
+    name: ledmon-comuneros-api_app-network

@@ -23,6 +23,20 @@ En desarrollo `next.config.ts` reescribe `/api/*` hacia `API_PROXY_TARGET`
 (equivalente al `proxy.conf.json` del Angular original). En producción se pone la
 URL absoluta de la API; ver [`DEPLOY.md`](./DEPLOY.md).
 
+### Todo en Docker
+
+Alternativa a `npm run dev` cuando se quiere revisar el conjunto tal y como se
+despliega (imagen de producción, sin hot-reload):
+
+```bash
+cd ../Ledmon-comuneros-api && docker compose up -d      # backend + nginx + postgres
+cd ../Ledmon-comuneros-web && docker compose up -d --build
+```
+
+El `docker-compose.yml` de aquí levanta **solo el front** y se une a la red del
+compose de la API, así que aquel tiene que estar arriba primero. Detalles en
+[`DEPLOY.md`](./DEPLOY.md).
+
 ## Documentación
 
 | Documento | Qué cuenta |
