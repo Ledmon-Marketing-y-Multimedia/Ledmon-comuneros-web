@@ -52,6 +52,31 @@ docker build \
 docker run -p 3000:3000 comuneros-marcon-web
 ```
 
+> **Lo que se hornea en el build:** además de las `NEXT_PUBLIC_*`, también
+> `API_PROXY_TARGET`. El `rewrites()` de `next.config.ts` se resuelve durante
+> `next build` y su destino queda escrito literal en `.next/routes-manifest.json`,
+> así que **no** se puede cambiar en runtime: si no se pasa como `--build-arg`, la
+> imagen sale con el `http://localhost:8080` del entorno de desarrollo. En un
+> despliegue con URL absoluta de la API da igual (no se usa el proxy); importa en
+> el stack local de abajo.
+
+### Stack local completo (front + API en Docker)
+
+Para revisar el conjunto sin nada en el host hay un `docker-compose.yml` que
+construye esta misma imagen y se engancha a la red que crea el compose de la API:
+
+```bash
+cd ../Ledmon-comuneros-api && docker compose up -d      # backend + nginx + postgres
+cd ../Ledmon-comuneros-web && docker compose up -d --build
+```
+
+Front en `http://localhost:3000`, API en `http://localhost:8080`. Dentro de la red
+el proxy apunta a `http://nginx/comuneros/api/v1`, así que las llamadas del
+navegador van al **mismo origen** (`/api`) y **no hace falta CORS**. No hay
+hot-reload: la imagen es la de producción y cada cambio pide
+`docker compose up -d --build` (≈1 min). Para desarrollar sigue siendo mejor
+`npm run dev` contra la API en Docker.
+
 ## Opción C — Vercel
 
 `git push` de `core/rebuild-to-nextjs` y definir las `NEXT_PUBLIC_*` en el panel
