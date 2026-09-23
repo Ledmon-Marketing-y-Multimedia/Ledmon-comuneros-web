@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ApiError } from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useFieldArray } from "react-hook-form";
@@ -71,6 +72,15 @@ const EMPTY_COMUNERO: Comunero = {
   user: { name: "", id: "", username: "", phones: [], email: "" },
   id: "",
 };
+
+function saveErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 409) return "Ya existe un comunero con ese nombre de usuario.";
+    if (error.status === 422) return "No se ha podido guardar: faltan datos o no son válidos.";
+    return `No se ha podido guardar el comunero (el servidor ha respondido ${error.status}).`;
+  }
+  return "No se ha podido guardar el comunero: revisa la conexión.";
+}
 
 export function ComuneroDetails({
   comuneroId,
@@ -159,14 +169,19 @@ export function ComuneroDetails({
         },
       });
     } else {
+      // La API valida el PATCH con las mismas reglas que el alta, que exigen
+      // `role`: sin él cada edición volvía con un 422 y no se guardaba nada.
+      const edited = { ...payload, role: comunero.role ?? "HOLDER" };
       updateMut.mutate(
-        { id: payload.id, comunero: payload as unknown as Comunero },
+        { id: payload.id, comunero: edited as unknown as Comunero },
         {
           onSuccess: () => setEditMode(false),
         },
       );
     }
   };
+
+  const saveError = createMut.error ?? updateMut.error;
 
   const changeStatus = (result: { comments: string }) => {
     if (!comunero.id) return;
@@ -451,7 +466,7 @@ export function ComuneroDetails({
                             )}
                             <input
                               {...register(`phones.${i}.phoneNumber` as const)}
-                              placeholder="Phone"
+                              placeholder="Teléfono"
                               className={fieldClass}
                             />
                           </div>
@@ -465,7 +480,7 @@ export function ComuneroDetails({
                               <TagIcon className="mr-2 hidden h-5 w-5 sm:block" />
                               <input
                                 {...register(`phones.${i}.label` as const)}
-                                placeholder="Label"
+                                placeholder="Etiqueta"
                                 className={fieldClass}
                               />
                             </div>
@@ -501,6 +516,15 @@ export function ComuneroDetails({
                     </span>
                   </div>
                 </div>
+
+                {saveError && (
+                  <div
+                    role="alert"
+                    className="mt-6 rounded border border-warn-600 bg-red-50 p-4 font-medium text-warn-600"
+                  >
+                    {saveErrorMessage(saveError)}
+                  </div>
+                )}
 
                 {/* Acciones */}
                 <FormActions

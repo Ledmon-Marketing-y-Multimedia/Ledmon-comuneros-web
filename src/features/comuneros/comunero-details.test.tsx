@@ -147,6 +147,25 @@ describe("ComuneroDetails", () => {
       id: "c1",
       dni: "22222222J",
       lugarId: "l1",
+      // Sin role la API responde 422 y la edición no se guarda.
+      role: "HOLDER",
     });
+  });
+
+  it("si guardar falla, lo dice en vez de quedarse callado", async () => {
+    setLocation("/comuneros/c1");
+    mockRoute("GET", "/comunero/c1", () => ana);
+    mockRoute("PATCH", "/comunero/c1", () => {
+      throw new ApiError(422, "validation.required");
+    });
+
+    renderWithProviders(<ComuneroDetails comuneroId="c1" />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Editar" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/no se ha podido guardar/i);
   });
 });
