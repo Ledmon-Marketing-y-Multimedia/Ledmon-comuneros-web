@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/*
+ * Tema portado de la app Angular (plantilla Fuse).
+ * Tailwind v4: la configuración vive aquí vía @theme.
+ */
+@theme {
+  /* Escala tipográfica de Fuse (más compacta que la de Tailwind por defecto) */
+  --text-xs: 0.625rem;
+  --text-sm: 0.75rem;
+  --text-md: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.25rem;
+  --text-3xl: 1.5rem;
+  --text-4xl: 2rem;
+  --text-5xl: 2.25rem;
+  --text-6xl: 2.5rem;
+  --text-7xl: 3rem;
+  --text-8xl: 4rem;
+  --text-9xl: 6rem;
+  --text-10xl: 8rem;
+
+  /* Breakpoints de Fuse */
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 960px;
+  --breakpoint-lg: 1280px;
+  --breakpoint-xl: 1440px;
+
+  /* Fuentes */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Color primario (indigo) portado del tema default de Fuse */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+  --color-primary: #4f46e5;
+
+  /* Warn (red) */
+  --color-warn-500: #ef4444;
+  --color-warn-600: #dc2626;
+
+  /* Espaciado extra usado por Fuse */
+  --spacing-13: 3.25rem;
+  --spacing-15: 3.75rem;
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-26: 6.5rem;
+  --spacing-30: 7.5rem;
+  --spacing-50: 12.5rem;
+  --spacing-90: 22.5rem;
+  --spacing-100: 25rem;
+  --spacing-120: 30rem;
+  --spacing-128: 32rem;
+  --spacing-140: 35rem;
+  --spacing-160: 40rem;
+  --spacing-180: 45rem;
+  --spacing-192: 48rem;
+  --spacing-200: 50rem;
+  --spacing-240: 60rem;
+  --spacing-256: 64rem;
+  --spacing-280: 70rem;
+  --spacing-320: 80rem;
+  --spacing-360: 90rem;
+  --spacing-400: 100rem;
+  --spacing-480: 120rem;
+}
+
+/*
+ * Variables semánticas de Fuse (superficie clara).
+ */
+:root {
+  --fuse-bg-default: #f1f5f9;   /* slate-100 */
+  --fuse-bg-card: #ffffff;
+  --fuse-text-default: #1e293b; /* slate-800 */
+  --fuse-text-secondary: #64748b;
+  --fuse-text-hint: #94a3b8;
+  --fuse-border: #e2e8f0;
+}
+
+/*
+ * Color por defecto de los bordes.
+ *
+ * En Tailwind v3 era `gray-200`; **en v4 pasó a ser `currentColor`**, así que al
+ * migrar, cada `border`/`border-b`/`border-t` de la app se quedó pintando del
+ * color del texto (slate-800): las filas de las tablas, las cabeceras y los pies
+ * de formulario salían con una línea casi negra en vez del gris del tema. Esta
+ * regla lo devuelve al gris de Fuse, que ya estaba definido arriba y no se usaba
+ * en ningún sitio.
+ *
+ * Va en `base` a propósito: cualquier utilidad explícita (`border-gray-300`,
+ * `border-primary`…) pertenece a una capa posterior y sigue ganando.
+ */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--fuse-border);
+  }
+}
+
+@layer utilities {
+  .bg-card {
+    background-color: var(--fuse-bg-card);
+  }
+  .bg-default {
+    background-color: var(--fuse-bg-default);
+  }
+  .text-default {
+    color: var(--fuse-text-default);
+  }
+  .text-secondary {
+    color: var(--fuse-text-secondary);
+  }
+  .text-hint {
+    color: var(--fuse-text-hint);
+  }
+  .icon-size-5 {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+  }
+  .icon-size-6 {
+    width: 1.5rem;
+    height: 1.5rem;
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--fuse-bg-default);
+  color: var(--fuse-text-default);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+}
