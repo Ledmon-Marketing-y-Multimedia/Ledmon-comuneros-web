@@ -1,0 +1,14 @@
+# Staging en srv03 — se superpone al docker-compose.yml (la API, antes):
+#   docker compose -f docker-compose.yml -f compose.staging.yml up -d --build
+#
+# Como en producción, el navegador llama a la API directamente: la URL se
+# hornea en el build, así que cambiarla obliga a reconstruir.
+services:
+  frontend:
+    image: ledmon-comuneros-web:staging
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: http://192.168.30.103:8086/comuneros/api/v1
+    ports: !override
+      - "192.168.30.103:8085:3000"
+      - "127.0.0.1:8085:3000"
