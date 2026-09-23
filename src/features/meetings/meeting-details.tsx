@@ -39,6 +39,7 @@ import { Paginator } from "@/components/ui/paginator";
 import { SearchInput } from "@/components/ui/search-input";
 import { badgeClass } from "@/components/ui/status-badge";
 import { usePagination } from "@/lib/use-pagination";
+import { fromDateInput, toDateInput } from "@/features/meetings/date-input";
 
 interface FormValues {
   name: string;
@@ -69,13 +70,6 @@ function motivo(error: unknown): string {
 
 /** Acciones de la cabecera: a ancho completo en móvil, en fila en escritorio. */
 const ACTION_CLASS = "w-full px-6 md:ml-3 md:w-fit";
-
-function toDateInput(d?: Date | string | null): string {
-  if (!d) return "";
-  const date = new Date(d);
-  if (isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
 
 export function MeetingDetails({
   meetingId,
@@ -147,7 +141,7 @@ export function MeetingDetails({
       name: values.name,
       description: values.description,
       status: values.status,
-      date: date ? (new Date(date) as unknown as Date) : undefined,
+      date: fromDateInput(date),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...({ comunidad: { id: COMUNIDAD_ID } } as any),
     };
@@ -295,7 +289,7 @@ export function MeetingDetails({
                 <label className="mb-1 text-secondary">Título</label>
                 <input
                   {...register("name", { required: true })}
-                  placeholder="name"
+                  placeholder="Título de la reunión"
                   className={fieldClass}
                 />
               </div>
@@ -303,7 +297,7 @@ export function MeetingDetails({
                 <label className="mb-1 text-secondary">Descripción</label>
                 <textarea
                   {...register("description")}
-                  placeholder="description"
+                  placeholder="Descripción"
                   className={fieldClass}
                 />
               </div>
