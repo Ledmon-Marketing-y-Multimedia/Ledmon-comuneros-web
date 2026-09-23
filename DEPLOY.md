@@ -79,7 +79,7 @@ hot-reload: la imagen es la de producción y cada cambio pide
 
 ## Opción C — Vercel
 
-`git push` de `core/rebuild-to-nextjs` y definir las `NEXT_PUBLIC_*` en el panel
+`git push` de `main` y definir las `NEXT_PUBLIC_*` en el panel
 de Environment Variables del proyecto. Build command `next build` por defecto.
 (En Vercel no aplica el rewrite `/api`; usar la URL absoluta de la API.)
 
