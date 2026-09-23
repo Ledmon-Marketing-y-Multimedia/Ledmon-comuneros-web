@@ -296,7 +296,7 @@ export function AnnouncementDetails({
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="title"
+                  placeholder="Título de la comunicación"
                   className={fieldClass}
                 />
               </div>
@@ -365,6 +365,19 @@ export function AnnouncementDetails({
                 value={multiValue(emailIds)}
                 onChange={setEmailIds}
               />
+              {/* Antes el envío no decía nada, saliera bien o mal. */}
+              {emailMut.isSuccess && (
+                <p role="status" className="mt-3 font-medium text-green-700">
+                  {emailMut.variables?.comuneros?.length
+                    ? `Email enviado a ${emailMut.variables.comuneros.length} comunero(s).`
+                    : "No se ha enviado nada: no hay comuneros seleccionados."}
+                </p>
+              )}
+              {emailMut.isError && (
+                <p role="alert" className="mt-3 font-medium text-warn-600">
+                  No se ha podido enviar el email. Inténtalo de nuevo o avisa a administración.
+                </p>
+              )}
             </Section>
           </div>
         </div>
