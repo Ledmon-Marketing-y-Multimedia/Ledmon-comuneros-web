@@ -37,6 +37,25 @@ El `docker-compose.yml` de aquí levanta **solo el front** y se une a la red del
 compose de la API, así que aquel tiene que estar arriba primero. Detalles en
 [`DEPLOY.md`](./DEPLOY.md).
 
+## Ramas y despliegue
+
+```
+fix/…, feat/…  ──PR──▶  develop  ──PR──▶  main
+                        staging           producción
+```
+
+- **`develop`** es lo que corre en el staging de srv03 (web `192.168.30.103:8085`,
+  API `:8086`, con una copia de la BD de producción). Todo cambio entra aquí por PR
+  desde una rama corta con prefijo (`fix/`, `feat/`, `docs/`…).
+- **`main`** es producción. Solo se cambia por PR desde `develop` (o desde un
+  `hotfix/` que sale de `main` y luego vuelve a `develop`). Fusionar con merge
+  commit o rebase, **nunca squash**: se rompe la relación con `develop`.
+- **Se despliega desde srv03**, no desde el VPS: `/opt/ops/comuneros/deploy-comuneros.sh`
+  (simula por defecto; `--apply` despliega y `--rollback` vuelve atrás). Se niega si
+  lo que probó staging no tiene el mismo contenido que `origin/main`. Norma de la casa
+  en `/opt/DESPLIEGUE.md` de srv03.
+- El código anterior al cambio de stack vive en **`legacy/angular`**.
+
 ## Documentación
 
 | Documento | Qué cuenta |
