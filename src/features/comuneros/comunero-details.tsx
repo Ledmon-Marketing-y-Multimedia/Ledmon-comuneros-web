@@ -75,7 +75,7 @@ const EMPTY_COMUNERO: Comunero = {
 
 function saveErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 409) return "Ya existe un comunero con ese nombre de usuario.";
+    if (error.status === 409) return "Ya existe un comunero con ese email o nombre de usuario.";
     if (error.status === 422) return "No se ha podido guardar: faltan datos o no son válidos.";
     return `No se ha podido guardar el comunero (el servidor ha respondido ${error.status}).`;
   }
